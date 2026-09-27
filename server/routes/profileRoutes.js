@@ -92,7 +92,7 @@ router.get("/search/:userId", authMiddleware, async (req, res) => {
   try {
     const value = String(req.params.userId || "").trim().toLowerCase();
     if (!value) return res.status(400).json({ message: "Enter a User ID." });
-    const user = await User.findOne({ userId: value, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified");
+    const user = await User.findOne({ userId: value, isActive: true }).select("_id userId name age gender location bio interests profileImage profileImageFileId isVerified");
     if (!user) return res.status(404).json({ message: "No user found with that User ID." });
     if (await Block.exists({ $or: [{ blocker: req.userId, blocked: user._id }, { blocker: user._id, blocked: req.userId }] }))
       return res.status(403).json({ message: "This user is unavailable." });
@@ -114,6 +114,7 @@ router.post(
           });
       const user = await User.findById(req.userId);
       if (!user) return res.status(404).json({ message: "User not found" });
+      await ensureUserId(user);
 
       // Store profile photos in MongoDB GridFS instead of relying on the
       // Render/container filesystem. This keeps photos available after
@@ -154,6 +155,7 @@ router.post(
       res.json({
         message: "Profile photo updated 📸",
         profileImage: user.profileImage,
+        profileImageFileId: user.profileImageFileId,
       });
     } catch (e) {
       console.error(e);
@@ -174,7 +176,8 @@ router.get("/photo/:userId", async (req, res) => {
 
     if (!user.profileImageFileId || !mongoose.connection.db) {
       // Keep compatibility with older filesystem-based profile photos.
-      return res.redirect(user.profileImage || "/images/default-avatar.svg");
+      if (user.profileImage) return res.redirect(user.profileImage);
+      return res.status(404).end();
     }
 
     const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
@@ -183,7 +186,10 @@ router.get("/photo/:userId", async (req, res) => {
     const fileId = new mongoose.Types.ObjectId(user.profileImageFileId);
     const files = await bucket.find({ _id: fileId }).toArray();
     if (!files.length) {
-      return res.redirect(user.profileImage || "/images/default-avatar.svg");
+      if (user.profileImage && !user.profileImage.includes("/api/profile/photo/")) {
+        return res.redirect(user.profileImage);
+      }
+      return res.status(404).end();
     }
 
     const file = files[0];

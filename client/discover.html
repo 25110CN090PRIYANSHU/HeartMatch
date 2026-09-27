@@ -63,7 +63,8 @@
     }
 
     function profileImage(u) {
-      if (u.profileImage) return HM.esc(u.profileImage);
+      const src = HM.img(u);
+      if (src) return HM.esc(src);
       return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'
       );

@@ -911,7 +911,8 @@
         }
       }
     </style>
-  </head>
+      <script src="/js/app.js"></script>
+</head>
 
   <body>
     <!-- =========================
@@ -1347,9 +1348,11 @@
 
           chatUserName = data.user.name || "They";
 
-          if (data.user.profileImage) {
+          const photoUrl = HM.img(data.user);
+
+          if (photoUrl) {
             profilePhoto.innerHTML = `<img
-                            src="${escapeHTML(data.user.profileImage)}"
+                            src="${escapeHTML(photoUrl)}"
                             alt="Profile"
                         >`;
 
@@ -1365,7 +1368,7 @@
               event.preventDefault();
               event.stopPropagation();
               window.open(
-                data.user.profileImage,
+                photoUrl,
                 "_blank",
                 "noopener,noreferrer",
               );

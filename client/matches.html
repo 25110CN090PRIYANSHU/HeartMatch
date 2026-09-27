@@ -429,6 +429,7 @@
 
     </style>
 
+    <script src="/js/app.js"></script>
 </head>
 
 
@@ -634,13 +635,15 @@
                     let photo;
 
 
-                    if (user.profileImage) {
+                    const photoUrl = HM.img(user);
+
+                    if (photoUrl) {
 
                         photo = `
 
                             <img
                                 src="${escapeAttribute(
-                                    user.profileImage
+                                    photoUrl
                                 )}"
                                 alt="Profile photo"
                                 onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className:'default-photo', textContent:'❤️'}));"

@@ -282,6 +282,7 @@
             }
         }
     </style>
+    <script src="/js/app.js"></script>
 </head>
 
 <body>
@@ -368,11 +369,13 @@
 
                 let profileImage = "";
 
-                if (user.profileImage) {
+                const photoUrl = HM.img(user);
+
+                if (photoUrl) {
                     profileImage = `
                         <img
                             id="profileImage"
-                            src="${escapeHTML(user.profileImage)}"
+                            src="${escapeHTML(photoUrl)}"
                             alt="${name}'s profile photo"
                             title="Click to open full-size photo"
                         >
@@ -451,7 +454,7 @@
                         "click",
                         () => {
                             window.open(
-                                user.profileImage,
+                                photoUrl,
                                 "_blank",
                                 "noopener,noreferrer"
                             );

@@ -29,7 +29,13 @@ const HM = {
     );
   },
   img(u) {
-    return u?.profileImage || "";
+    if (!u) return "";
+    // Always use the persistent GridFS photo endpoint when a photo file exists.
+    // This avoids stale /uploads URLs after Render restarts or redeploys.
+    if (u.profileImageFileId && (u.userId || u._id)) {
+      return `/api/profile/photo/${encodeURIComponent(u.userId || u._id)}`;
+    }
+    return u.profileImage || "";
   },
   async api(url, opt = {}) {
     const headers = {

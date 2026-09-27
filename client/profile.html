@@ -194,7 +194,8 @@
             : "Your profile";
           els.email.textContent = user.email || "";
           els.verified.textContent = user.isVerified ? "✓ Email verified" : "";
-          els.avatar.src = user.profileImage || fallback;
+          els.avatar.src = HM.img(user) || fallback;
+          els.avatar.onerror = () => { els.avatar.onerror = null; els.avatar.src = fallback; };
         } catch (e) {
           console.error(e);
           setMsg("Could not load profile. Please refresh.");
@@ -283,8 +284,9 @@
           });
           els.photoMsg.textContent = d.message || "Done";
           if (r.ok) {
-            els.avatar.src = d.profileImage;
-            user = { ...user, profileImage: d.profileImage };
+            user = { ...user, profileImage: d.profileImage, profileImageFileId: d.profileImageFileId || user.profileImageFileId };
+            els.avatar.src = HM.img(user) || fallback;
+            els.avatar.onerror = () => { els.avatar.onerror = null; els.avatar.src = fallback; };
             localStorage.setItem(
               "user",
               JSON.stringify({ ...HM.user(), profileImage: d.profileImage }),
