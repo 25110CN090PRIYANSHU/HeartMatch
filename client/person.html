@@ -192,33 +192,56 @@
         .profile-actions {
             width: 100%;
             margin-top: 28px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
         }
 
-        .message-btn {
+        .profile-action-btn {
             width: 100%;
-            margin-top: 28px;
-            padding: 14px 18px;
-            border: 0;
+            min-height: 48px;
+            padding: 13px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 13px;
             color: #fff;
-            background: linear-gradient(
-                135deg,
-                var(--pink),
-                var(--purple)
-            );
-            box-shadow: 0 12px 30px rgba(255, 63, 142, 0.2);
+            background: rgba(255, 255, 255, 0.06);
             font-weight: 800;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s, opacity 0.2s;
         }
 
-        .message-btn:hover {
+        .profile-action-btn:hover {
             transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-action-btn:disabled {
+            opacity: 0.55;
+            cursor: wait;
+            transform: none;
+        }
+
+        .profile-action-btn.like {
+            background: linear-gradient(135deg, var(--pink), var(--purple));
+            border-color: transparent;
+            box-shadow: 0 12px 30px rgba(255, 63, 142, 0.2);
+        }
+
+        .profile-action-btn.like:hover {
             box-shadow: 0 16px 36px rgba(255, 63, 142, 0.3);
         }
 
-        .message-btn:active {
-            transform: translateY(0);
+        .profile-action-btn.danger {
+            color: #ffd8e5;
+        }
+
+        .action-status {
+            grid-column: 1 / -1;
+            min-height: 20px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -255,6 +278,7 @@
 
             .profile-actions {
                 margin-top: 24px;
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -403,13 +427,11 @@
                         </section>
 
                         <div class="profile-actions">
-                            <button
-                                class="message-btn"
-                                id="messageButton"
-                                type="button"
-                            >
-                                💬 Message ${name}
-                            </button>
+                            <button class="profile-action-btn like" id="likeButton" type="button">❤️ Like</button>
+                            <button class="profile-action-btn" id="passButton" type="button">👋 Pass</button>
+                            <button class="profile-action-btn danger" id="reportButton" type="button">🚩 Report</button>
+                            <button class="profile-action-btn danger" id="blockButton" type="button">🚫 Block</button>
+                            <p class="action-status" id="actionStatus" aria-live="polite"></p>
                         </div>
                     </div>
                 `;
@@ -430,14 +452,137 @@
                     );
                 }
 
-                document
-                    .getElementById("messageButton")
-                    .addEventListener("click", () => {
-                        const chatUserId = user.userId || user._id || id;
-                        window.location.href =
-                            "chat.html?user=" +
-                            encodeURIComponent(chatUserId);
+                const likeButton = document.getElementById("likeButton");
+                const passButton = document.getElementById("passButton");
+                const reportButton = document.getElementById("reportButton");
+                const blockButton = document.getElementById("blockButton");
+                const actionStatus = document.getElementById("actionStatus");
+                const targetObjectId = String(user._id || "");
+
+                function setActionState(disabled) {
+                    [likeButton, passButton, reportButton, blockButton].forEach((button) => {
+                        if (button) button.disabled = disabled;
                     });
+                }
+
+                function showActionStatus(message) {
+                    if (actionStatus) actionStatus.textContent = message || "";
+                }
+
+                async function sendLikeOrPass(type) {
+                    if (!targetObjectId) {
+                        showActionStatus("This profile cannot be acted on right now.");
+                        return;
+                    }
+
+                    setActionState(true);
+                    showActionStatus(type === "like" ? "Liking..." : "Passing...");
+
+                    try {
+                        const response = await fetch("/api/likes", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: "Bearer " + token
+                            },
+                            body: JSON.stringify({
+                                to: targetObjectId,
+                                type
+                            })
+                        });
+
+                        const data = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(data.message || "Action failed");
+                        }
+
+                        showActionStatus(
+                            type === "like"
+                                ? (data.matched ? "It's a match! ❤️💕" : "Liked ❤️")
+                                : "Passed 👋"
+                        );
+                    } catch (error) {
+                        console.error("Profile action error:", error);
+                        showActionStatus(error.message || "Action failed. Please try again.");
+                    } finally {
+                        setActionState(false);
+                    }
+                }
+
+                async function blockProfile() {
+                    if (!targetObjectId) return;
+                    if (!confirm("Block this user?")) return;
+
+                    setActionState(true);
+                    showActionStatus("Blocking...");
+
+                    try {
+                        const response = await fetch(
+                            "/api/blocks/" + encodeURIComponent(targetObjectId),
+                            {
+                                method: "POST",
+                                headers: {
+                                    Authorization: "Bearer " + token
+                                }
+                            }
+                        );
+                        const data = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(data.message || "Could not block this user.");
+                        }
+
+                        showActionStatus("User blocked.");
+                        setTimeout(() => {
+                            window.location.href = "discover.html";
+                        }, 500);
+                    } catch (error) {
+                        console.error("Block error:", error);
+                        showActionStatus(error.message || "Could not block this user.");
+                        setActionState(false);
+                    }
+                }
+
+                async function reportProfile() {
+                    if (!targetObjectId) return;
+                    const reason = prompt("Why are you reporting this profile?");
+                    if (!reason || !reason.trim()) return;
+
+                    setActionState(true);
+                    showActionStatus("Submitting report...");
+
+                    try {
+                        const response = await fetch(
+                            "/api/reports/" + encodeURIComponent(targetObjectId),
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: "Bearer " + token
+                                },
+                                body: JSON.stringify({ reason: reason.trim() })
+                            }
+                        );
+                        const data = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(data.message || "Could not submit report.");
+                        }
+
+                        showActionStatus(data.message || "Report submitted. Thank you.");
+                    } catch (error) {
+                        console.error("Report error:", error);
+                        showActionStatus(error.message || "Could not submit report.");
+                    } finally {
+                        setActionState(false);
+                    }
+                }
+
+                likeButton.addEventListener("click", () => sendLikeOrPass("like"));
+                passButton.addEventListener("click", () => sendLikeOrPass("pass"));
+                reportButton.addEventListener("click", reportProfile);
+                blockButton.addEventListener("click", blockProfile);
             } catch (error) {
                 card.innerHTML = `
                     <div class="body">
