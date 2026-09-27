@@ -189,6 +189,11 @@
             font-size: 14px;
         }
 
+        .profile-actions {
+            width: 100%;
+            margin-top: 28px;
+        }
+
         .message-btn {
             width: 100%;
             margin-top: 28px;
@@ -248,7 +253,7 @@
                 font-size: 15px;
             }
 
-            .message-btn {
+            .profile-actions {
                 margin-top: 24px;
             }
         }
@@ -397,13 +402,15 @@
                             </div>
                         </section>
 
-                        <button
-                            class="message-btn"
-                            id="messageButton"
-                            type="button"
-                        >
-                            💬 Message ${name}
-                        </button>
+                        <div class="profile-actions">
+                            <button
+                                class="message-btn"
+                                id="messageButton"
+                                type="button"
+                            >
+                                💬 Message ${name}
+                            </button>
+                        </div>
                     </div>
                 `;
 
@@ -426,9 +433,10 @@
                 document
                     .getElementById("messageButton")
                     .addEventListener("click", () => {
+                        const chatUserId = user.userId || user._id || id;
                         window.location.href =
                             "chat.html?user=" +
-                            encodeURIComponent(user._id || id);
+                            encodeURIComponent(chatUserId);
                     });
             } catch (error) {
                 card.innerHTML = `
