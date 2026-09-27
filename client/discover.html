@@ -22,17 +22,14 @@
     <div class="section-title">
       <div>
         <h1>Discover</h1>
-        <p class="muted">People matching your preferences.</p>
+        <p class="muted">Discover all HeartMatch users.</p>
       </div>
       <button id="refreshBtn" class="btn ghost" type="button">Refresh</button>
     </div>
 
     <div id="msg" class="msg"></div>
 
-    <section class="card" id="preferenceBox" style="margin-bottom:18px">
-      <h3>People matching your preferences</h3>
-      <div id="preferenceText" class="muted">Loading your preferences...</div>
-    </section>
+
 
     <section class="card" style="margin-bottom:18px">
       <h2>Find someone by User ID 🔎</h2>
@@ -53,7 +50,6 @@
 
     const grid = document.getElementById("grid");
     const msg = document.getElementById("msg");
-    const preferenceText = document.getElementById("preferenceText");
     const refreshBtn = document.getElementById("refreshBtn");
     const userSearch = document.getElementById("userSearch");
     const findUserBtn = document.getElementById("findUserBtn");
@@ -66,18 +62,6 @@
       msg.className = "msg" + (type ? " " + type : "");
     }
 
-    function showPreferences(p) {
-      const minAge = Number.isFinite(Number(p?.minAge)) ? Number(p.minAge) : 18;
-      const maxAge = Number.isFinite(Number(p?.maxAge)) ? Number(p.maxAge) : 100;
-      const interestedIn = String(p?.interestedIn || "any").toLowerCase();
-      const genderText = interestedIn === "any"
-        ? "Everyone"
-        : interestedIn.charAt(0).toUpperCase() + interestedIn.slice(1);
-      const location = String(p?.location || "").trim();
-
-      preferenceText.textContent = `Age ${minAge}–${Math.max(minAge, maxAge)} • ${genderText} • ${location ? "Location: " + location : "Any location"}`;
-    }
-
     function profileImage(u) {
       if (u.profileImage) return HM.esc(u.profileImage);
       return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
@@ -87,7 +71,7 @@
 
     function renderUsers(users) {
       if (!Array.isArray(users) || users.length === 0) {
-        grid.innerHTML = '<div class="card"><h2>No new profiles right now.</h2><p class="muted">Try widening your preferences in Profile.</p></div>';
+        grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
         return;
       }
 
@@ -126,12 +110,10 @@
 
         if (!r.ok) {
           grid.innerHTML = "";
-          preferenceText.textContent = "Could not load your preferences.";
           setMessage(d?.message || "Could not load Discover. Please try again.", "err");
           return;
         }
 
-        showPreferences(d?.preferences || {});
         renderUsers(d?.users || []);
       } catch (error) {
         console.error("Discover load error:", error);
