@@ -42,9 +42,10 @@ const userSchema = new mongoose.Schema({
   chatBackgrounds: { type: Map, of: String, default: {} }
 }, { timestamps: true });
 
-userSchema.pre("validate", function(next) {
-  if (!this.uniqueId) this.uniqueId = generateUniqueId();
-  next();
+userSchema.pre("validate", function() {
+  if (!this.uniqueId) {
+    this.uniqueId = generateUniqueId();
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);
