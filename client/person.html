@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HeartMatch • Profile</title>
+
+    <style>
+        :root {
+            --bg: #090812;
+            --card: #171421;
+            --card-light: #211c2b;
+            --text: #ffffff;
+            --muted: #aaa5b8;
+            --pink: #ff3f8e;
+            --purple: #a855f7;
+            --line: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-width: 320px;
+            background: var(--bg);
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(
+                    circle at 10% 0,
+                    rgba(143, 54, 173, 0.35),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 90% 100%,
+                    rgba(91, 48, 160, 0.25),
+                    transparent 35%
+                ),
+                var(--bg);
+        }
+
+        .wrap {
+            width: min(820px, calc(100% - 32px));
+            margin: 24px auto 60px;
+        }
+
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .back {
+            color: #fff;
+            font-size: 27px;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .top strong {
+            font-size: 15px;
+        }
+
+        .card {
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: var(--card);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+        }
+
+        /*
+         * The image area has a controlled height.
+         * "contain" keeps the complete profile image visible.
+         */
+        .hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: min(58vw, 430px);
+            min-height: 260px;
+            padding: 12px;
+            background:
+                radial-gradient(
+                    circle at center,
+                    #3a2848,
+                    #17121f 72%
+                );
+        }
+
+        .hero img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            border-radius: 15px;
+            cursor: zoom-in;
+        }
+
+        .avatar {
+            width: 130px;
+            height: 130px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: white;
+            background: linear-gradient(
+                135deg,
+                var(--pink),
+                var(--purple)
+            );
+            font-size: 46px;
+            font-weight: 800;
+        }
+
+        .body {
+            padding: clamp(20px, 4vw, 34px);
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255, 255, 255, 0.07),
+                    rgba(255, 255, 255, 0.025)
+                ),
+                var(--card);
+        }
+
+        .name {
+            margin: 0;
+            color: #fff;
+            font-size: clamp(26px, 5vw, 38px);
+            line-height: 1.15;
+            overflow-wrap: anywhere;
+        }
+
+        .location {
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .profile-section {
+            margin-top: 25px;
+        }
+
+        .section-label {
+            margin-bottom: 8px;
+            color: #ff91ba;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .bio {
+            margin: 0;
+            color: #e5e1eb;
+            font-size: 16px;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .chip {
+            padding: 8px 12px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 999px;
+            color: #e2d7ff;
+            background: rgba(168, 85, 247, 0.13);
+            font-size: 13px;
+        }
+
+        .no-interests {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .message-btn {
+            width: 100%;
+            margin-top: 28px;
+            padding: 14px 18px;
+            border: 0;
+            border-radius: 13px;
+            color: #fff;
+            background: linear-gradient(
+                135deg,
+                var(--pink),
+                var(--purple)
+            );
+            box-shadow: 0 12px 30px rgba(255, 63, 142, 0.2);
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .message-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(255, 63, 142, 0.3);
+        }
+
+        .message-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                width: calc(100% - 24px);
+                margin-top: 16px;
+            }
+
+            .card {
+                border-radius: 19px;
+            }
+
+            .hero {
+                height: min(76vw, 340px);
+                min-height: 230px;
+                padding: 8px;
+            }
+
+            .hero img {
+                border-radius: 12px;
+            }
+
+            .body {
+                padding: 21px 18px 22px;
+            }
+
+            .name {
+                font-size: 28px;
+            }
+
+            .bio {
+                font-size: 15px;
+            }
+
+            .message-btn {
+                margin-top: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="wrap">
+        <div class="top">
+            <a
+                class="back"
+                href="javascript:history.back()"
+                aria-label="Go back"
+            >
+                ←
+            </a>
+
+            <strong>Profile</strong>
+        </div>
+
+        <section class="card" id="card">
+            <div class="body">Loading profile...</div>
+        </section>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+        const id = new URLSearchParams(
+            window.location.search
+        ).get("user");
+
+        if (!token) {
+            window.location.href = "login.html";
+        }
+
+        if (!id) {
+            window.location.href = "matches.html";
+        }
+
+        const card = document.getElementById("card");
+
+        function escapeHTML(value) {
+            const div = document.createElement("div");
+            div.textContent = value ?? "";
+            return div.innerHTML;
+        }
+
+        async function loadProfile() {
+            try {
+                const response = await fetch(
+                    "/api/person/" + encodeURIComponent(id),
+                    {
+                        headers: {
+                            Authorization: "Bearer " + token
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Profile not found"
+                    );
+                }
+
+                const user = data.user;
+                const name = escapeHTML(user.name || "User");
+                const age = user.age != null
+                    ? ", " + escapeHTML(user.age)
+                    : "";
+
+                const location = escapeHTML(
+                    user.location || "Location not specified"
+                );
+
+                const bio = escapeHTML(
+                    user.bio || "No bio yet."
+                );
+
+                const interests = (user.interests || [])
+                    .map(
+                        interest =>
+                            `<span class="chip">${escapeHTML(interest)}</span>`
+                    )
+                    .join("");
+
+                let profileImage = "";
+
+                if (user.profileImage) {
+                    profileImage = `
+                        <img
+                            id="profileImage"
+                            src="${escapeHTML(user.profileImage)}"
+                            alt="${name}'s profile photo"
+                            title="Click to open full-size photo"
+                        >
+                    `;
+                } else {
+                    profileImage = `
+                        <div class="avatar">
+                            ${escapeHTML(
+                                (user.name || "?")
+                                    .charAt(0)
+                                    .toUpperCase()
+                            )}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="hero">
+                        ${profileImage}
+                    </div>
+
+                    <div class="body">
+                        <h1 class="name">
+                            ${name}${age}
+                        </h1>
+
+                        <div class="location">
+                            📍 ${location}
+                        </div>
+
+                        <section class="profile-section">
+                            <div class="section-label">
+                                About
+                            </div>
+
+                            <p class="bio">
+                                ${bio}
+                            </p>
+                        </section>
+
+                        <section class="profile-section">
+                            <div class="section-label">
+                                Interests
+                            </div>
+
+                            <div class="chips">
+                                ${
+                                    interests ||
+                                    '<span class="no-interests">No interests added</span>'
+                                }
+                            </div>
+                        </section>
+
+                        <button
+                            class="message-btn"
+                            id="messageButton"
+                            type="button"
+                        >
+                            💬 Message ${name}
+                        </button>
+                    </div>
+                `;
+
+                const profileImageElement =
+                    document.getElementById("profileImage");
+
+                if (profileImageElement) {
+                    profileImageElement.addEventListener(
+                        "click",
+                        () => {
+                            window.open(
+                                user.profileImage,
+                                "_blank",
+                                "noopener,noreferrer"
+                            );
+                        }
+                    );
+                }
+
+                document
+                    .getElementById("messageButton")
+                    .addEventListener("click", () => {
+                        window.location.href =
+                            "chat.html?user=" +
+                            encodeURIComponent(id);
+                    });
+            } catch (error) {
+                card.innerHTML = `
+                    <div class="body">
+                        😕 ${escapeHTML(error.message)}
+                    </div>
+                `;
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

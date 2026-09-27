@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notifications - HeartMatch</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --bg: #0b0b12;
+            --panel: #151520;
+            --panel-raised: #191522;
+            --line: #29283a;
+            --muted: #aaa;
+            --pink: #ff4f9a;
+            --purple: #a855f7;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+        }
+
+        button, a { font: inherit; }
+        button { cursor: pointer; }
+
+        nav {
+            min-height: 70px;
+            padding: 12px 7%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            background: #12121c;
+            border-bottom: 1px solid #252536;
+        }
+
+        .logo {
+            flex: 0 0 auto;
+            font-size: 25px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #ff4f9a, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+        }
+
+        .nav-links {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            position: relative;
+            color: #aaa;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color .2s;
+        }
+
+        .nav-links a:hover { color: #fff; }
+
+        .notification-link { position: relative; }
+
+        .badge {
+            position: absolute;
+            top: -10px;
+            right: -12px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            color: #fff;
+            background: var(--pink);
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: min(800px, calc(100% - 32px));
+            margin: 42px auto 60px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: clamp(24px, 4vw, 30px);
+        }
+
+        .mark-all {
+            flex: 0 0 auto;
+            padding: 10px 15px;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: #ccc;
+            background: transparent;
+        }
+
+        .mark-all:hover {
+            border-color: var(--pink);
+            color: #fff;
+        }
+
+        .notification {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: var(--panel);
+            transition: border-color .2s, transform .2s;
+            cursor: pointer;
+        }
+
+        .notification:hover {
+            border-color: var(--pink);
+            transform: translateY(-2px);
+        }
+
+        .notification.unread {
+            border-left: 4px solid var(--pink);
+            background: var(--panel-raised);
+        }
+
+        .notification-main {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon {
+            width: 50px;
+            height: 50px;
+            flex: 0 0 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--pink), var(--purple));
+            font-size: 23px;
+        }
+
+        .content { min-width: 0; }
+        .content h3 {
+            margin: 0 0 5px;
+            font-size: 16px;
+        }
+
+        .content p {
+            margin: 0;
+            overflow-wrap: anywhere;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .time {
+            flex: 0 0 auto;
+            color: #777;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .delete-notification {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            color: #aaa;
+            background: transparent;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .delete-notification:hover,
+        .delete-notification:focus-visible {
+            border-color: rgba(255, 107, 129, .45);
+            color: #ff8094;
+            background: rgba(255, 107, 129, .12);
+        }
+
+        .empty, .loading, .error {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .empty, .loading { color: #777; }
+        .error { color: #ff6b6b; }
+
+        .toast {
+            position: fixed;
+            right: 25px;
+            bottom: 25px;
+            width: min(320px, calc(100% - 30px));
+            padding: 16px;
+            border: 1px solid var(--pink);
+            border-radius: 15px;
+            background: var(--panel-raised);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            transform: translateY(120px);
+            opacity: 0;
+            pointer-events: none;
+            transition: .3s;
+            z-index: 9999;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast h3 { margin: 0 0 6px; font-size: 15px; }
+        .toast p { margin: 0; color: var(--muted); font-size: 13px; }
+
+        @media (max-width: 600px) {
+            nav {
+                align-items: flex-start;
+                flex-wrap: wrap;
+                padding: 10px 20px;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: nowrap;
+                gap: 14px;
+                overflow-x: auto;
+                padding-bottom: 2px;
+                scrollbar-width: none;
+            }
+
+            .nav-links::-webkit-scrollbar { display: none; }
+
+            .container {
+                width: calc(100% - 24px);
+                margin-top: 28px;
+            }
+
+            .header {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            .mark-all { width: 100%; }
+            .notification { align-items: flex-start; padding: 12px; }
+            .notification-main { align-items: flex-start; gap: 10px; }
+            .icon { width: 42px; height: 42px; flex-basis: 42px; font-size: 19px; }
+            .time { display: none; }
+            .delete-notification { margin-left: auto; }
+            .toast { right: 15px; bottom: 15px; left: 15px; width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">❤️ HeartMatch</div>
+        <div class="nav-links">
+            <a href="discover.html">Discover</a>
+            <a href="matches.html">Matches</a>
+            <a href="profile.html">Profile</a>
+            <a href="notifications.html" class="notification-link">
+                🔔
+                <span id="notificationBadge" class="badge" style="display:none;">0</span>
+            </a>
+            <a href="#" onclick="logout(); return false;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="header">
+            <h1>Notifications 🔔</h1>
+            <button class="mark-all" type="button" onclick="markAllRead()">Mark all as read</button>
+        </div>
+        <div id="notifications">
+            <div class="loading">Loading notifications...</div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <h3 id="toastTitle">New notification</h3>
+        <p id="toastMessage">You have a new notification.</p>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            window.location.href = "login.html";
+        }
+
+        const socket = typeof io === "function"
+            ? io({ auth: { token } })
+            : null;
+
+        socket?.on("newNotification", notification => {
+            loadNotifications();
+            showToast(notification.title, notification.message);
+        });
+
+        async function loadNotifications() {
+            const container = document.getElementById("notifications");
+
+            try {
+                const response = await fetch("/api/notifications", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to load notifications");
+                }
+
+                updateBadge(data.unreadCount);
+
+                if (!data.notifications.length) {
+                    container.innerHTML = `
+                        <div class="empty">
+                            <div style="font-size:50px;">🔔</div>
+                            <h2 style="margin-top:15px;">No notifications yet</h2>
+                            <p style="margin-top:10px;">Your matches and other activity will appear here.</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = data.notifications.map(renderNotification).join("");
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<div class="error">Failed to load notifications.</div>`;
+            }
+        }
+
+        function renderNotification(notification) {
+            const type = notification.type || "";
+            const sender = notification.sender;
+            const senderId = sender && typeof sender === "object"
+                ? sender._id
+                : sender;
+            const icon = type === "match" ? "💕" : type === "message" ? "💬" : "❤️";
+            const id = escapeHTML(notification._id);
+            const senderValue = escapeHTML(senderId || "");
+            const title = escapeHTML(notification.title);
+            const message = escapeHTML(notification.message);
+            const time = new Date(notification.createdAt).toLocaleString();
+
+            return `
+                <div class="notification ${notification.read ? "" : "unread"}"
+                     data-id="${id}"
+                     data-type="${escapeHTML(type)}"
+                     data-sender-id="${senderValue}"
+                     onclick="readNotification(this)">
+                    <div class="notification-main">
+                        <div class="icon">${icon}</div>
+                        <div class="content">
+                            <h3>${title}</h3>
+                            <p>${message}</p>
+                        </div>
+                        <div class="time">${escapeHTML(time)}</div>
+                    </div>
+                    <button class="delete-notification" type="button"
+                            aria-label="Delete notification"
+                            title="Delete notification"
+                            onclick="deleteNotification(event, this.closest('.notification'))">🗑️</button>
+                </div>`;
+        }
+
+        function notificationDestination(type, senderId) {
+            if (!senderId) return "";
+            const id = encodeURIComponent(senderId);
+            if (type === "message") return `chat.html?user=${id}`;
+            if (type === "match" || type === "like") return `person.html?user=${id}`;
+            return "";
+        }
+
+        async function readNotification(card) {
+            const id = card?.dataset.id;
+            if (!id) return;
+
+            try {
+                const response = await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, {
+                    method: "PUT",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.message || "Unable to open notification");
+                }
+
+                const destination = notificationDestination(
+                    card.dataset.type,
+                    card.dataset.senderId
+                );
+
+                if (destination) {
+                    window.location.href = destination;
+                } else {
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function deleteNotification(event, card) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const id = card?.dataset.id;
+            if (!id) return;
+
+            try {
+                const response = await fetch(`/api/notifications/${encodeURIComponent(id)}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.message || "Unable to delete notification");
+                }
+
+                card.remove();
+                loadNotifications();
+            } catch (error) {
+                console.error(error);
+                showToast("Delete failed", error.message);
+            }
+        }
+
+        async function markAllRead() {
+            try {
+                const response = await fetch("/api/notifications/read-all", {
+                    method: "PUT",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error("Unable to mark notifications as read");
+                loadNotifications();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function updateBadge(count) {
+            const badge = document.getElementById("notificationBadge");
+            if (!count || count <= 0) {
+                badge.style.display = "none";
+                return;
+            }
+
+            badge.style.display = "flex";
+            badge.textContent = count > 99 ? "99+" : count;
+        }
+
+        function showToast(title, message) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toastTitle").textContent = title || "New notification";
+            document.getElementById("toastMessage").textContent = message || "";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 4000);
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "login.html";
+        }
+
+        loadNotifications();
+    </script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>My Profile — HeartMatch</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <style>
+      .save-status {
+        min-height: 22px;
+        margin-top: 10px;
+      }
+      .save-status.ok {
+        color: #7ee787;
+      }
+      .save-status.err {
+        color: #ff7b8a;
+      }
+      .btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="brand">❤️ <span>HeartMatch</span></div>
+      <div class="navlinks">
+        <a href="discover.html">Discover</a><a href="matches.html">Matches</a
+        ><a href="notifications.html">Notifications</a
+        ><a href="settings.html">Settings</a
+        ><button onclick="HM.logout()">Logout</button>
+      </div>
+    </nav>
+    <main class="wrap">
+      <div class="section-title">
+        <div>
+          <h1>My Profile</h1>
+          <p class="muted">Make your profile worth a right swipe. 💕</p>
+        </div>
+      </div>
+      <div class="two">
+        <section class="card" style="text-align: center">
+          <img id="avatar" class="avatar" alt="Profile photo" />
+          <h2 id="preview">Loading...</h2>
+          <p id="email" class="muted"></p>
+          <p id="verified" class="status"></p>
+          <hr style="border-color: var(--line); margin: 20px 0" />
+          <div class="field">
+            <label>Profile photo (JPG/PNG/WebP, max 5MB)</label
+            ><input
+              id="photo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+            />
+          </div>
+          <button id="uploadPhotoBtn" class="btn alt" type="button">
+            Upload photo 📸
+          </button>
+          <div id="photoMsg" class="msg"></div>
+        </section>
+        <section class="card">
+          <h2>Edit profile</h2>
+          <div class="field">
+            <label>Name</label><input id="name" autocomplete="name" />
+          </div>
+          <div class="two">
+            <div class="field">
+              <label>Age</label><input id="age" type="number" min="18" />
+            </div>
+            <div class="field">
+              <label>Gender</label
+              ><select id="gender">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Location</label
+            ><input id="location" placeholder="e.g. Greater Noida" />
+          </div>
+          <div class="field">
+            <label>Bio</label><textarea id="bio" maxlength="500"></textarea>
+          </div>
+          <div class="field">
+            <label>Interests (comma separated)</label
+            ><input id="interests" placeholder="Gaming, Coding, Cricket" />
+          </div>
+          <h3>Discovery preferences</h3>
+          <div class="two">
+            <div class="field">
+              <label>Minimum age</label
+              ><input id="minAge" type="number" min="18" max="100" />
+            </div>
+            <div class="field">
+              <label>Maximum age</label
+              ><input id="maxAge" type="number" min="18" max="100" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Interested in</label
+            ><select id="interestedIn">
+              <option value="any">Everyone</option>
+              <option value="male">Men</option>
+              <option value="female">Women</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Preferred location (optional)</label
+            ><input
+              id="prefLocation"
+              placeholder="Leave blank for any location"
+            />
+          </div>
+          <button
+            id="saveProfileBtn"
+            class="btn"
+            style="width: 100%"
+            type="button"
+          >
+            Save profile ❤️
+          </button>
+          <div id="msg" class="msg save-status" aria-live="polite"></div>
+        </section>
+      </div>
+    </main>
+    <script src="/js/app.js"></script>
+    <script>
+      HM.requireAuth();
+      const els = {
+        avatar: document.getElementById("avatar"),
+        preview: document.getElementById("preview"),
+        email: document.getElementById("email"),
+        verified: document.getElementById("verified"),
+        photo: document.getElementById("photo"),
+        photoMsg: document.getElementById("photoMsg"),
+        uploadPhotoBtn: document.getElementById("uploadPhotoBtn"),
+        name: document.getElementById("name"),
+        age: document.getElementById("age"),
+        gender: document.getElementById("gender"),
+        location: document.getElementById("location"),
+        bio: document.getElementById("bio"),
+        interests: document.getElementById("interests"),
+        minAge: document.getElementById("minAge"),
+        maxAge: document.getElementById("maxAge"),
+        interestedIn: document.getElementById("interestedIn"),
+        prefLocation: document.getElementById("prefLocation"),
+        saveBtn: document.getElementById("saveProfileBtn"),
+        msg: document.getElementById("msg"),
+      };
+      let user = null;
+      const fallback =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="70">❤️</text></svg>',
+        );
+      function setMsg(text, ok = false) {
+        els.msg.textContent = text;
+        els.msg.className = "msg save-status " + (ok ? "ok" : "err");
+      }
+      async function load() {
+        try {
+          const { r, d } = await HM.api("/api/profile");
+          if (!r.ok) {
+            setMsg(d.message || "Could not load profile");
+            return;
+          }
+          user = d.user || {};
+          els.name.value = user.name || "";
+          els.age.value = user.age ?? "";
+          els.gender.value = user.gender || "other";
+          els.location.value = user.location || "";
+          els.bio.value = user.bio || "";
+          els.interests.value = Array.isArray(user.interests)
+            ? user.interests.join(", ")
+            : "";
+          const p = user.preferences || {};
+          els.minAge.value = p.minAge ?? 18;
+          els.maxAge.value = p.maxAge ?? 100;
+          els.interestedIn.value = p.interestedIn || "any";
+          els.prefLocation.value = p.location || "";
+          els.preview.textContent = user.name
+            ? `${user.name}, ${user.age || ""}`
+            : "Your profile";
+          els.email.textContent = user.email || "";
+          els.verified.textContent = user.isVerified ? "✓ Email verified" : "";
+          els.avatar.src = user.profileImage || fallback;
+        } catch (e) {
+          console.error(e);
+          setMsg("Could not load profile. Please refresh.");
+        }
+      }
+      async function save() {
+        if (els.saveBtn.disabled) return;
+        const name = els.name.value.trim(),
+          age = Number(els.age.value),
+          minAge = Number(els.minAge.value),
+          maxAge = Number(els.maxAge.value);
+        if (!name) return setMsg("Please enter your name.");
+        if (!Number.isFinite(age) || age < 18)
+          return setMsg("Age must be 18 or above.");
+        if (
+          !Number.isFinite(minAge) ||
+          !Number.isFinite(maxAge) ||
+          minAge < 18 ||
+          maxAge < minAge
+        )
+          return setMsg("Please enter valid age preferences.");
+        const body = {
+          name,
+          age,
+          gender: els.gender.value,
+          location: els.location.value.trim(),
+          bio: els.bio.value.trim(),
+          interests: els.interests.value
+            .split(",")
+            .map((x) => x.trim())
+            .filter(Boolean),
+          preferences: {
+            minAge,
+            maxAge,
+            interestedIn: els.interestedIn.value,
+            location: els.prefLocation.value.trim(),
+          },
+        };
+        els.saveBtn.disabled = true;
+        els.saveBtn.textContent = "Saving...";
+        setMsg("Saving...", true);
+        try {
+          const { r, d } = await HM.api("/api/profile", {
+            method: "PUT",
+            body,
+          });
+          if (!r.ok) {
+            setMsg(d.message || "Could not save profile.");
+            return;
+          }
+          user = d.user || { ...user, ...body };
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ ...HM.user(), ...user }),
+          );
+          els.preview.textContent = `${body.name}, ${body.age}`;
+          setMsg(d.message || "Profile saved successfully ❤️", true);
+        } catch (e) {
+          console.error(e);
+          setMsg(
+            "Could not save profile. Check your connection and try again.",
+          );
+        } finally {
+          els.saveBtn.disabled = false;
+          els.saveBtn.textContent = "Save profile ❤️";
+        }
+      }
+      async function uploadPhoto() {
+        const f = els.photo.files?.[0];
+        if (!f) {
+          els.photoMsg.textContent = "Choose an image first";
+          return;
+        }
+        els.uploadPhotoBtn.disabled = true;
+        els.photoMsg.textContent = "Uploading...";
+        try {
+          const fd = new FormData();
+          fd.append("profileImage", f);
+          const { r, d } = await HM.api("/api/profile/photo", {
+            method: "POST",
+            body: fd,
+          });
+          els.photoMsg.textContent = d.message || "Done";
+          if (r.ok) {
+            els.avatar.src = d.profileImage;
+            user = { ...user, profileImage: d.profileImage };
+            localStorage.setItem(
+              "user",
+              JSON.stringify({ ...HM.user(), profileImage: d.profileImage }),
+            );
+          }
+        } catch (e) {
+          console.error(e);
+          els.photoMsg.textContent = "Upload failed. Please try again.";
+        } finally {
+          els.uploadPhotoBtn.disabled = false;
+        }
+      }
+      els.saveBtn.addEventListener("click", save);
+      els.uploadPhotoBtn.addEventListener("click", uploadPhoto);
+      load();
+    </script>
+  </body>
+</html>

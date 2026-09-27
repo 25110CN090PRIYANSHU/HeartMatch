@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Create account — HeartMatch</title><link rel="stylesheet" href="/css/app.css"></head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="login.html">Login</a></div></nav><main class="form card"><h1>Create your account</h1><p class="muted" style="text-align:center">You must be 18 or older.</p><div class="field"><label>Name</label><input id="name"></div><div class="two"><div class="field"><label>Age</label><input id="age" type="number" min="18"></div><div class="field"><label>Gender</label><select id="gender"><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div></div><div class="field"><label>Email</label><input id="email" type="email"></div><div class="field"><label>Password (8+ characters)</label><input id="password" type="password"></div><button class="btn" style="width:100%" onclick="signup()">Create account ❤️</button><div id="msg" class="msg"></div></main><script src="/js/app.js"></script><script>
+async function signup(){
+  const msg=document.getElementById("msg");
+  const name=document.getElementById("name").value.trim();
+  const age=document.getElementById("age").value;
+  const gender=document.getElementById("gender").value;
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!name||!age||!gender||!email||!password){msg.textContent="Please fill all fields";return;}
+  msg.textContent="Creating account...";
+  try{
+    const result=await HM.api("/api/auth/signup",{method:"POST",body:{name,age,gender,email,password}});
+    if(!result.r.ok){msg.textContent=result.d.message||"Signup failed";return;}
+    msg.textContent=result.d.message||"Account created successfully ❤️";
+    if(result.d.verificationUrl){const a=document.createElement("a");a.href=result.d.verificationUrl;a.textContent=" Verify email";a.style.display="block";a.style.marginTop="10px";msg.appendChild(a);}
+    setTimeout(()=>location.href="login.html",5000);
+  }catch(e){console.error(e);msg.textContent="Cannot connect to server. Open this page through http://localhost:5000";}
+}
+</script></body></html>

@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login — HeartMatch</title><link rel="stylesheet" href="/css/app.css"></head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="signup.html">Sign up</a></div></nav><main class="form card"><h1>Welcome back 💕</h1><p class="muted" style="text-align:center">Log in to continue.</p><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="login()">Login</button><div id="msg" class="msg"></div><p style="text-align:center"><a class="muted" href="forgot-password.html">Forgot password?</a></p></main><script src="/js/app.js"></script><script>
+async function login(){
+  const msg=document.getElementById("msg");
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email||!password){msg.textContent="Please enter email and password";return;}
+  msg.textContent="Logging in...";
+  try{
+    const result=await HM.api("/api/auth/login",{method:"POST",body:{email,password}});
+    if(!result.r.ok){msg.textContent=result.d.message||"Login failed";return;}
+    localStorage.setItem("token",result.d.token);localStorage.setItem("user",JSON.stringify(result.d.user));
+    location.href="discover.html";
+  }catch(e){console.error(e);msg.textContent="Cannot connect to server. Open this page through http://localhost:5000";}
+}
+</script></body></html>
