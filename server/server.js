@@ -163,7 +163,7 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
         })) {
             return res.status(403).json({ message: "This user is unavailable" });
         }
-        const user = await User.findById(id).select("name age gender location bio interests profileImage uniqueId");
+        const user = await User.findById(id).select("name age gender location bio interests profileImage");
         if (!user) return res.status(404).json({ message: "User not found" });
         res.json({ success: true, user });
     } catch (error) {
@@ -1262,7 +1262,7 @@ mongoose.connect(
     }
 )
 
-.then(async () => {
+.then(() => {
 
     console.log(
         "MongoDB connected successfully ✅"
@@ -1272,18 +1272,6 @@ mongoose.connect(
         "Database:",
         mongoose.connection.name
     );
-
-    // Backfill public HeartMatch IDs for accounts created before the ID feature.
-    // The User model generates a collision-safe ID during validation.
-    const usersMissingIds = await User.find({
-        $or: [{ uniqueId: { $exists: false } }, { uniqueId: null }, { uniqueId: "" }]
-    });
-    for (const legacyUser of usersMissingIds) {
-        await legacyUser.save();
-    }
-    if (usersMissingIds.length) {
-        console.log(`Backfilled ${usersMissingIds.length} HeartMatch IDs ✨`);
-    }
 
 
     const PORT =

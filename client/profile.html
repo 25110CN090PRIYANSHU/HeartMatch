@@ -44,7 +44,7 @@
           <img id="avatar" class="avatar" alt="Profile photo" />
           <h2 id="preview">Loading...</h2>
           <p id="email" class="muted"></p>
-          <p id="verified" class="status"></p><div class="profile-id-chip" id="profileIdChip">HeartMatch ID: <strong id="currentUniqueId">—</strong></div>
+          <p id="verified" class="status"></p>
           <hr style="border-color: var(--line); margin: 20px 0" />
           <div class="field">
             <label>Profile photo (JPG/PNG/WebP, max 5MB)</label
@@ -61,15 +61,6 @@
         </section>
         <section class="card">
           <h2>Edit profile</h2>
-          <div class="field unique-id-field">
-            <label>Unique HeartMatch ID</label>
-            <div class="unique-id-row">
-              <input id="uniqueId" maxlength="24" autocomplete="off" placeholder="e.g. harsh_2026" />
-              <button id="saveUniqueIdBtn" class="btn alt" type="button">Rename ID</button>
-            </div>
-            <small class="muted">4–24 characters. Letters, numbers, dot, underscore and hyphen only. This is what others can search.</small>
-            <div id="uniqueIdMsg" class="save-status" aria-live="polite"></div>
-          </div>
           <div class="field">
             <label>Name</label><input id="name" autocomplete="name" />
           </div>
@@ -144,10 +135,6 @@
         preview: document.getElementById("preview"),
         email: document.getElementById("email"),
         verified: document.getElementById("verified"),
-        uniqueId: document.getElementById("uniqueId"),
-        currentUniqueId: document.getElementById("currentUniqueId"),
-        saveUniqueIdBtn: document.getElementById("saveUniqueIdBtn"),
-        uniqueIdMsg: document.getElementById("uniqueIdMsg"),
         photo: document.getElementById("photo"),
         photoMsg: document.getElementById("photoMsg"),
         uploadPhotoBtn: document.getElementById("uploadPhotoBtn"),
@@ -183,8 +170,6 @@
           }
           user = d.user || {};
           els.name.value = user.name || "";
-          els.uniqueId.value = user.uniqueId || "";
-          els.currentUniqueId.textContent = user.uniqueId || "Generating…";
           els.age.value = user.age ?? "";
           els.gender.value = user.gender || "other";
           els.location.value = user.location || "";
@@ -270,37 +255,6 @@
           els.saveBtn.textContent = "Save profile ❤️";
         }
       }
-      async function saveUniqueId() {
-        const value = els.uniqueId.value.trim().toLowerCase();
-        els.uniqueIdMsg.textContent = "";
-        if (!/^[a-z0-9][a-z0-9._-]{3,23}$/.test(value)) {
-          els.uniqueIdMsg.textContent = "Use 4–24 letters, numbers, dot, underscore or hyphen.";
-          els.uniqueIdMsg.className = "save-status err";
-          return;
-        }
-        els.saveUniqueIdBtn.disabled = true;
-        els.saveUniqueIdBtn.textContent = "Saving…";
-        try {
-          const { r, d } = await HM.api("/api/profile/unique-id", { method: "PUT", body: { uniqueId: value } });
-          if (!r.ok) {
-            els.uniqueIdMsg.textContent = d.message || "Could not update ID.";
-            els.uniqueIdMsg.className = "save-status err";
-            return;
-          }
-          user = d.user || user;
-          els.uniqueId.value = value;
-          els.currentUniqueId.textContent = value;
-          localStorage.setItem("user", JSON.stringify({ ...HM.user(), ...user, uniqueId: value }));
-          els.uniqueIdMsg.textContent = "ID renamed successfully ✨";
-          els.uniqueIdMsg.className = "save-status ok";
-        } catch (e) {
-          els.uniqueIdMsg.textContent = "Could not update ID. Check your connection.";
-          els.uniqueIdMsg.className = "save-status err";
-        } finally {
-          els.saveUniqueIdBtn.disabled = false;
-          els.saveUniqueIdBtn.textContent = "Rename ID";
-        }
-      }
       async function uploadPhoto() {
         const f = els.photo.files?.[0];
         if (!f) {
@@ -333,10 +287,8 @@
         }
       }
       els.saveBtn.addEventListener("click", save);
-      els.saveUniqueIdBtn.addEventListener("click", saveUniqueId);
       els.uploadPhotoBtn.addEventListener("click", uploadPhoto);
       load();
     </script>
-  <script src="/js/global-call.js"></script>
-</body>
+  </body>
 </html>

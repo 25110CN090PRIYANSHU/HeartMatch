@@ -1,453 +1,571 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Matches — HeartMatch</title>
 
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
 
-      :root {
-        --pink: #ff4d8d;
-        --purple: #8b5cf6;
-        --dark: #08080d;
-        --border: rgba(255, 255, 255, 0.09);
-        --muted: #9999a8;
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --pink: #ff4d8d;
+            --purple: #8b5cf6;
+            --dark: #08080d;
+            --border: rgba(255,255,255,.09);
+            --muted: #9999a8;
+        }
+
+        body {
+            min-height: 100vh;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 15% 10%,
+                    rgba(139,92,246,.18),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(255,77,141,.14),
+                    transparent 30%
+                ),
+                #08080d;
+        }
+
+        /* NAVBAR */
 
-      body {
-        min-height: 100vh;
-        color: white;
-        font-family: Arial, Helvetica, sans-serif;
-
-        background:
-          radial-gradient(
-            circle at 15% 10%,
-            rgba(139, 92, 246, 0.18),
-            transparent 30%
-          ),
-          radial-gradient(
-            circle at 85% 20%,
-            rgba(255, 77, 141, 0.14),
-            transparent 30%
-          ),
-          #08080d;
-      }
-
-      /* NAVBAR */
-
-      .navbar {
-        height: 76px;
-        padding: 0 6%;
-
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        position: sticky;
-        top: 0;
-        z-index: 100;
-
-        background: rgba(8, 8, 13, 0.8);
-        backdrop-filter: blur(20px);
-
-        border-bottom: 1px solid var(--border);
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
-        font-size: 24px;
-        font-weight: 800;
-      }
-
-      .brand-icon {
-        width: 39px;
-        height: 39px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 12px;
-
-        background: linear-gradient(135deg, var(--pink), var(--purple));
-
-        box-shadow: 0 8px 25px rgba(255, 77, 141, 0.3);
-      }
-
-      .brand-name {
-        background: linear-gradient(90deg, white, #ff9cbd);
-
-        -webkit-background-clip: text;
-        color: transparent;
-      }
-
-      .nav-buttons {
-        display: flex;
-        gap: 10px;
-      }
-
-      .nav-btn {
-        padding: 11px 17px;
-
-        border-radius: 12px;
-
-        border: 1px solid var(--border);
-
-        background: rgba(255, 255, 255, 0.04);
-
-        color: white;
-
-        cursor: pointer;
-
-        transition: 0.25s;
-      }
-
-      .nav-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
-      }
-
-      /* PAGE */
-
-      .page {
-        width: min(1050px, 94%);
-        margin: auto;
-
-        padding: 45px 0 70px;
-      }
-
-      .heading {
-        text-align: center;
-        margin-bottom: 35px;
-      }
-
-      .heading h1 {
-        font-size: 40px;
-        margin-bottom: 10px;
-
-        background: linear-gradient(90deg, white, #ff9abb);
-
-        -webkit-background-clip: text;
-        color: transparent;
-      }
-
-      .heading p {
-        color: var(--muted);
-        font-size: 15px;
-      }
-
-      /* MATCH GRID */
-
-      #matches {
-        display: grid;
-
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-
-        gap: 22px;
-      }
-
-      /* CARD */
-
-      .match-card {
-        overflow: hidden;
-
-        border-radius: 25px;
-
-        background: linear-gradient(
-          145deg,
-          rgba(255, 255, 255, 0.075),
-          rgba(255, 255, 255, 0.025)
-        );
-
-        border: 1px solid var(--border);
-
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-
-        transition: 0.35s;
-      }
-
-      .match-card:hover {
-        transform: translateY(-8px);
-
-        border-color: rgba(255, 77, 141, 0.3);
-
-        box-shadow:
-          0 30px 70px rgba(0, 0, 0, 0.5),
-          0 0 35px rgba(255, 77, 141, 0.07);
-      }
-
-      /* IMAGE */
-
-      .photo {
-        height: 280px;
-
-        position: relative;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        overflow: hidden;
-
-        background: radial-gradient(circle, #54265e, #17121c);
-      }
-
-      .photo img {
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-
-        transition: 0.5s;
-      }
-
-      .match-card:hover .photo img {
-        transform: scale(1.05);
-      }
-
-      .default-photo {
-        font-size: 75px;
-      }
-
-      /* MATCH BADGE */
-
-      .match-badge {
-        position: absolute;
-
-        top: 15px;
-        left: 15px;
-
-        padding: 8px 12px;
-
-        border-radius: 30px;
-
-        background: rgba(8, 8, 13, 0.7);
-
-        backdrop-filter: blur(10px);
-
-        border: 1px solid rgba(255, 255, 255, 0.1);
-
-        color: #ff9abb;
-
-        font-size: 12px;
-
-        z-index: 2;
-      }
-
-      /* CARD BODY */
-
-      .card-body {
-        padding: 20px;
-      }
-
-      .name {
-        font-size: 23px;
-        font-weight: 750;
-
-        margin-bottom: 7px;
-      }
-
-      .location {
-        color: #aaaab7;
-        font-size: 13px;
-
-        margin-bottom: 17px;
-      }
-
-      .bio {
-        color: #c9c9d2;
-
-        font-size: 14px;
-
-        line-height: 1.6;
-
-        min-height: 45px;
-
-        margin-bottom: 18px;
-      }
-
-      /* CHAT BUTTON */
-
-      .chat-btn {
-        width: 100%;
-        height: 47px;
-
-        border: none;
-
-        border-radius: 13px;
-
-        background: linear-gradient(135deg, var(--pink), #ff315e);
-
-        color: white;
-
-        font-weight: bold;
-
-        font-size: 14px;
-
-        cursor: pointer;
-
-        box-shadow: 0 10px 25px rgba(255, 49, 94, 0.2);
-
-        transition: 0.25s;
-      }
-
-      .chat-btn:hover {
-        transform: translateY(-2px);
-
-        box-shadow: 0 15px 35px rgba(255, 49, 94, 0.3);
-      }
-
-      /* EMPTY */
-
-      .empty {
-        grid-column: 1 / -1;
-
-        text-align: center;
-
-        padding: 80px 20px;
-
-        border: 1px solid var(--border);
-
-        border-radius: 25px;
-
-        background: rgba(255, 255, 255, 0.025);
-      }
-
-      .empty-icon {
-        font-size: 60px;
-        margin-bottom: 20px;
-      }
-
-      .empty h2 {
-        margin-bottom: 10px;
-      }
-
-      .empty p {
-        color: var(--muted);
-      }
-
-      /* MOBILE */
-
-      @media (max-width: 650px) {
         .navbar {
-          height: auto;
-          min-height: 76px;
-          padding: 12px 18px;
-          gap: 10px;
-          flex-wrap: wrap;
+            height: 76px;
+            padding: 0 6%;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            position: sticky;
+            top: 0;
+            z-index: 100;
+
+            background: rgba(8,8,13,.8);
+            backdrop-filter: blur(20px);
+
+            border-bottom: 1px solid var(--border);
         }
 
         .brand {
-          font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            font-size: 24px;
+            font-weight: 800;
         }
 
-        .nav-btn {
-          padding: 10px 12px;
+        .brand-icon {
+            width: 39px;
+            height: 39px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--pink),
+                    var(--purple)
+                );
+
+            box-shadow:
+                0 8px 25px rgba(255,77,141,.3);
+        }
+
+        .brand-name {
+            background:
+                linear-gradient(
+                    90deg,
+                    white,
+                    #ff9cbd
+                );
+
+            -webkit-background-clip: text;
+            color: transparent;
         }
 
         .nav-buttons {
-          width: 100%;
-          overflow-x: auto;
-          padding-bottom: 2px;
-          scrollbar-width: none;
+            display: flex;
+            gap: 10px;
         }
 
-        .nav-buttons::-webkit-scrollbar {
-          display: none;
+        .nav-btn {
+            padding: 11px 17px;
+
+            border-radius: 12px;
+
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,.04);
+
+            color: white;
+
+            cursor: pointer;
+
+            transition: .25s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,.1);
+            transform: translateY(-2px);
+        }
+
+        /* PAGE */
+
+        .page {
+            width: min(1050px, 94%);
+            margin: auto;
+
+            padding: 45px 0 70px;
+        }
+
+        .heading {
+            text-align: center;
+            margin-bottom: 35px;
         }
 
         .heading h1 {
-          font-size: 31px;
+            font-size: 40px;
+            margin-bottom: 10px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    white,
+                    #ff9abb
+                );
+
+            -webkit-background-clip: text;
+            color: transparent;
         }
 
-        .page {
-          width: calc(100% - 24px);
-          padding-top: 28px;
+        .heading p {
+            color: var(--muted);
+            font-size: 15px;
         }
+
+        /* MATCH GRID */
 
         #matches {
-          grid-template-columns: 1fr;
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit, minmax(260px, 1fr));
+
+            gap: 22px;
         }
+
+        /* CARD */
+
+        .match-card {
+
+            overflow: hidden;
+
+            border-radius: 25px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.075),
+                    rgba(255,255,255,.025)
+                );
+
+            border: 1px solid var(--border);
+
+            box-shadow:
+                0 20px 60px rgba(0,0,0,.35);
+
+            transition: .35s;
+        }
+
+        .match-card:hover {
+            transform: translateY(-8px);
+
+            border-color:
+                rgba(255,77,141,.3);
+
+            box-shadow:
+                0 30px 70px rgba(0,0,0,.5),
+                0 0 35px rgba(255,77,141,.07);
+        }
+
+        /* IMAGE */
 
         .photo {
-          height: min(280px, 72vw);
-        }
-      }
-    </style>
-  </head>
+            height: 280px;
 
-  <body>
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    circle,
+                    #54265e,
+                    #17121c
+                );
+        }
+
+        .photo img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+
+            transition: .5s;
+        }
+
+        .match-card:hover .photo img {
+            transform: scale(1.05);
+        }
+
+        .default-photo {
+            font-size: 75px;
+        }
+
+        /* MATCH BADGE */
+
+        .match-badge {
+
+            position: absolute;
+
+            top: 15px;
+            left: 15px;
+
+            padding: 8px 12px;
+
+            border-radius: 30px;
+
+            background:
+                rgba(8,8,13,.7);
+
+            backdrop-filter: blur(10px);
+
+            border:
+                1px solid rgba(255,255,255,.1);
+
+            color: #ff9abb;
+
+            font-size: 12px;
+
+            z-index: 2;
+        }
+
+        /* CARD BODY */
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .name {
+            font-size: 23px;
+            font-weight: 750;
+
+            margin-bottom: 7px;
+        }
+
+        .location {
+            color: #aaaab7;
+            font-size: 13px;
+
+            margin-bottom: 17px;
+        }
+
+        .bio {
+            color: #c9c9d2;
+
+            font-size: 14px;
+
+            line-height: 1.6;
+
+            min-height: 45px;
+
+            margin-bottom: 18px;
+        }
+
+        /* CHAT BUTTON */
+
+        .chat-btn {
+
+            width: 100%;
+            height: 47px;
+
+            border: none;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--pink),
+                    #ff315e
+                );
+
+            color: white;
+
+            font-weight: bold;
+
+            font-size: 14px;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 10px 25px rgba(255,49,94,.2);
+
+            transition: .25s;
+        }
+
+        .chat-btn:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 15px 35px rgba(255,49,94,.3);
+        }
+
+        /* EMPTY */
+
+        .empty {
+
+            grid-column: 1 / -1;
+
+            text-align: center;
+
+            padding: 80px 20px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 25px;
+
+            background:
+                rgba(255,255,255,.025);
+        }
+
+        .empty-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .empty h2 {
+            margin-bottom: 10px;
+        }
+
+        .empty p {
+            color: var(--muted);
+        }
+
+        /* MOBILE */
+
+        @media(max-width: 650px) {
+
+            .navbar {
+                height: auto;
+                min-height: 76px;
+                padding: 12px 18px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .brand {
+                font-size: 20px;
+            }
+
+            .nav-btn {
+                padding: 10px 12px;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 2px;
+                scrollbar-width: none;
+            }
+
+            .nav-buttons::-webkit-scrollbar {
+                display: none;
+            }
+
+            .heading h1 {
+                font-size: 31px;
+            }
+
+            .page {
+                width: calc(100% - 24px);
+                padding-top: 28px;
+            }
+
+            #matches {
+                grid-template-columns: 1fr;
+            }
+
+            .photo {
+                height: min(280px, 72vw);
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
     <!-- NAVBAR -->
 
     <nav class="navbar">
-      <div class="brand">
-        <div class="brand-icon">❤️</div>
 
-        <div class="brand-name">HeartMatch</div>
-      </div>
+        <div class="brand">
 
-      <div class="nav-buttons">
-        <button class="nav-btn" onclick="goDiscover()">Discover</button>
+            <div class="brand-icon">
+                ❤️
+            </div>
 
-        <button class="nav-btn" onclick="goProfile()">Profile</button>
+            <div class="brand-name">
+                HeartMatch
+            </div>
 
-        <button class="nav-btn" onclick="logout()">Logout</button>
-      </div>
+        </div>
+
+
+        <div class="nav-buttons">
+
+            <button
+                class="nav-btn"
+                onclick="goDiscover()"
+            >
+                Discover
+            </button>
+
+            <button
+                class="nav-btn"
+                onclick="goProfile()"
+            >
+                Profile
+            </button>
+
+            <button
+                class="nav-btn"
+                onclick="logout()"
+            >
+                Logout
+            </button>
+
+        </div>
+
     </nav>
+
 
     <!-- PAGE -->
 
     <main class="page">
-      <section class="heading">
-        <h1>Your Matches 💕</h1>
 
-        <p>People who liked you back.</p>
-      </section>
 
-      <div id="matches">
-        <div class="empty">
-          <div class="empty-icon">💕</div>
+        <section class="heading">
 
-          <h2>Loading your matches...</h2>
+            <h1>
+                Your Matches 💕
+            </h1>
 
-          <p>Looking for your connections.</p>
+            <p>
+                People who liked you back.
+            </p>
+
+        </section>
+
+
+        <div id="matches">
+
+            <div class="empty">
+
+                <div class="empty-icon">
+                    💕
+                </div>
+
+                <h2>
+                    Loading your matches...
+                </h2>
+
+                <p>
+                    Looking for your connections.
+                </p>
+
+            </div>
+
         </div>
-      </div>
+
+
     </main>
 
+
     <script>
-      const token = localStorage.getItem("token");
 
-      if (!token) {
-        window.location.href = "login.html";
-      }
 
-      async function loadMatches() {
-        const container = document.getElementById("matches");
+        const token =
+            localStorage.getItem("token");
 
-        try {
-          const response = await fetch("/api/matches", {
-            method: "GET",
 
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+        if (!token) {
 
-          const data = await response.json();
+            window.location.href =
+                "login.html";
 
-          if (!response.ok) {
-            container.innerHTML = `
+        }
+
+
+        async function loadMatches() {
+
+            const container =
+                document.getElementById("matches");
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/matches",
+                        {
+                            method: "GET",
+
+                            headers: {
+                                "Authorization":
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    container.innerHTML = `
 
                         <div class="empty">
 
@@ -463,13 +581,20 @@
 
                     `;
 
-            return;
-          }
+                    return;
 
-          container.innerHTML = "";
+                }
 
-          if (!data.matches || data.matches.length === 0) {
-            container.innerHTML = `
+
+                container.innerHTML = "";
+
+
+                if (
+                    !data.matches ||
+                    data.matches.length === 0
+                ) {
+
+                    container.innerHTML = `
 
                         <div class="empty">
 
@@ -490,36 +615,52 @@
 
                     `;
 
-            return;
-          }
+                    return;
 
-          data.matches.forEach((user) => {
-            const card = document.createElement("div");
+                }
 
-            card.className = "match-card";
 
-            let photo;
+                data.matches.forEach(user => {
 
-            if (user.profileImage) {
-              photo = `
+
+                    const card =
+                        document.createElement("div");
+
+
+                    card.className =
+                        "match-card";
+
+
+                    let photo;
+
+
+                    if (user.profileImage) {
+
+                        photo = `
 
                             <img
-                                src="${escapeAttribute(user.profileImage)}"
+                                src="${escapeAttribute(
+                                    user.profileImage
+                                )}"
                                 alt="Profile photo"
                             >
 
                         `;
-            } else {
-              photo = `
+
+                    } else {
+
+                        photo = `
 
                             <div class="default-photo">
                                 ❤️
                             </div>
 
                         `;
-            }
 
-            card.innerHTML = `
+                    }
+
+
+                    card.innerHTML = `
 
                         <div class="photo">
 
@@ -546,7 +687,8 @@
 
                                 📍
                                 ${escapeHTML(
-                                  user.location || "Location not specified",
+                                    user.location ||
+                                    "Location not specified"
                                 )}
 
                             </div>
@@ -555,8 +697,8 @@
                             <div class="bio">
 
                                 ${escapeHTML(
-                                  user.bio ||
-                                    "Say hello and start getting to know each other. 💕",
+                                    user.bio ||
+                                    "Say hello and start getting to know each other. 💕"
                                 )}
 
                             </div>
@@ -575,12 +717,17 @@
 
                     `;
 
-            container.appendChild(card);
-          });
-        } catch (error) {
-          console.error(error);
 
-          container.innerHTML = `
+                    container.appendChild(card);
+
+                });
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                container.innerHTML = `
 
                     <div class="empty">
 
@@ -599,59 +746,87 @@
                     </div>
 
                 `;
-        }
-      }
 
-      function openChat(userId) {
-        /*
+            }
+
+        }
+
+
+        function openChat(userId) {
+
+            /*
                 We'll connect this to the real
                 Socket.IO chat system next.
             */
 
-        window.location.href = `chat.html?user=${userId}`;
-      }
+            window.location.href =
+                `chat.html?user=${userId}`;
 
-      function goDiscover() {
-        window.location.href = "discover.html";
-      }
+        }
 
-      function goProfile() {
-        window.location.href = "profile.html";
-      }
 
-      function logout() {
-        localStorage.removeItem("token");
+        function goDiscover() {
 
-        localStorage.removeItem("user");
+            window.location.href =
+                "discover.html";
 
-        window.location.href = "login.html";
-      }
+        }
 
-      function escapeHTML(value) {
-        return String(value)
-          .replace(/&/g, "&amp;")
 
-          .replace(/</g, "&lt;")
+        function goProfile() {
 
-          .replace(/>/g, "&gt;")
+            window.location.href =
+                "profile.html";
 
-          .replace(/"/g, "&quot;")
+        }
 
-          .replace(/'/g, "&#039;");
-      }
 
-      function escapeAttribute(value) {
-        return String(value)
-          .replace(/"/g, "&quot;")
+        function logout() {
 
-          .replace(/</g, "&lt;")
+            localStorage.removeItem("token");
 
-          .replace(/>/g, "&gt;");
-      }
+            localStorage.removeItem("user");
 
-      loadMatches();
+            window.location.href =
+                "login.html";
+
+        }
+
+
+        function escapeHTML(value) {
+
+            return String(value)
+
+                .replace(/&/g, "&amp;")
+
+                .replace(/</g, "&lt;")
+
+                .replace(/>/g, "&gt;")
+
+                .replace(/"/g, "&quot;")
+
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        function escapeAttribute(value) {
+
+            return String(value)
+
+                .replace(/"/g, "&quot;")
+
+                .replace(/</g, "&lt;")
+
+                .replace(/>/g, "&gt;");
+
+        }
+
+
+        loadMatches();
+
     </script>
 
-    <script src="/js/global-call.js"></script>
-  </body>
+</body>
+
 </html>

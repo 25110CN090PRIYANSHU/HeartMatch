@@ -947,57 +947,7 @@
           bottom: 20px;
         }
       }
-    
-      /* Premium chat motion + composer polish */
-      .chat-container {
-        box-shadow: 0 28px 90px rgba(0,0,0,.38);
-        animation: chatShellIn .45s cubic-bezier(.22,1,.36,1);
-      }
-      @keyframes chatShellIn { from { opacity:0; transform:translateY(12px) scale(.99); } to { opacity:1; transform:none; } }
-      .message-row {
-        animation: bubbleIn .28s cubic-bezier(.22,1,.36,1) both;
-      }
-      @keyframes bubbleIn {
-        from { opacity:0; transform:translateY(7px) scale(.985); }
-        to { opacity:1; transform:none; }
-      }
-      .message {
-        box-shadow: 0 7px 20px rgba(0,0,0,.12);
-        transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, filter .18s ease;
-      }
-      .message:hover { box-shadow: 0 10px 25px rgba(0,0,0,.18); }
-      .chat-input {
-        padding: 11px 14px;
-        gap: 8px;
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-      }
-      .chat-input input {
-        min-height: 48px;
-        border: 1px solid rgba(255,255,255,.06);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
-        transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
-      }
-      .chat-input input:focus {
-        border-color: rgba(255,77,141,.42);
-        box-shadow: 0 0 0 4px rgba(255,77,141,.07);
-        transform: translateY(-1px);
-      }
-      .send-btn {
-        flex: 0 0 48px;
-        transition: transform .2s cubic-bezier(.2,.85,.25,1.25), box-shadow .2s ease, filter .2s ease;
-      }
-      .send-btn:hover { transform: translateY(-2px) scale(1.06); box-shadow: 0 10px 25px rgba(255,63,142,.3); }
-      .call-btn { transition: transform .2s ease, background .2s ease; }
-      .call-btn:active, .send-btn:active { transform: scale(.92); }
-      .messages { scroll-behavior: smooth; overscroll-behavior: contain; }
-      .attach-menu {
-        transform-origin: bottom left;
-        animation: none;
-      }
-      .attach-menu.open { animation: attachIn .2s cubic-bezier(.22,1,.36,1); }
-      @keyframes attachIn { from { opacity:0; transform:translateY(8px) scale(.96); } to { opacity:1; transform:none; } }
-</style>
+    </style>
   </head>
 
   <body>
@@ -2664,50 +2614,50 @@ function setupPeer(target) {
   // REMOTE TRACK
   // ----------------------------------------------
 
-peer.ontrack = async (event) => {
-  console.log("🎥/🔊 Remote track received:", event.track.kind);
+  // ----------------------------------------------
+// REMOTE TRACK
+// ----------------------------------------------
 
-  if (!event.streams?.[0]) return;
+peer.ontrack = (event) => {
+    console.log("🎥 REMOTE TRACK RECEIVED", event);
 
-  const remoteStream = event.streams[0];
-
-  // Video
-  if (event.track.kind === "video" && remoteVideo) {
-    remoteVideo.srcObject = remoteStream;
-
-    try {
-      await remoteVideo.play();
-      console.log("▶️ Remote video playing");
-    } catch (error) {
-      console.warn("Video play error:", error);
-    }
-  }
-
-  // Audio
-  if (event.track.kind === "audio") {
-    let remoteAudio = document.getElementById("remoteAudio");
-
-    if (!remoteAudio) {
-      remoteAudio = document.createElement("audio");
-      remoteAudio.id = "remoteAudio";
-      remoteAudio.autoplay = true;
-      remoteAudio.playsInline = true;
-      remoteAudio.style.display = "none";
-
-      document.body.appendChild(remoteAudio);
+    if (!remoteVideo || !event.track) {
+      console.warn("⚠️ Remote video element or track missing");
+      return;
     }
 
-    remoteAudio.srcObject = remoteStream;
-
-    try {
-      await remoteAudio.play();
-      console.log("🔊 Remote audio playing");
-    } catch (error) {
-      console.error("🔊 Audio play error:", error);
+    // Keep one stable MediaStream for both audio and video tracks.
+    // Do not repeatedly replace srcObject or call play() from ontrack;
+    // doing so can race with the browser's media load and cause the
+    // "play() request was interrupted by a new load request" warning.
+    if (!remoteMediaStream) {
+      remoteMediaStream = new MediaStream();
+      remoteVideo.srcObject = remoteMediaStream;
+      remoteVideo.autoplay = true;
+      remoteVideo.playsInline = true;
+      console.log("🎥 Created remote MediaStream");
     }
-  }
-};
 
+    const alreadyAdded = remoteMediaStream
+      .getTracks()
+      .some((track) => track.id === event.track.id);
+
+    if (!alreadyAdded) {
+      remoteMediaStream.addTrack(event.track);
+      console.log(
+        "🎥 Added remote track:",
+        event.track.kind,
+        event.track.id
+      );
+    }
+
+    // The <video autoplay playsinline> element handles playback.
+    // No explicit play() call is needed here.
+    console.log(
+      "🎥 Remote stream attached:",
+      remoteMediaStream.getTracks().map((track) => track.kind)
+    );
+  };
 
 
   // ----------------------------------------------
