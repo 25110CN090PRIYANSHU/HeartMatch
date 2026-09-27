@@ -12,6 +12,7 @@ const safeUser = (u) => ({
   id: u._id,
   name: u.name,
   email: u.email,
+  uniqueId: u.uniqueId,
   age: u.age,
   gender: u.gender,
   profileImage: u.profileImage,

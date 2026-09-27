@@ -40,6 +40,32 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Change the public HeartMatch ID. IDs are intentionally separate from MongoDB _id.
+router.put("/unique-id", authMiddleware, async (req, res) => {
+  try {
+    const raw = String(req.body?.uniqueId || "").trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9._-]{3,23}$/.test(raw)) {
+      return res.status(400).json({
+        message: "ID must be 4–24 characters and use only letters, numbers, dot, underscore or hyphen."
+      });
+    }
+    const exists = await User.findOne({ uniqueId: raw, _id: { $ne: req.userId } }).select("_id");
+    if (exists) return res.status(409).json({ message: "That HeartMatch ID is already taken." });
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    user.uniqueId = raw;
+    await user.save();
+    const safe = user.toObject();
+    delete safe.password;
+    res.json({ message: "HeartMatch ID updated successfully ✨", user: safe });
+  } catch (e) {
+    console.error("Unique ID update error:", e);
+    if (e?.code === 11000) return res.status(409).json({ message: "That HeartMatch ID is already taken." });
+    res.status(400).json({ message: e.message || "Could not update HeartMatch ID" });
+  }
+});
+
 router.put("/", authMiddleware, async (req, res) => {
   try {
     const allowed = [

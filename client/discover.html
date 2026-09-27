@@ -1,1 +1,36 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Discover — HeartMatch</title><link rel="stylesheet" href="/css/app.css"></head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="profile.html">Profile</a><a href="matches.html">Matches</a><a href="notifications.html">Notifications</a><a href="settings.html">Settings</a><button onclick="HM.logout()">Logout</button></div></nav><main class="wrap"><div class="section-title"><div><h1>Discover</h1><p class="muted">People matching your preferences.</p></div><button class="btn ghost" onclick="load()">Refresh</button></div><div id="msg" class="msg"></div><div id="grid" class="grid"></div></main><script src="/js/app.js"></script><script>HM.requireAuth();const grid=document.getElementById('grid');async function load(){grid.innerHTML='<div class="card">Finding people... 💕</div>';const {r,d}=await HM.api('/api/discover');if(!r.ok){grid.innerHTML='';msg.textContent=d.message;return}if(!d.users.length){grid.innerHTML='<div class="card"><h2>No new profiles right now.</h2><p class="muted">Try widening your preferences in Profile.</p></div>';return}grid.innerHTML=d.users.map(u=>`<article class="card"><img class="profile-img" src="${HM.esc(u.profileImage||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'))}" alt="Profile"><h3>${HM.esc(u.name)}, ${u.age} ${u.isVerified?'✓':''}</h3><p class="muted">${HM.esc(u.location||'Location not set')}</p><p>${HM.esc(u.bio||'No bio yet.')}</p><div class="tags">${(u.interests||[]).slice(0,6).map(i=>`<span class="tag">${HM.esc(i)}</span>`).join('')}</div><div class="card-actions"><button class="btn ghost" onclick="act('${u._id}','pass',this)">Pass</button><button class="btn" onclick="act('${u._id}','like',this)">Like ❤️</button></div><div style="display:flex;gap:8px;margin-top:9px"><button class="btn ghost" style="flex:1" onclick="blockUser('${u._id}')">Block</button><button class="btn ghost" style="flex:1" onclick="reportUser('${u._id}')">Report</button></div></article>`).join('')}async function act(id,type,b){b.disabled=true;const {r,d}=await HM.api('/api/likes',{method:'POST',body:{to:id,type}});if(!r.ok)alert(d.message||'Action failed');await load()}async function blockUser(id){if(!confirm('Block this user?'))return;const {d}=await HM.api('/api/blocks/'+id,{method:'POST'});alert(d.message||'Blocked');load()}async function reportUser(id){const reason=prompt('Why are you reporting this profile?');if(!reason)return;const {d}=await HM.api('/api/reports/'+id,{method:'POST',body:{reason}});alert(d.message||'Report sent')}load();</script></body></html>
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Discover — HeartMatch</title><link rel="stylesheet" href="/css/app.css"></head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="profile.html">Profile</a><a href="matches.html">Matches</a><a href="notifications.html">Notifications</a><a href="settings.html">Settings</a><button onclick="HM.logout()">Logout</button></div></nav><main class="wrap"><div class="section-title"><div><h1>Discover</h1><p class="muted">People matching your preferences.</p></div><button class="btn ghost" onclick="load()">Refresh</button></div><section class="discover-search card">
+  <div>
+    <span class="eyebrow">FIND SOMEONE</span>
+    <h2>Search by HeartMatch ID</h2>
+    <p class="muted">Have their unique ID? Jump straight to their profile.</p>
+  </div>
+  <form id="idSearchForm" class="id-search-form">
+    <input id="uniqueIdSearch" maxlength="24" placeholder="e.g. hm_7K3Q2A9P" autocomplete="off" />
+    <button class="btn" type="submit">Search 🔎</button>
+  </form>
+  <div id="idSearchMsg" class="search-msg" aria-live="polite"></div>
+</section>
+<div id="msg" class="msg"></div><div id="grid" class="grid"></div></main><script src="/js/app.js"></script><script>HM.requireAuth();const grid=document.getElementById('grid');async function load(){grid.innerHTML='<div class="card">Finding people... 💕</div>';const {r,d}=await HM.api('/api/discover');if(!r.ok){grid.innerHTML='';msg.textContent=d.message;return}if(!d.users.length){grid.innerHTML='<div class="card"><h2>No new profiles right now.</h2><p class="muted">Try widening your preferences in Profile.</p></div>';return}grid.innerHTML=d.users.map(u=>`<article class="card"><img class="profile-img" src="${HM.esc(u.profileImage||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'))}" alt="Profile"><h3>${HM.esc(u.name)}, ${u.age} ${u.isVerified?'✓':''}</h3><p class="unique-id-line">@${HM.esc(u.uniqueId||"no-id")}</p><p class="muted">${HM.esc(u.location||'Location not set')}</p><p>${HM.esc(u.bio||'No bio yet.')}</p><div class="tags">${(u.interests||[]).slice(0,6).map(i=>`<span class="tag">${HM.esc(i)}</span>`).join('')}</div><div class="card-actions"><button class="btn ghost" onclick="act('${u._id}','pass',this)">Pass</button><button class="btn" onclick="act('${u._id}','like',this)">Like ❤️</button></div><div style="display:flex;gap:8px;margin-top:9px"><button class="btn ghost" style="flex:1" onclick="blockUser('${u._id}')">Block</button><button class="btn ghost" style="flex:1" onclick="reportUser('${u._id}')">Report</button></div></article>`).join('')}async function act(id,type,b){b.disabled=true;const {r,d}=await HM.api('/api/likes',{method:'POST',body:{to:id,type}});if(!r.ok)alert(d.message||'Action failed');await load()}async function blockUser(id){if(!confirm('Block this user?'))return;const {d}=await HM.api('/api/blocks/'+id,{method:'POST'});alert(d.message||'Blocked');load()}async function reportUser(id){const reason=prompt('Why are you reporting this profile?');if(!reason)return;const {d}=await HM.api('/api/reports/'+id,{method:'POST',body:{reason}});alert(d.message||'Report sent')}document.getElementById("idSearchForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = document.getElementById("uniqueIdSearch");
+  const status = document.getElementById("idSearchMsg");
+  const id = input.value.trim().toLowerCase();
+  status.textContent = "Searching…";
+  status.className = "search-msg loading";
+  if (!/^[a-z0-9][a-z0-9._-]{3,23}$/.test(id)) {
+    status.textContent = "Enter a valid HeartMatch ID.";
+    status.className = "search-msg error";
+    return;
+  }
+  const {r,d} = await HM.api("/api/discover/id/" + encodeURIComponent(id));
+  if (!r.ok) {
+    status.textContent = d.message || "No user found.";
+    status.className = "search-msg error";
+    return;
+  }
+  status.textContent = "Profile found — opening…";
+  status.className = "search-msg success";
+  window.location.href = "person.html?id=" + encodeURIComponent(d.user._id);
+});
+load();</script><script src="/js/global-call.js"></script>
+</body></html>
