@@ -167,18 +167,30 @@
     }
 
     async function act(id, type, button) {
+      const card = button?.closest("article.card");
       button.disabled = true;
       try {
         const { r, d } = await HM.api("/api/likes", {
           method: "POST",
           body: { to: id, type }
         });
-        if (!r.ok) alert(d?.message || "Action failed");
+        if (!r.ok) {
+          alert(d?.message || "Action failed");
+          button.disabled = false;
+          return;
+        }
+
+        // Remove the acted-on profile immediately. The server also excludes
+        // acted-on users on the next Discover refresh.
+        card?.remove();
+        if (!grid.querySelector("article.card")) {
+          grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+        }
       } catch (error) {
         console.error(error);
         alert("Action failed. Please try again.");
+        button.disabled = false;
       }
-      await load();
     }
 
     async function blockUser(id) {

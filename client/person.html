@@ -428,7 +428,7 @@
                     .addEventListener("click", () => {
                         window.location.href =
                             "chat.html?user=" +
-                            encodeURIComponent(id);
+                            encodeURIComponent(user._id || id);
                     });
             } catch (error) {
                 card.innerHTML = `

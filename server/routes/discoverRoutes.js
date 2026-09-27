@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/User");
 const Block = require("../models/Block");
+const Like = require("../models/Like");
 const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
@@ -11,6 +12,11 @@ router.get("/", authMiddleware, async (req, res) => {
     }).select("blocker blocked");
 
     const excluded = new Set([String(req.userId)]);
+
+    // Hide users that I have already liked or passed.
+    const actedOn = await Like.find({ from: req.userId }).select("to");
+    actedOn.forEach((item) => excluded.add(String(item.to)));
+
     blocked.forEach((b) => {
       excluded.add(String(b.blocker));
       excluded.add(String(b.blocked));

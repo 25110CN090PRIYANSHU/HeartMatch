@@ -15,13 +15,24 @@ router.get("/:userId", authMiddleware, async (req, res) => {
 
     try {
 
-        const otherUserId = req.params.userId;
+        const requestedUserId = String(req.params.userId || "").trim();
+        let otherUser;
 
-        if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
-            return res.status(400).json({
-                message: "Invalid user ID"
+        // Chat links may contain either the MongoDB _id or the user's public
+        // HeartMatch User ID. Resolve the public ID to the real _id first.
+        if (mongoose.Types.ObjectId.isValid(requestedUserId)) {
+            otherUser = await User.findById(requestedUserId).select("-password");
+        } else {
+            otherUser = await User.findOne({ userId: requestedUserId.toLowerCase(), isActive: true }).select("-password");
+        }
+
+        if (!otherUser) {
+            return res.status(404).json({
+                message: "User not found"
             });
         }
+
+        const otherUserId = otherUser._id.toString();
 
         if (otherUserId === req.userId.toString()) {
             return res.status(400).json({
@@ -61,15 +72,6 @@ router.get("/:userId", authMiddleware, async (req, res) => {
         if (!myLike || !theirLike) {
             return res.status(403).json({
                 message: "You can only chat with your matches"
-            });
-        }
-
-        const otherUser = await User.findById(otherUserId)
-            .select("-password");
-
-        if (!otherUser) {
-            return res.status(404).json({
-                message: "User not found"
             });
         }
 

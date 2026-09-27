@@ -1196,7 +1196,7 @@
 
       const params = new URLSearchParams(window.location.search);
 
-      const otherUserId = params.get("user");
+      let otherUserId = params.get("user");
 
       // =========================
       // LOGIN CHECK
@@ -1333,6 +1333,12 @@
           // =========================
           // USER INFORMATION
           // =========================
+
+          // Convert a public HeartMatch User ID from the URL to the
+          // MongoDB _id used by Socket.IO message/call events.
+          if (data.user?._id) {
+            otherUserId = data.user._id.toString();
+          }
 
           userName.textContent = `${data.user.name}, ${data.user.age}`;
 
