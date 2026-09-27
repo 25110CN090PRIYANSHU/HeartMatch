@@ -2251,32 +2251,110 @@
         });
       }
 
-      function setupPeer(target) {
-        peer = new RTCPeerConnection(rtcConfig);
-        peer.ontrack = (event) => {
-          if (remoteVideo && event.streams?.[0])
-            remoteVideo.srcObject = event.streams[0];
-        };
-        peer.onicecandidate = (event) => {
-          if (event.candidate && socket?.connected && target) {
-            socket.emit("callIce", { to: target, candidate: event.candidate });
-          }
-        };
-        peer.onconnectionstatechange = () => {
-          const state = peer?.connectionState;
-          if (state === "connected" && callStatus)
-            callStatus.textContent = "Connected";
-          if (
-            ["failed", "disconnected", "closed"].includes(state) &&
-            callTarget
-          ) {
-            if (callStatus)
-              callStatus.textContent =
-                state === "failed" ? "Connection failed" : "Disconnected";
-          }
-        };
-        return peer;
+     function setupPeer(target) {
+  peer = new RTCPeerConnection(rtcConfig);
+
+  console.log("🟢 RTCPeerConnection created");
+  console.log("🟢 ICE servers:", rtcConfig.iceServers);
+
+  peer.ontrack = (event) => {
+    console.log("🎥 REMOTE TRACK RECEIVED", event);
+
+    if (remoteVideo && event.streams?.[0]) {
+      console.log("🎥 Setting remote video stream");
+
+      remoteVideo.srcObject = event.streams[0];
+
+      remoteVideo
+        .play()
+        .then(() => {
+          console.log("▶️ Remote video playing");
+        })
+        .catch((error) => {
+          console.warn("⚠️ Remote video play error:", error);
+        });
+    }
+  };
+
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log(
+        "🧊 Local ICE candidate:",
+        event.candidate.candidate
+      );
+
+      if (socket?.connected && target) {
+        socket.emit("callIce", {
+          to: target,
+          candidate: event.candidate
+        });
       }
+    } else {
+      console.log("🧊 ICE candidate gathering finished");
+    }
+  };
+
+  peer.oniceconnectionstatechange = () => {
+    console.log(
+      "🧊 ICE connection state:",
+      peer.iceConnectionState
+    );
+  };
+
+  peer.onicegatheringstatechange = () => {
+    console.log(
+      "🧊 ICE gathering state:",
+      peer.iceGatheringState
+    );
+  };
+
+  peer.onsignalingstatechange = () => {
+    console.log(
+      "📡 Signaling state:",
+      peer.signalingState
+    );
+  };
+
+  peer.onconnectionstatechange = () => {
+    const state = peer?.connectionState;
+
+    console.log(
+      "🔌 Peer connection state:",
+      state
+    );
+
+    if (state === "connected" && callStatus) {
+      callStatus.textContent = "Connected";
+      console.log("✅ WEBRTC CONNECTED");
+    }
+
+    if (state === "failed") {
+      console.error("❌ WEBRTC CONNECTION FAILED");
+    }
+
+    if (state === "disconnected") {
+      console.warn("⚠️ WEBRTC DISCONNECTED");
+    }
+
+    if (state === "closed") {
+      console.warn("⚠️ WEBRTC CLOSED");
+    }
+
+    if (
+      ["failed", "disconnected", "closed"].includes(state) &&
+      callTarget
+    ) {
+      if (callStatus) {
+        callStatus.textContent =
+          state === "failed"
+            ? "Connection failed"
+            : "Disconnected";
+      }
+    }
+  };
+
+  return peer;
+}
 
       async function startCall(mode) {
         await loadWebRTCConfig();
