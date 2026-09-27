@@ -2257,24 +2257,40 @@
   console.log("🟢 RTCPeerConnection created");
   console.log("🟢 ICE servers:", rtcConfig.iceServers);
 
-  peer.ontrack = (event) => {
-    console.log("🎥 REMOTE TRACK RECEIVED", event);
+peer.ontrack = (event) => {
+  console.log("🎥 REMOTE TRACK RECEIVED", event);
 
-    if (remoteVideo && event.streams?.[0]) {
-      console.log("🎥 Setting remote video stream");
+  if (!remoteVideo || !event.streams?.[0]) {
+    console.warn("⚠️ No remote video element or stream found");
+    return;
+  }
 
-      remoteVideo.srcObject = event.streams[0];
+  const remoteStream = event.streams[0];
 
-      remoteVideo
-        .play()
-        .then(() => {
-          console.log("▶️ Remote video playing");
-        })
-        .catch((error) => {
-          console.warn("⚠️ Remote video play error:", error);
-        });
+  // Don't reload the video element if the same stream is already attached
+  if (remoteVideo.srcObject !== remoteStream) {
+    console.log("🎥 Setting remote video stream");
+    remoteVideo.srcObject = remoteStream;
+  }
+
+  // Wait until the video element has loaded the stream
+  const playRemoteVideo = async () => {
+    try {
+      await remoteVideo.play();
+      console.log("▶️ Remote video playing");
+    } catch (error) {
+      console.warn("⚠️ Remote video play error:", error);
     }
   };
+
+  if (remoteVideo.readyState >= 2) {
+    playRemoteVideo();
+  } else {
+    remoteVideo.onloadedmetadata = () => {
+      playRemoteVideo();
+    };
+  }
+};
 
   peer.onicecandidate = (event) => {
     if (event.candidate) {
