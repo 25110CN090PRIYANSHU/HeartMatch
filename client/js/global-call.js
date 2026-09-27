@@ -25,82 +25,69 @@
     const style = document.createElement("style");
     style.id = "hm-global-call-styles";
     style.textContent = `
-      #hm-global-call { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; }
-      #hm-global-call .hm-incoming-backdrop,
-      #hm-global-call .hm-call-screen {
-        position: fixed; inset: 0; z-index: 2147483001;
+      #hm-global-call { position: relative; z-index: 2147483647; }
+      .hm-incoming-backdrop, .hm-call-screen {
+        position: fixed; inset: 0; z-index: 2147483647;
         opacity: 0; visibility: hidden; pointer-events: none;
         transition: opacity .22s ease, visibility .22s ease;
       }
-      #hm-global-call .hm-incoming-backdrop.open,
-      #hm-global-call .hm-call-screen.open {
+      .hm-incoming-backdrop.open, .hm-call-screen.open {
         opacity: 1; visibility: visible; pointer-events: auto;
       }
-      #hm-global-call .hm-incoming-backdrop {
-        display: flex; align-items: center; justify-content: center;
-        padding: 20px; background: rgba(4,3,10,.72);
-        backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      .hm-incoming-backdrop {
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+        background: rgba(5,3,12,.76); backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
       }
-      #hm-global-call .hm-incoming-card {
-        width: min(390px, calc(100vw - 32px));
-        padding: 34px 25px 25px; position: relative; overflow: hidden;
-        text-align: center; color: #fff;
-        border: 1px solid rgba(255,255,255,.13); border-radius: 30px;
-        background: linear-gradient(145deg, rgba(36,28,52,.98), rgba(17,15,27,.99));
-        box-shadow: 0 35px 100px rgba(0,0,0,.62);
-        transform: translateY(8px) scale(.97); transition: transform .22s ease;
+      .hm-incoming-card {
+        width: min(390px, calc(100vw - 32px)); padding: 30px 24px 24px;
+        text-align: center; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.13); border-radius: 26px;
+        background: linear-gradient(145deg,#241c34,#12101b);
+        color: #fff; box-shadow: 0 30px 90px rgba(0,0,0,.65);
+        font-family: Arial, Helvetica, sans-serif;
       }
-      #hm-global-call .hm-incoming-backdrop.open .hm-incoming-card { transform: translateY(0) scale(1); }
-      #hm-global-call .hm-call-glow {
-        position:absolute; width:210px; height:210px; border-radius:50%;
-        left:50%; top:-130px; transform:translateX(-50%);
+      .hm-call-glow {
+        position:absolute; width:220px; height:220px; border-radius:50%;
+        left:50%; top:-150px; transform:translateX(-50%);
         background:rgba(255,77,141,.25); filter:blur(28px);
       }
-      #hm-global-call .hm-call-avatar {
-        width:92px; height:92px; margin:0 auto 15px; display:block;
-        border-radius:50%; object-fit:cover; border:3px solid rgba(255,255,255,.16);
-        box-shadow:0 0 0 10px rgba(255,77,141,.07), 0 18px 45px rgba(0,0,0,.35);
-        background:#2b2039; color:#fff;
+      .hm-call-avatar {
+        display:block; width:92px; height:92px; margin:0 auto 14px;
+        border-radius:50%; object-fit:cover; background:#2b2039;
+        border:3px solid rgba(255,255,255,.15);
       }
-      #hm-global-call .hm-call-label { color:#a9a1b8; font-size:12px; text-transform:uppercase; letter-spacing:.12em; font-weight:800; }
-      #hm-global-call .hm-incoming-card h2 { margin:7px 0 2px; color:#fff; font-size:22px; }
-      #hm-global-call .hm-incoming-card p { margin:0; color:#91899e; font-size:12px; }
-      #hm-global-call .hm-incoming-actions { display:flex; justify-content:center; gap:60px; margin-top:27px; }
-      #hm-global-call .hm-call-action {
-        width:58px; height:58px; border:0; border-radius:50%; color:#fff; font-size:22px;
-        box-shadow:0 12px 28px rgba(0,0,0,.25); cursor:pointer;
+      .hm-call-label { color:#aaa1b7; font-size:12px; text-transform:uppercase; letter-spacing:.1em; }
+      .hm-incoming-card h2 { margin:7px 0 2px; font-size:22px; }
+      .hm-incoming-card p { margin:0; color:#91899e; font-size:12px; }
+      .hm-incoming-actions { display:flex; justify-content:center; gap:42px; margin-top:25px; }
+      .hm-call-action { width:58px; height:58px; border:0; border-radius:50%; color:#fff; font-size:22px; cursor:pointer; }
+      .hm-call-action.decline { background:#e53d62; }
+      .hm-call-action.accept { background:#35c987; }
+      .hm-call-action-labels { display:flex; justify-content:center; gap:58px; color:#777083; font-size:10px; margin-top:8px; }
+      .hm-call-screen {
+        display:flex; flex-direction:column; background:rgba(5,4,10,.98);
+        color:#fff; font-family:Arial,Helvetica,sans-serif;
       }
-      #hm-global-call .hm-call-action.decline { background:#e53d62; }
-      #hm-global-call .hm-call-action.accept { background:#35c987; }
-      #hm-global-call .hm-call-action:hover { transform:translateY(-3px) scale(1.05); }
-      #hm-global-call .hm-call-action-labels { display:flex; justify-content:center; gap:70px; color:#777083; font-size:10px; margin-top:8px; }
-      #hm-global-call .hm-call-screen {
-        display:flex; flex-direction:column; background:rgba(5,4,10,.98); color:#fff;
-        transform:scale(1.01);
+      .hm-call-head {
+        display:flex; justify-content:space-between; align-items:center; padding:18px 22px;
+        background:rgba(255,255,255,.035); border-bottom:1px solid rgba(255,255,255,.08);
       }
-      #hm-global-call .hm-call-screen.open { transform:scale(1); }
-      #hm-global-call .hm-call-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; background:rgba(255,255,255,.035); border-bottom:1px solid rgba(255,255,255,.08); }
-      #hm-global-call .hm-call-head small { color:#8e8999; }
-      #hm-global-call .hm-mini { border:0; background:rgba(255,255,255,.07); color:#fff; width:38px; height:38px; border-radius:50%; cursor:pointer; }
-      #hm-global-call .hm-call-stage { flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:18px; }
-      #hm-global-call #hmRemoteVideo { width:100%; height:100%; max-width:1100px; object-fit:cover; border-radius:22px; background:#101016; }
-      #hm-global-call #hmLocalVideo { position:absolute; right:34px; bottom:34px; width:190px; aspect-ratio:4/3; object-fit:cover; border-radius:16px; border:2px solid rgba(255,255,255,.2); box-shadow:0 15px 40px rgba(0,0,0,.45); }
-      #hm-global-call .hm-audio-avatar { width:125px; height:125px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:52px; background:linear-gradient(135deg,#ff4d8d,#8b5cf6); box-shadow:0 0 0 16px rgba(139,92,246,.08),0 30px 80px rgba(0,0,0,.4); }
-      #hm-global-call .hm-call-controls { display:flex; justify-content:center; gap:13px; padding:18px; }
-      #hm-global-call .hm-call-control { width:54px; height:54px; border:0; border-radius:50%; background:#302b3c; color:#fff; font-size:20px; cursor:pointer; }
-      #hm-global-call .hm-call-control:hover { transform:translateY(-2px); background:#40394d; }
-      #hm-global-call .hm-call-control.end { background:#e53d62; }
-      @media (max-width:700px) {
-        #hm-global-call .hm-incoming-card { border-radius:25px; }
-        #hm-global-call #hmLocalVideo { width:120px; right:20px; bottom:20px; }
-        #hm-global-call .hm-call-stage { padding:10px; }
-      }
+      .hm-call-head small { color:#8e8999; }
+      .hm-mini { border:0; background:rgba(255,255,255,.07); color:#fff; width:38px; height:38px; border-radius:50%; }
+      .hm-call-stage { flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:18px; }
+      #hmRemoteVideo { width:100%; height:100%; max-width:1100px; object-fit:cover; border-radius:22px; background:#101016; }
+      #hmLocalVideo { position:absolute; right:34px; bottom:34px; width:190px; aspect-ratio:4/3; object-fit:cover; border-radius:16px; border:2px solid rgba(255,255,255,.2); }
+      .hm-audio-avatar { width:125px; height:125px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:52px; background:linear-gradient(135deg,#ff4d8d,#8b5cf6); }
+      .hm-call-controls { display:flex; justify-content:center; gap:13px; padding:18px; }
+      .hm-call-control { width:54px; height:54px; border:0; border-radius:50%; background:#302b3c; color:#fff; font-size:20px; cursor:pointer; }
+      .hm-call-control.end { background:#e53d62; }
+      @media (max-width:600px) { #hmLocalVideo { width:120px; right:18px; bottom:18px; } .hm-incoming-actions { gap:30px; } }
     `;
     document.head.appendChild(style);
   }
 
   function injectUI() {
-    injectStyles();
     if (document.getElementById("hm-global-call")) return;
     const el = document.createElement("div");
     el.id = "hm-global-call";
@@ -327,6 +314,7 @@
   }
 
   async function boot() {
+    injectStyles();
     injectUI();
     try {
       await loadSocketIO();
