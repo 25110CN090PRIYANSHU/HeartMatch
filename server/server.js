@@ -93,6 +93,61 @@ app.use("/api/matches", matchRoutes);
 
 app.use("/api/chat", chatRoutes);
 
+// ===============================
+// WEBRTC TURN CONFIG
+// ===============================
+// TURN credentials are stored in Render Environment Variables.
+// They are NOT stored in GitHub or exposed in your source code.
+
+app.get("/api/turn-config", (req, res) => {
+    try {
+        const urls = (process.env.TURN_URLS || "")
+            .split(",")
+            .map(url => url.trim())
+            .filter(Boolean);
+
+        // Always include Google STUN servers
+        const iceServers = [
+            {
+                urls: "stun:stun.l.google.com:19302"
+            },
+            {
+                urls: "stun:stun1.l.google.com:19302"
+            }
+        ];
+
+        // Add TURN only when all required credentials exist
+        if (
+            urls.length > 0 &&
+            process.env.TURN_USERNAME &&
+            process.env.TURN_CREDENTIAL
+        ) {
+            iceServers.push({
+                urls: urls,
+                username: process.env.TURN_USERNAME,
+                credential: process.env.TURN_CREDENTIAL
+            });
+        }
+
+        res.json({
+            success: true,
+            iceServers: iceServers
+        });
+
+    } catch (error) {
+
+        console.error(
+            "TURN config error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to load WebRTC configuration"
+        });
+    }
+});
+
 // Public profile endpoint for a matched person's profile page.
 app.get("/api/person/:id", authMiddleware, async (req, res) => {
     try {

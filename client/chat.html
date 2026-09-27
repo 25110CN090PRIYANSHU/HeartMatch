@@ -2148,12 +2148,41 @@
       // =========================
       // WEBRTC AUDIO / VIDEO CALLS
       // =========================
-      const rtcConfig = {
+      let rtcConfig = {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
           { urls: "stun:stun1.l.google.com:19302" },
         ],
       };
+
+      async function loadWebRTCConfig() {
+        try {
+          const response = await fetch("/api/turn-config");
+
+          if (!response.ok) {
+            throw new Error("Failed to load WebRTC configuration");
+          }
+
+          const config = await response.json();
+
+          if (
+            config &&
+            Array.isArray(config.iceServers) &&
+            config.iceServers.length > 0
+          ) {
+            rtcConfig = {
+              iceServers: config.iceServers,
+            };
+          }
+
+          console.log("✅ WebRTC configuration loaded:", rtcConfig);
+        } catch (error) {
+          console.warn(
+            "⚠️ TURN configuration unavailable. Using STUN only:",
+            error,
+          );
+        }
+      }
 
       const incomingCallModal = document.getElementById("incomingCallModal");
       const incomingCallTitle = document.getElementById("incomingCallTitle");
@@ -2250,6 +2279,7 @@
       }
 
       async function startCall(mode) {
+        await loadWebRTCConfig();
         if (!socket?.connected) {
           alert(
             "Chat connection is not ready. Please wait a moment and try again.",
@@ -2435,7 +2465,7 @@
       // =========================
 
       getCurrentUser();
-
+      loadWebRTCConfig();
       loadChat();
     </script>
   </body>
