@@ -1,1 +1,238 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Discover — HeartMatch</title><link rel="stylesheet" href="/css/app.css"></head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="profile.html">Profile</a><a href="matches.html">Matches</a><a href="notifications.html">Notifications</a><a href="settings.html">Settings</a><button onclick="HM.logout()">Logout</button></div></nav><main class="wrap"><div class="section-title"><div><h1>Discover</h1><p class="muted">People matching your preferences.</p></div><button class="btn ghost" onclick="load()">Refresh</button></div><div id="msg" class="msg"></div><section class="card" id="preferenceBox" style="margin-bottom:18px"><h3>People matching your preferences</h3><div id="preferenceText" class="muted">Loading your preferences...</div></section><section class="card" style="margin-bottom:18px"><h2>Find someone by User ID 🔎</h2><p class="muted">Enter their unique User ID to open their profile.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><input id="userSearch" class="search-input" placeholder="e.g. priyanshu123" maxlength="24" style="flex:1;min-width:220px"><button class="btn" onclick="searchUser()">Find user</button></div><div id="searchResult" class="msg"></div></section><div id="grid" class="grid"></div></main><script src="/js/app.js"></script><script>HM.requireAuth();const grid=document.getElementById('grid');async function load(){grid.innerHTML='<div class="card">Finding people... 💕</div>';const {r,d}=await HM.api('/api/discover');if(!r.ok){grid.innerHTML='';msg.textContent=d.message;return}const p=d.preferences||{};document.getElementById('preferenceText').textContent=`Age ${p.minAge||18}–${p.maxAge||100} • ${p.interestedIn==='any'?'Everyone':p.interestedIn} • ${p.location?'Location: '+p.location:'Any location'}`;if(!d.users.length){grid.innerHTML='<div class="card"><h2>No new profiles right now.</h2><p class="muted">Try widening your preferences in Profile.</p></div>';return}grid.innerHTML=d.users.map(u=>`<article class="card"><img class="profile-img" src="${HM.esc(u.profileImage||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'))}" alt="Profile"><h3>${HM.esc(u.name)}, ${u.age} ${u.isVerified?'✓':''}</h3><p class="muted">@${HM.esc(u.userId||'user')}</p><p class="muted">${HM.esc(u.location||'Location not set')}</p><p>${HM.esc(u.bio||'No bio yet.')}</p><div class="tags">${(u.interests||[]).slice(0,6).map(i=>`<span class="tag">${HM.esc(i)}</span>`).join('')}</div><div class="card-actions"><button class="btn ghost" onclick="act('${u._id}','pass',this)">Pass</button><button class="btn" onclick="act('${u._id}','like',this)">Like ❤️</button></div><div style="display:flex;gap:8px;margin-top:9px"><button class="btn ghost" style="flex:1" onclick="blockUser('${u._id}')">Block</button><button class="btn ghost" style="flex:1" onclick="reportUser('${u._id}')">Report</button></div></article>`).join('')}async function searchUser(){const value=document.getElementById('userSearch').value.trim().toLowerCase();const out=document.getElementById('searchResult');if(!value){out.textContent='Enter a User ID.';return}out.textContent='Searching...';const {r,d}=await HM.api('/api/profile/search/'+encodeURIComponent(value));if(!r.ok){out.textContent=d.message||'User not found';return}out.innerHTML='Found <b>@'+HM.esc(d.user.userId)+'</b> — '+HM.esc(d.user.name)+' <button class="btn ghost" style="margin-left:8px" onclick="location.href='person.html?id='+encodeURIComponent(d.user.userId)+''">Open profile</button>'}async function act(id,type,b){b.disabled=true;const {r,d}=await HM.api('/api/likes',{method:'POST',body:{to:id,type}});if(!r.ok)alert(d.message||'Action failed');await load()}async function blockUser(id){if(!confirm('Block this user?'))return;const {d}=await HM.api('/api/blocks/'+id,{method:'POST'});alert(d.message||'Blocked');load()}async function reportUser(id){const reason=prompt('Why are you reporting this profile?');if(!reason)return;const {d}=await HM.api('/api/reports/'+id,{method:'POST',body:{reason}});alert(d.message||'Report sent')}load();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Discover — HeartMatch</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="brand">❤️ <span>HeartMatch</span></div>
+    <div class="navlinks">
+      <a href="profile.html">Profile</a>
+      <a href="matches.html">Matches</a>
+      <a href="notifications.html">Notifications</a>
+      <a href="settings.html">Settings</a>
+      <button type="button" onclick="HM.logout()">Logout</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <div class="section-title">
+      <div>
+        <h1>Discover</h1>
+        <p class="muted">People matching your preferences.</p>
+      </div>
+      <button id="refreshBtn" class="btn ghost" type="button">Refresh</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="card" id="preferenceBox" style="margin-bottom:18px">
+      <h3>People matching your preferences</h3>
+      <div id="preferenceText" class="muted">Loading your preferences...</div>
+    </section>
+
+    <section class="card" style="margin-bottom:18px">
+      <h2>Find someone by User ID 🔎</h2>
+      <p class="muted">Enter their unique User ID to open their profile.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <input id="userSearch" class="search-input" autocomplete="off" placeholder="e.g. priyanshu123" maxlength="24" style="flex:1;min-width:220px">
+        <button id="findUserBtn" class="btn" type="button">Find user</button>
+      </div>
+      <div id="searchResult" class="msg"></div>
+    </section>
+
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    HM.requireAuth();
+
+    const grid = document.getElementById("grid");
+    const msg = document.getElementById("msg");
+    const preferenceText = document.getElementById("preferenceText");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const userSearch = document.getElementById("userSearch");
+    const findUserBtn = document.getElementById("findUserBtn");
+    const searchResult = document.getElementById("searchResult");
+
+    let loading = false;
+
+    function setMessage(text, type = "") {
+      msg.textContent = text || "";
+      msg.className = "msg" + (type ? " " + type : "");
+    }
+
+    function showPreferences(p) {
+      const minAge = Number.isFinite(Number(p?.minAge)) ? Number(p.minAge) : 18;
+      const maxAge = Number.isFinite(Number(p?.maxAge)) ? Number(p.maxAge) : 100;
+      const interestedIn = String(p?.interestedIn || "any").toLowerCase();
+      const genderText = interestedIn === "any"
+        ? "Everyone"
+        : interestedIn.charAt(0).toUpperCase() + interestedIn.slice(1);
+      const location = String(p?.location || "").trim();
+
+      preferenceText.textContent = `Age ${minAge}–${Math.max(minAge, maxAge)} • ${genderText} • ${location ? "Location: " + location : "Any location"}`;
+    }
+
+    function profileImage(u) {
+      if (u.profileImage) return HM.esc(u.profileImage);
+      return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'
+      );
+    }
+
+    function renderUsers(users) {
+      if (!Array.isArray(users) || users.length === 0) {
+        grid.innerHTML = '<div class="card"><h2>No new profiles right now.</h2><p class="muted">Try widening your preferences in Profile.</p></div>';
+        return;
+      }
+
+      grid.innerHTML = users.map(u => `
+        <article class="card">
+          <img class="profile-img" src="${profileImage(u)}" alt="Profile">
+          <h3>${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
+          <p class="muted">@${HM.esc(u.userId || "user")}</p>
+          <p class="muted">${HM.esc(u.location || "Location not set")}</p>
+          <p>${HM.esc(u.bio || "No bio yet.")}</p>
+          <div class="tags">
+            ${(u.interests || []).slice(0, 6).map(i => `<span class="tag">${HM.esc(i)}</span>`).join("")}
+          </div>
+          <div class="card-actions">
+            <button class="btn ghost" type="button" onclick="act('${u._id}','pass',this)">Pass</button>
+            <button class="btn" type="button" onclick="act('${u._id}','like',this)">Like ❤️</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:9px">
+            <button class="btn ghost" style="flex:1" type="button" onclick="blockUser('${u._id}')">Block</button>
+            <button class="btn ghost" style="flex:1" type="button" onclick="reportUser('${u._id}')">Report</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    async function load() {
+      if (loading) return;
+      loading = true;
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = "Refreshing...";
+      setMessage("");
+      grid.innerHTML = '<div class="card">Finding people... 💕</div>';
+
+      try {
+        const { r, d } = await HM.api("/api/discover");
+
+        if (!r.ok) {
+          grid.innerHTML = "";
+          preferenceText.textContent = "Could not load your preferences.";
+          setMessage(d?.message || "Could not load Discover. Please try again.", "err");
+          return;
+        }
+
+        showPreferences(d?.preferences || {});
+        renderUsers(d?.users || []);
+      } catch (error) {
+        console.error("Discover load error:", error);
+        grid.innerHTML = '<div class="card"><h2>Could not load Discover.</h2><p class="muted">Check your connection and try again.</p></div>';
+        preferenceText.textContent = "Could not load your preferences.";
+        setMessage("Could not load Discover. Please try again.", "err");
+      } finally {
+        loading = false;
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = "Refresh";
+      }
+    }
+
+    async function searchUser() {
+      const value = userSearch.value.trim().toLowerCase();
+      searchResult.textContent = "";
+
+      if (!value) {
+        searchResult.textContent = "Enter a User ID.";
+        return;
+      }
+
+      findUserBtn.disabled = true;
+      findUserBtn.textContent = "Searching...";
+      searchResult.textContent = "Searching...";
+
+      try {
+        const { r, d } = await HM.api("/api/profile/search/" + encodeURIComponent(value));
+
+        if (!r.ok || !d?.user) {
+          searchResult.textContent = d?.message || "No user found with that User ID.";
+          return;
+        }
+
+        const user = d.user;
+        searchResult.innerHTML = `
+          Found <b>@${HM.esc(user.userId)}</b> — ${HM.esc(user.name)}
+          <button id="openFoundProfile" class="btn ghost" style="margin-left:8px" type="button">Open profile</button>
+        `;
+
+        document.getElementById("openFoundProfile").addEventListener("click", () => {
+          window.location.href = "person.html?user=" + encodeURIComponent(user.userId);
+        });
+      } catch (error) {
+        console.error("User search error:", error);
+        searchResult.textContent = "Search failed. Please try again.";
+      } finally {
+        findUserBtn.disabled = false;
+        findUserBtn.textContent = "Find user";
+      }
+    }
+
+    async function act(id, type, button) {
+      button.disabled = true;
+      try {
+        const { r, d } = await HM.api("/api/likes", {
+          method: "POST",
+          body: { to: id, type }
+        });
+        if (!r.ok) alert(d?.message || "Action failed");
+      } catch (error) {
+        console.error(error);
+        alert("Action failed. Please try again.");
+      }
+      await load();
+    }
+
+    async function blockUser(id) {
+      if (!confirm("Block this user?")) return;
+      try {
+        const { d } = await HM.api("/api/blocks/" + encodeURIComponent(id), { method: "POST" });
+        alert(d?.message || "Blocked");
+        await load();
+      } catch (error) {
+        console.error(error);
+        alert("Could not block this user.");
+      }
+    }
+
+    async function reportUser(id) {
+      const reason = prompt("Why are you reporting this profile?");
+      if (!reason) return;
+      try {
+        const { d } = await HM.api("/api/reports/" + encodeURIComponent(id), {
+          method: "POST",
+          body: { reason }
+        });
+        alert(d?.message || "Report sent");
+      } catch (error) {
+        console.error(error);
+        alert("Could not send report.");
+      }
+    }
+
+    refreshBtn.addEventListener("click", load);
+    findUserBtn.addEventListener("click", searchUser);
+    userSearch.addEventListener("keydown", event => {
+      if (event.key === "Enter") searchUser();
+    });
+
+    load();
+  </script>
+</body>
+</html>

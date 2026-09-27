@@ -29,7 +29,7 @@ router.get("/", authMiddleware, async (req, res) => {
     // Discover strictly follows the current user's saved preferences.
     const q = {
       _id: { $nin: [...excluded] },
-      isActive: true,
+      isActive: { $ne: false },
       age: { $gte: minAge, $lte: Math.max(minAge, maxAge) }
     };
 
