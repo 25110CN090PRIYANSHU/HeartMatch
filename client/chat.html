@@ -2148,413 +2148,1150 @@
       // =========================
       // WEBRTC AUDIO / VIDEO CALLS
       // =========================
-      let rtcConfig = {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
+      // =========================
+// WEBRTC AUDIO / VIDEO CALLS
+// =========================
+
+// --------------------------------------------------
+// WEBRTC / TURN CONFIG
+// --------------------------------------------------
+
+let rtcConfig = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ],
+};
+
+async function loadWebRTCConfig() {
+  try {
+    const response = await fetch("/api/turn-config", {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load WebRTC configuration");
+    }
+
+    const config = await response.json();
+
+    if (
+      config &&
+      Array.isArray(config.iceServers) &&
+      config.iceServers.length > 0
+    ) {
+      rtcConfig = {
+        iceServers: config.iceServers,
       };
+    }
 
-      async function loadWebRTCConfig() {
-        try {
-          const response = await fetch("/api/turn-config");
+    console.log("✅ WebRTC configuration loaded");
+    console.log(
+      "🧊 ICE server count:",
+      rtcConfig.iceServers.length
+    );
+  } catch (error) {
+    console.warn(
+      "⚠️ TURN configuration unavailable. Using STUN only:",
+      error
+    );
+  }
+}
 
-          if (!response.ok) {
-            throw new Error("Failed to load WebRTC configuration");
-          }
 
-          const config = await response.json();
+// --------------------------------------------------
+// CALL UI
+// --------------------------------------------------
 
-          if (
-            config &&
-            Array.isArray(config.iceServers) &&
-            config.iceServers.length > 0
-          ) {
-            rtcConfig = {
-              iceServers: config.iceServers,
-            };
-          }
+const incomingCallModal =
+  document.getElementById("incomingCallModal");
 
-          console.log("✅ WebRTC configuration loaded:", rtcConfig);
-        } catch (error) {
-          console.warn(
-            "⚠️ TURN configuration unavailable. Using STUN only:",
-            error,
-          );
-        }
-      }
+const incomingCallTitle =
+  document.getElementById("incomingCallTitle");
 
-      const incomingCallModal = document.getElementById("incomingCallModal");
-      const incomingCallTitle = document.getElementById("incomingCallTitle");
-      const incomingCallSubtitle = document.getElementById(
-        "incomingCallSubtitle",
-      );
-      const incomingCallAvatar = document.getElementById("incomingCallAvatar");
-      const incomingAccept = document.getElementById("incomingAccept");
-      const incomingDecline = document.getElementById("incomingDecline");
+const incomingCallSubtitle =
+  document.getElementById("incomingCallSubtitle");
 
-      let peer = null;
-      let localStream = null;
-      let callTarget = null;
-      let callMode = "video";
-      let incomingCall = null;
-      let pendingIceCandidates = [];
+const incomingCallAvatar =
+  document.getElementById("incomingCallAvatar");
 
-      function openCall(mode, statusText = `Calling ${chatUserName}...`) {
-        callMode = mode;
-        callOverlay?.classList.add("open");
-        if (callTitle)
-          callTitle.textContent =
-            mode === "video" ? "Video call" : "Audio call";
-        if (callStatus) callStatus.textContent = statusText;
-      }
+const incomingAccept =
+  document.getElementById("incomingAccept");
 
-      function closeCall() {
-        callOverlay?.classList.remove("open");
-        if (remoteVideo) remoteVideo.srcObject = null;
-        if (localVideo) localVideo.srcObject = null;
-        if (callStatus) callStatus.textContent = "";
-      }
+const incomingDecline =
+  document.getElementById("incomingDecline");
 
-      function hideIncomingCall() {
-        incomingCall = null;
-        incomingCallModal?.classList.remove("open");
-      }
 
-      async function cleanupCall(notify = true) {
-        const target = callTarget;
-        if (notify && target && socket?.connected)
-          socket.emit("callEnd", { to: target });
-        if (peer) {
-          try {
-            peer.close();
-          } catch {}
-          peer = null;
-        }
-        if (localStream) {
-          localStream.getTracks().forEach((t) => t.stop());
-          localStream = null;
-        }
-        pendingIceCandidates = [];
-        callTarget = null;
-        hideIncomingCall();
-        closeCall();
-      }
+// --------------------------------------------------
+// CALL STATE
+// --------------------------------------------------
 
-      async function getCallMedia(mode) {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error("Camera/microphone requires HTTPS or localhost.");
-        }
-        return navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: mode === "video",
-        });
-      }
+let peer = null;
+let localStream = null;
 
-     function setupPeer(target) {
-  peer = new RTCPeerConnection(rtcConfig);
+let callTarget = null;
+let callMode = "video";
 
-  console.log("🟢 RTCPeerConnection created");
-  console.log("🟢 ICE servers:", rtcConfig.iceServers);
+let incomingCall = null;
 
-peer.ontrack = (event) => {
-  console.log("🎥 REMOTE TRACK RECEIVED", event);
 
-  if (!remoteVideo || !event.streams?.[0]) {
-    console.warn("⚠️ No remote video element or stream found");
+// IMPORTANT:
+// Candidates can arrive before the peer exists,
+// or before the remote description is ready.
+//
+// Store them by sender ID instead of dropping them.
+const pendingIceByPeer = new Map();
+
+
+// Prevent old connection timers from affecting
+// a new call.
+let connectionTimer = null;
+
+
+// --------------------------------------------------
+// CALL UI HELPERS
+// --------------------------------------------------
+
+function openCall(
+  mode,
+  statusText = `Calling ${chatUserName}...`
+) {
+  callMode = mode;
+
+  callOverlay?.classList.add("open");
+
+  if (callTitle) {
+    callTitle.textContent =
+      mode === "video"
+        ? "Video call"
+        : "Audio call";
+  }
+
+  if (callStatus) {
+    callStatus.textContent = statusText;
+  }
+}
+
+
+function closeCall() {
+  callOverlay?.classList.remove("open");
+
+  if (remoteVideo) {
+    remoteVideo.srcObject = null;
+  }
+
+  if (localVideo) {
+    localVideo.srcObject = null;
+  }
+
+  if (callStatus) {
+    callStatus.textContent = "";
+  }
+}
+
+
+function hideIncomingCall() {
+  incomingCall = null;
+
+  incomingCallModal?.classList.remove("open");
+}
+
+
+// --------------------------------------------------
+// ICE QUEUE HELPERS
+// --------------------------------------------------
+
+function queueIceCandidate(fromId, candidate) {
+  if (!fromId || !candidate) return;
+
+  const key = String(fromId);
+
+  if (!pendingIceByPeer.has(key)) {
+    pendingIceByPeer.set(key, []);
+  }
+
+  pendingIceByPeer.get(key).push(candidate);
+
+  console.log(
+    "🧊 ICE candidate queued for:",
+    key,
+    "queue size:",
+    pendingIceByPeer.get(key).length
+  );
+}
+
+
+async function flushIceCandidates(fromId) {
+  if (!fromId || !peer) return;
+
+  const key = String(fromId);
+
+  const queue = pendingIceByPeer.get(key);
+
+  if (!queue || queue.length === 0) {
     return;
   }
 
-  const remoteStream = event.streams[0];
-
-  // Don't reload the video element if the same stream is already attached
-  if (remoteVideo.srcObject !== remoteStream) {
-    console.log("🎥 Setting remote video stream");
-    remoteVideo.srcObject = remoteStream;
+  if (!peer.remoteDescription) {
+    console.log(
+      "🧊 Remote description not ready. Keeping ICE queue."
+    );
+    return;
   }
 
-  // Wait until the video element has loaded the stream
-  const playRemoteVideo = async () => {
+  console.log(
+    "🧊 Flushing queued ICE candidates:",
+    queue.length
+  );
+
+  pendingIceByPeer.delete(key);
+
+  for (const candidate of queue) {
     try {
-      await remoteVideo.play();
-      console.log("▶️ Remote video playing");
-    } catch (error) {
-      console.warn("⚠️ Remote video play error:", error);
-    }
-  };
+      await peer.addIceCandidate(candidate);
 
-  if (remoteVideo.readyState >= 2) {
-    playRemoteVideo();
-  } else {
-    remoteVideo.onloadedmetadata = () => {
-      playRemoteVideo();
-    };
-  }
-};
-
-  peer.onicecandidate = (event) => {
-    if (event.candidate) {
       console.log(
-        "🧊 Local ICE candidate:",
-        event.candidate.candidate
+        "✅ Queued ICE candidate added"
       );
-
-      if (socket?.connected && target) {
-        socket.emit("callIce", {
-          to: target,
-          candidate: event.candidate
-        });
-      }
-    } else {
-      console.log("🧊 ICE candidate gathering finished");
+    } catch (error) {
+      console.warn(
+        "⚠️ Queued ICE candidate failed:",
+        error
+      );
     }
-  };
+  }
+}
 
-  peer.oniceconnectionstatechange = () => {
-    console.log(
-      "🧊 ICE connection state:",
-      peer.iceConnectionState
+
+function clearIceQueue(fromId = null) {
+  if (fromId) {
+    pendingIceByPeer.delete(String(fromId));
+  } else {
+    pendingIceByPeer.clear();
+  }
+}
+
+
+// --------------------------------------------------
+// MEDIA
+// --------------------------------------------------
+
+async function getCallMedia(mode) {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error(
+      "Camera/microphone requires HTTPS or localhost."
     );
-  };
+  }
 
-  peer.onicegatheringstatechange = () => {
+  return navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: mode === "video",
+  });
+}
+
+
+// --------------------------------------------------
+// CLEANUP
+// --------------------------------------------------
+
+async function cleanupCall(notify = true) {
+  const target = callTarget;
+
+  if (connectionTimer) {
+    clearTimeout(connectionTimer);
+    connectionTimer = null;
+  }
+
+  if (
+    notify &&
+    target &&
+    socket?.connected
+  ) {
+    socket.emit("callEnd", {
+      to: target,
+    });
+  }
+
+  if (peer) {
+    try {
+      peer.ontrack = null;
+      peer.onicecandidate = null;
+      peer.oniceconnectionstatechange = null;
+      peer.onconnectionstatechange = null;
+      peer.close();
+    } catch {}
+
+    peer = null;
+  }
+
+  if (localStream) {
+    localStream
+      .getTracks()
+      .forEach((track) => track.stop());
+
+    localStream = null;
+  }
+
+  clearIceQueue();
+
+  callTarget = null;
+
+  hideIncomingCall();
+
+  closeCall();
+}
+
+
+// --------------------------------------------------
+// CREATE PEER CONNECTION
+// --------------------------------------------------
+
+function setupPeer(target) {
+  peer = new RTCPeerConnection(rtcConfig);
+
+  console.log(
+    "🟢 RTCPeerConnection created"
+  );
+
+  console.log(
+    "🧊 ICE servers:",
+    rtcConfig.iceServers
+  );
+
+
+  // ----------------------------------------------
+  // REMOTE TRACK
+  // ----------------------------------------------
+
+  peer.ontrack = (event) => {
     console.log(
-      "🧊 ICE gathering state:",
-      peer.iceGatheringState
+      "🎥 REMOTE TRACK RECEIVED",
+      event
     );
-  };
-
-  peer.onsignalingstatechange = () => {
-    console.log(
-      "📡 Signaling state:",
-      peer.signalingState
-    );
-  };
-
-  peer.onconnectionstatechange = () => {
-    const state = peer?.connectionState;
-
-    console.log(
-      "🔌 Peer connection state:",
-      state
-    );
-
-    if (state === "connected" && callStatus) {
-      callStatus.textContent = "Connected";
-      console.log("✅ WEBRTC CONNECTED");
-    }
-
-    if (state === "failed") {
-      console.error("❌ WEBRTC CONNECTION FAILED");
-    }
-
-    if (state === "disconnected") {
-      console.warn("⚠️ WEBRTC DISCONNECTED");
-    }
-
-    if (state === "closed") {
-      console.warn("⚠️ WEBRTC CLOSED");
-    }
 
     if (
-      ["failed", "disconnected", "closed"].includes(state) &&
-      callTarget
+      !remoteVideo ||
+      !event.streams?.[0]
     ) {
-      if (callStatus) {
-        callStatus.textContent =
-          state === "failed"
-            ? "Connection failed"
-            : "Disconnected";
+      console.warn(
+        "⚠️ Remote video element or stream missing"
+      );
+      return;
+    }
+
+    const remoteStream =
+      event.streams[0];
+
+    // Don't repeatedly replace the same stream.
+    if (
+      remoteVideo.srcObject !==
+      remoteStream
+    ) {
+      console.log(
+        "🎥 Setting remote video stream"
+      );
+
+      remoteVideo.srcObject =
+        remoteStream;
+    }
+
+    // Let the browser autoplay the WebRTC stream.
+    // If manual playback is needed, try it once
+    // after metadata becomes available.
+    const playRemote = async () => {
+      try {
+        await remoteVideo.play();
+
+        console.log(
+          "▶️ Remote video playing"
+        );
+      } catch (error) {
+        // Autoplay errors can happen temporarily
+        // while the stream is being attached.
+        console.warn(
+          "⚠️ Remote video play warning:",
+          error.message
+        );
       }
+    };
+
+    if (
+      remoteVideo.readyState >= 2
+    ) {
+      playRemote();
+    } else {
+      remoteVideo.onloadedmetadata =
+        () => {
+          playRemote();
+        };
     }
   };
+
+
+  // ----------------------------------------------
+  // LOCAL ICE CANDIDATES
+  // ----------------------------------------------
+
+  peer.onicecandidate = (event) => {
+    if (!event.candidate) {
+      console.log(
+        "🧊 ICE candidate gathering finished"
+      );
+      return;
+    }
+
+    console.log(
+      "🧊 Local ICE candidate:",
+      event.candidate.candidate
+    );
+
+    if (
+      socket?.connected &&
+      target
+    ) {
+      socket.emit("callIce", {
+        to: String(target),
+        candidate: event.candidate,
+      });
+    }
+  };
+
+
+  // ----------------------------------------------
+  // ICE GATHERING STATE
+  // ----------------------------------------------
+
+  peer.onicegatheringstatechange =
+    () => {
+      console.log(
+        "🧊 ICE gathering state:",
+        peer?.iceGatheringState
+      );
+    };
+
+
+  // ----------------------------------------------
+  // ICE CONNECTION STATE
+  // ----------------------------------------------
+
+  peer.oniceconnectionstatechange =
+    () => {
+      const state =
+        peer?.iceConnectionState;
+
+      console.log(
+        "🧊 ICE connection state:",
+        state
+      );
+
+      if (
+        state === "connected" ||
+        state === "completed"
+      ) {
+        console.log(
+          "✅ ICE CONNECTION ESTABLISHED"
+        );
+      }
+
+      if (state === "failed") {
+        console.error(
+          "❌ ICE CONNECTION FAILED"
+        );
+
+        if (callStatus) {
+          callStatus.textContent =
+            "Connection failed";
+        }
+      }
+
+      if (state === "disconnected") {
+        console.warn(
+          "⚠️ ICE temporarily disconnected"
+        );
+      }
+    };
+
+
+  // ----------------------------------------------
+  // PEER CONNECTION STATE
+  // ----------------------------------------------
+
+  peer.onconnectionstatechange =
+    () => {
+      const state =
+        peer?.connectionState;
+
+      console.log(
+        "🔌 Peer connection state:",
+        state
+      );
+
+      if (state === "connected") {
+        if (connectionTimer) {
+          clearTimeout(connectionTimer);
+          connectionTimer = null;
+        }
+
+        if (callStatus) {
+          callStatus.textContent =
+            "Connected";
+        }
+
+        console.log(
+          "✅ WEBRTC CONNECTED"
+        );
+      }
+
+
+      if (state === "failed") {
+        console.error(
+          "❌ WEBRTC CONNECTION FAILED"
+        );
+
+        if (callStatus) {
+          callStatus.textContent =
+            "Connection failed";
+        }
+      }
+
+
+      if (state === "disconnected") {
+        console.warn(
+          "⚠️ WEBRTC DISCONNECTED"
+        );
+
+        if (callStatus) {
+          callStatus.textContent =
+            "Reconnecting...";
+        }
+      }
+
+
+      if (state === "closed") {
+        console.warn(
+          "⚠️ WEBRTC CLOSED"
+        );
+      }
+    };
+
+
+  // ----------------------------------------------
+  // SIGNALING STATE
+  // ----------------------------------------------
+
+  peer.onsignalingstatechange =
+    () => {
+      console.log(
+        "📡 Signaling state:",
+        peer?.signalingState
+      );
+    };
+
 
   return peer;
 }
 
-      async function startCall(mode) {
-        await loadWebRTCConfig();
-        if (!socket?.connected) {
-          alert(
-            "Chat connection is not ready. Please wait a moment and try again.",
-          );
-          return;
-        }
-        try {
-          await cleanupCall(false);
-          callTarget = otherUserId.toString();
-          callMode = mode;
-          localStream = await getCallMedia(mode);
-          openCall(mode, `Calling ${chatUserName}...`);
-          setupPeer(callTarget);
+
+// --------------------------------------------------
+// START OUTGOING CALL
+// --------------------------------------------------
+
+async function startCall(mode) {
+  if (!socket?.connected) {
+    alert(
+      "Chat connection is not ready. Please wait a moment and try again."
+    );
+    return;
+  }
+
+  try {
+    // Always refresh TURN configuration
+    // before creating the peer.
+    await loadWebRTCConfig();
+
+    await cleanupCall(false);
+
+    callTarget =
+      otherUserId.toString();
+
+    callMode = mode;
+
+    localStream =
+      await getCallMedia(mode);
+
+    openCall(
+      mode,
+      `Calling ${chatUserName}...`
+    );
+
+    setupPeer(callTarget);
+
+
+    // Add local media tracks.
+    localStream
+      .getTracks()
+      .forEach((track) => {
+        peer.addTrack(
+          track,
           localStream
-            .getTracks()
-            .forEach((track) => peer.addTrack(track, localStream));
-          if (localVideo) localVideo.srcObject = localStream;
-          const offer = await peer.createOffer();
-          await peer.setLocalDescription(offer);
-          socket.emit("callOffer", { to: callTarget, offer, mode });
-        } catch (error) {
-          console.error("Start call error:", error);
-          alert(error.message || "Could not start call");
-          await cleanupCall(false);
-        }
-      }
+        );
+      });
 
-      async function acceptIncomingCall() {
-        const data = incomingCall;
-        if (!data) return;
-        hideIncomingCall();
-        try {
-          await cleanupCall(false);
-          callTarget = data.from.toString();
-          callMode = data.mode === "audio" ? "audio" : "video";
-          localStream = await getCallMedia(callMode);
-          openCall(callMode, `Connecting to ${chatUserName}...`);
-          setupPeer(callTarget);
-          localStream
-            .getTracks()
-            .forEach((track) => peer.addTrack(track, localStream));
-          if (localVideo) localVideo.srcObject = localStream;
-          await peer.setRemoteDescription(
-            new RTCSessionDescription(data.offer),
-          );
-          for (const candidate of pendingIceCandidates) {
-            try {
-              await peer.addIceCandidate(candidate);
-            } catch (e) {
-              console.warn("Queued ICE candidate failed", e);
-            }
-          }
-          pendingIceCandidates = [];
-          const answer = await peer.createAnswer();
-          await peer.setLocalDescription(answer);
-          socket.emit("callAnswer", { to: callTarget, answer });
-          if (callStatus) callStatus.textContent = "Connecting...";
-        } catch (error) {
-          console.error("Answer call error:", error);
-          alert(error.message || "Could not answer the call");
-          await cleanupCall(false);
-        }
-      }
 
-      function declineIncomingCall() {
-        const data = incomingCall;
-        hideIncomingCall();
-        if (data?.from && socket?.connected)
-          socket.emit("callReject", { to: data.from });
-      }
+    if (localVideo) {
+      localVideo.srcObject =
+        localStream;
+    }
 
-      socket.on("callOffer", async (data) => {
-        if (!data?.from || data.from.toString() !== otherUserId.toString())
-          return;
-        // Never use confirm(): Chrome may suppress dialogs in inactive tabs.
+
+    // Create offer.
+    const offer =
+      await peer.createOffer();
+
+    await peer.setLocalDescription(
+      offer
+    );
+
+
+    console.log(
+      "📤 Sending call offer"
+    );
+
+    socket.emit("callOffer", {
+      to: callTarget,
+      offer: peer.localDescription,
+      mode,
+    });
+
+
+    // Connection timeout.
+    connectionTimer =
+      setTimeout(() => {
         if (
-          incomingCall ||
-          callTarget ||
-          callOverlay?.classList.contains("open")
+          peer &&
+          peer.connectionState !==
+            "connected"
         ) {
-          return;
-        }
-        incomingCall = data;
-        incomingCallTitle.textContent = `${chatUserName} is calling`;
-        incomingCallSubtitle.textContent =
-          data.mode === "video" ? "Incoming video call" : "Incoming audio call";
-        if (incomingCallAvatar)
-          incomingCallAvatar.src =
-            profilePhoto?.src ||
-            "data:image/svg+xml;charset=UTF-8," +
-              encodeURIComponent(
-                '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="58%" text-anchor="middle" fill="white" font-size="44">❤️</text></svg>',
-              );
-        incomingCallModal?.classList.add("open");
-      });
-
-      socket.on("callAnswer", async (data) => {
-        if (
-          !peer ||
-          !callTarget ||
-          !data?.from ||
-          data.from.toString() !== String(callTarget)
-        )
-          return;
-
-        try {
-          await peer.setRemoteDescription(
-            new RTCSessionDescription(data.answer),
+          console.warn(
+            "⏱️ Call is taking longer than expected."
           );
 
-          console.log("Remote answer received");
-        } catch (error) {
-          console.error("Answer SDP error:", error);
+          if (callStatus) {
+            callStatus.textContent =
+              "Connecting...";
+          }
         }
+      }, 15000);
+
+  } catch (error) {
+    console.error(
+      "❌ Start call error:",
+      error
+    );
+
+    alert(
+      error.message ||
+        "Could not start call"
+    );
+
+    await cleanupCall(false);
+  }
+}
+
+
+// --------------------------------------------------
+// ACCEPT INCOMING CALL
+// --------------------------------------------------
+
+async function acceptIncomingCall() {
+  const data =
+    incomingCall;
+
+  if (!data) return;
+
+  hideIncomingCall();
+
+  try {
+    await loadWebRTCConfig();
+
+    await cleanupCall(false);
+
+    callTarget =
+      data.from.toString();
+
+    callMode =
+      data.mode === "audio"
+        ? "audio"
+        : "video";
+
+    localStream =
+      await getCallMedia(callMode);
+
+    openCall(
+      callMode,
+      `Connecting to ${chatUserName}...`
+    );
+
+    setupPeer(callTarget);
+
+
+    // Add our local tracks.
+    localStream
+      .getTracks()
+      .forEach((track) => {
+        peer.addTrack(
+          track,
+          localStream
+        );
       });
 
-      socket.on("callIce", async (data) => {
-        if (!data?.from || !data?.candidate) return;
 
-        const fromId = data.from.toString();
+    if (localVideo) {
+      localVideo.srcObject =
+        localStream;
+    }
 
-        // Accept ICE from the current caller even while
-        // the incoming-call popup is still open.
-        const expectedId =
-          callTarget?.toString() || incomingCall?.from?.toString();
 
-        if (!expectedId || fromId !== expectedId) return;
+    // Apply remote offer FIRST.
+    await peer.setRemoteDescription(
+      new RTCSessionDescription(
+        data.offer
+      )
+    );
 
-        const candidate = new RTCIceCandidate(data.candidate);
+    console.log(
+      "✅ Remote offer applied"
+    );
 
-        // If peer is not ready yet, save the candidate.
-        if (!peer || !peer.remoteDescription) {
-          pendingIceCandidates.push(candidate);
-          return;
-        }
 
-        try {
-          await peer.addIceCandidate(candidate);
-        } catch (error) {
-          console.error("ICE candidate error:", error);
-        }
+    // Now it is safe to add any ICE
+    // candidates that arrived before
+    // the offer was accepted.
+    await flushIceCandidates(
+      callTarget
+    );
+
+
+    // Create answer.
+    const answer =
+      await peer.createAnswer();
+
+    await peer.setLocalDescription(
+      answer
+    );
+
+
+    console.log(
+      "📤 Sending call answer"
+    );
+
+    socket.emit("callAnswer", {
+      to: callTarget,
+      answer: peer.localDescription,
+    });
+
+
+    if (callStatus) {
+      callStatus.textContent =
+        "Connecting...";
+    }
+
+  } catch (error) {
+    console.error(
+      "❌ Answer call error:",
+      error
+    );
+
+    alert(
+      error.message ||
+        "Could not answer the call"
+    );
+
+    await cleanupCall(false);
+  }
+}
+
+
+// --------------------------------------------------
+// DECLINE INCOMING CALL
+// --------------------------------------------------
+
+function declineIncomingCall() {
+  const data =
+    incomingCall;
+
+  hideIncomingCall();
+
+  if (
+    data?.from &&
+    socket?.connected
+  ) {
+    socket.emit("callReject", {
+      to: data.from,
+    });
+  }
+
+  clearIceQueue(
+    data?.from
+  );
+}
+
+
+// --------------------------------------------------
+// INCOMING CALL OFFER
+// --------------------------------------------------
+
+socket.on(
+  "callOffer",
+  async (data) => {
+    if (
+      !data?.from ||
+      data.from.toString() !==
+        otherUserId.toString()
+    ) {
+      return;
+    }
+
+
+    // If we are already in another call,
+    // don't replace it.
+    if (
+      incomingCall ||
+      callTarget ||
+      callOverlay?.classList.contains(
+        "open"
+      )
+    ) {
+      console.warn(
+        "⚠️ Ignoring incoming call because another call is active."
+      );
+      return;
+    }
+
+
+    console.log(
+      "📞 Incoming call offer received"
+    );
+
+
+    incomingCall = data;
+
+
+    incomingCallTitle.textContent =
+      `${chatUserName} is calling`;
+
+
+    incomingCallSubtitle.textContent =
+      data.mode === "video"
+        ? "Incoming video call"
+        : "Incoming audio call";
+
+
+    if (incomingCallAvatar) {
+      incomingCallAvatar.src =
+        profilePhoto?.src ||
+        "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="58%" text-anchor="middle" fill="white" font-size="44">❤️</text></svg>'
+          );
+    }
+
+
+    incomingCallModal?.classList.add(
+      "open"
+    );
+
+
+    // IMPORTANT:
+    // ICE candidates may have arrived
+    // before this offer.
+    //
+    // We don't delete them here.
+    // acceptIncomingCall() will flush
+    // them after setRemoteDescription().
+    const queued =
+      pendingIceByPeer.get(
+        String(data.from)
+      );
+
+    if (queued?.length) {
+      console.log(
+        "🧊 ICE candidates already waiting:",
+        queued.length
+      );
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// ANSWER RECEIVED
+// --------------------------------------------------
+
+socket.on(
+  "callAnswer",
+  async (data) => {
+    if (
+      !peer ||
+      !callTarget ||
+      !data?.from ||
+      data.from.toString() !==
+        String(callTarget)
+    ) {
+      return;
+    }
+
+
+    try {
+      await peer.setRemoteDescription(
+        new RTCSessionDescription(
+          data.answer
+        )
+      );
+
+
+      console.log(
+        "✅ Remote answer received"
+      );
+
+
+      // The caller may have received
+      // ICE candidates before the answer.
+      await flushIceCandidates(
+        callTarget
+      );
+
+    } catch (error) {
+      console.error(
+        "❌ Answer SDP error:",
+        error
+      );
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// ICE CANDIDATE RECEIVED
+// --------------------------------------------------
+
+socket.on(
+  "callIce",
+  async (data) => {
+    if (
+      !data?.from ||
+      !data?.candidate
+    ) {
+      return;
+    }
+
+
+    const fromId =
+      data.from.toString();
+
+
+    // Only accept candidates from:
+    // - current call target
+    // - the person whose incoming
+    //   call we're currently seeing
+    // - the chat partner
+    const allowedId =
+      callTarget?.toString() ||
+      incomingCall?.from?.toString() ||
+      otherUserId?.toString();
+
+
+    if (
+      allowedId &&
+      fromId !== String(allowedId)
+    ) {
+      return;
+    }
+
+
+    let candidate;
+
+    try {
+      candidate =
+        new RTCIceCandidate(
+          data.candidate
+        );
+    } catch (error) {
+      console.warn(
+        "⚠️ Invalid ICE candidate:",
+        error
+      );
+      return;
+    }
+
+
+    // If the peer isn't ready OR the
+    // remote description isn't ready,
+    // KEEP the candidate instead of
+    // dropping it.
+    if (
+      !peer ||
+      !peer.remoteDescription
+    ) {
+      queueIceCandidate(
+        fromId,
+        candidate
+      );
+
+      return;
+    }
+
+
+    try {
+      await peer.addIceCandidate(
+        candidate
+      );
+
+      console.log(
+        "✅ Remote ICE candidate added"
+      );
+
+    } catch (error) {
+      console.error(
+        "❌ ICE candidate error:",
+        error
+      );
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// CALL REJECTED
+// --------------------------------------------------
+
+socket.on(
+  "callReject",
+  (data) => {
+    if (
+      data?.from &&
+      data.from.toString() ===
+        String(callTarget)
+    ) {
+      alert("Call declined");
+
+      cleanupCall(false);
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// CALL ENDED
+// --------------------------------------------------
+
+socket.on(
+  "callEnd",
+  (data) => {
+    if (
+      data?.from &&
+      data.from.toString() ===
+        String(callTarget)
+    ) {
+      cleanupCall(false);
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// BUTTON EVENTS
+// --------------------------------------------------
+
+incomingAccept?.addEventListener(
+  "click",
+  acceptIncomingCall
+);
+
+incomingDecline?.addEventListener(
+  "click",
+  declineIncomingCall
+);
+
+videoCallBtn?.addEventListener(
+  "click",
+  () => startCall("video")
+);
+
+audioCallBtn?.addEventListener(
+  "click",
+  () => startCall("audio")
+);
+
+endCallBtn?.addEventListener(
+  "click",
+  () => cleanupCall(true)
+);
+
+
+// --------------------------------------------------
+// MUTE
+// --------------------------------------------------
+
+muteBtn?.addEventListener(
+  "click",
+  () => {
+    const track =
+      localStream?.getAudioTracks()[0];
+
+    if (track) {
+      track.enabled =
+        !track.enabled;
+
+      muteBtn.textContent =
+        track.enabled
+          ? "🎙️"
+          : "🔇";
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// CAMERA
+// --------------------------------------------------
+
+cameraBtn?.addEventListener(
+  "click",
+  () => {
+    const track =
+      localStream?.getVideoTracks()[0];
+
+    if (track) {
+      track.enabled =
+        !track.enabled;
+
+      cameraBtn.textContent =
+        track.enabled
+          ? "📷"
+          : "🚫";
+    }
+  }
+);
+
+
+// --------------------------------------------------
+// PAGE CLOSE
+// --------------------------------------------------
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    if (
+      callTarget &&
+      socket?.connected
+    ) {
+      socket.emit("callEnd", {
+        to: callTarget,
       });
-
-      socket.on("callReject", (data) => {
-        if (data?.from && data.from.toString() === String(callTarget)) {
-          alert("Call declined");
-          cleanupCall(false);
-        }
-      });
-
-      socket.on("callEnd", (data) => {
-        if (data?.from && data.from.toString() === String(callTarget)) {
-          cleanupCall(false);
-        }
-      });
-
-      incomingAccept?.addEventListener("click", acceptIncomingCall);
-      incomingDecline?.addEventListener("click", declineIncomingCall);
-      videoCallBtn?.addEventListener("click", () => startCall("video"));
-      audioCallBtn?.addEventListener("click", () => startCall("audio"));
-      endCallBtn?.addEventListener("click", () => cleanupCall(true));
-      muteBtn?.addEventListener("click", () => {
-        const track = localStream?.getAudioTracks()[0];
-        if (track) {
-          track.enabled = !track.enabled;
-          muteBtn.textContent = track.enabled ? "🎙️" : "🔇";
-        }
-      });
-      cameraBtn?.addEventListener("click", () => {
-        const track = localStream?.getVideoTracks()[0];
-        if (track) {
-          track.enabled = !track.enabled;
-          cameraBtn.textContent = track.enabled ? "📷" : "🚫";
-        }
-      });
-      window.addEventListener("beforeunload", () => {
-        if (callTarget && socket?.connected)
-          socket.emit("callEnd", { to: callTarget });
-      });
-
-      // =========================
+    }
+  }
+);      // =========================
       // START
       // =========================
 
