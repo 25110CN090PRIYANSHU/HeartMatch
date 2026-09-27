@@ -4,6 +4,33 @@ const Like = require("../models/Like");
 const Block = require("../models/Block");
 const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
+
+router.get("/id/:uniqueId", authMiddleware, async (req, res) => {
+  try {
+    const uniqueId = String(req.params.uniqueId || "").trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9._-]{3,23}$/.test(uniqueId)) {
+      return res.status(400).json({ message: "Enter a valid HeartMatch ID." });
+    }
+    if (uniqueId === String((await User.findById(req.userId).select("uniqueId"))?.uniqueId || "").toLowerCase()) {
+      return res.status(400).json({ message: "That's your own HeartMatch ID." });
+    }
+    const user = await User.findOne({ uniqueId, isActive: true })
+      .select("_id name age gender location bio interests profileImage isVerified uniqueId");
+    if (!user) return res.status(404).json({ message: "No user found with that HeartMatch ID." });
+    const blocked = await Block.exists({
+      $or: [
+        { blocker: req.userId, blocked: user._id },
+        { blocker: user._id, blocked: req.userId }
+      ]
+    });
+    if (blocked) return res.status(404).json({ message: "No user found with that HeartMatch ID." });
+    res.json({ success: true, user });
+  } catch (e) {
+    console.error("HeartMatch ID search error:", e);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const me = await User.findById(req.userId); const pref = me.preferences || {};
