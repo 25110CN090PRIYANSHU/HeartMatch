@@ -440,6 +440,13 @@
                     document.getElementById("profileImage");
 
                 if (profileImageElement) {
+                    profileImageElement.addEventListener("error", () => {
+                        const fallback = document.createElement("div");
+                        fallback.className = "avatar";
+                        fallback.textContent = (user.name || "?").charAt(0).toUpperCase();
+                        profileImageElement.replaceWith(fallback);
+                    }, { once: true });
+
                     profileImageElement.addEventListener(
                         "click",
                         () => {

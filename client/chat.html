@@ -1353,6 +1353,13 @@
                             alt="Profile"
                         >`;
 
+            const chatProfileImg = profilePhoto.querySelector("img");
+            chatProfileImg?.addEventListener("error", () => {
+              profilePhoto.innerHTML = escapeHTML((data.user.name || "?").charAt(0).toUpperCase());
+              profilePhoto.title = "Profile photo unavailable";
+              profilePhoto.onclick = null;
+            }, { once: true });
+
             profilePhoto.title = "Open profile photo";
             profilePhoto.onclick = (event) => {
               event.preventDefault();

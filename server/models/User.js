@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, enum: ["male", "female", "other"], required: true },
   bio: { type: String, default: "", maxlength: 500 },
   profileImage: { type: String, default: "" },
+  profileImageFileId: { type: mongoose.Schema.Types.ObjectId, default: null },
   interests: { type: [String], default: [] },
   location: { type: String, default: "", maxlength: 120 },
   preferences: {

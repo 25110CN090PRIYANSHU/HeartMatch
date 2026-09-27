@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
@@ -29,14 +30,7 @@ async function ensureUserId(user) {
 }
 const uploadDir = path.join(__dirname, "../uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
-const storage = multer.diskStorage({
-  destination: uploadDir,
-  filename: (req, file, cb) =>
-    cb(
-      null,
-      `${req.userId}-${Date.now()}${path.extname(file.originalname).toLowerCase()}`,
-    ),
-});
+const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -120,8 +114,43 @@ router.post(
           });
       const user = await User.findById(req.userId);
       if (!user) return res.status(404).json({ message: "User not found" });
-      user.profileImage = `/uploads/${req.file.filename}`;
+
+      // Store profile photos in MongoDB GridFS instead of relying on the
+      // Render/container filesystem. This keeps photos available after
+      // deploys and restarts.
+      if (!mongoose.connection.db) {
+        return res.status(503).json({ message: "Image storage is not ready. Please try again." });
+      }
+
+      const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+        bucketName: "profileImages",
+      });
+
+      const filename = `${req.userId}-${Date.now()}${path.extname(req.file.originalname).toLowerCase()}`;
+      const uploadStream = bucket.openUploadStream(filename, {
+        contentType: req.file.mimetype,
+        metadata: { userId: String(req.userId) },
+      });
+
+      await new Promise((resolve, reject) => {
+        uploadStream.on("finish", resolve);
+        uploadStream.on("error", reject);
+        uploadStream.end(req.file.buffer);
+      });
+
+      // Remove the previous GridFS photo after the new one is safely stored.
+      if (user.profileImageFileId) {
+        try {
+          await bucket.delete(new mongoose.Types.ObjectId(user.profileImageFileId));
+        } catch (deleteError) {
+          console.warn("Could not delete previous profile photo:", deleteError.message);
+        }
+      }
+
+      user.profileImageFileId = uploadStream.id;
+      user.profileImage = `/api/profile/photo/${user.userId || req.userId}`;
       await user.save();
+
       res.json({
         message: "Profile photo updated 📸",
         profileImage: user.profileImage,
@@ -132,6 +161,43 @@ router.post(
     }
   },
 );
+router.get("/photo/:userId", async (req, res) => {
+  try {
+    const value = String(req.params.userId || "").trim().toLowerCase();
+    if (!value) return res.status(404).end();
+
+    const user = mongoose.isValidObjectId(value)
+      ? await User.findById(value).select("profileImage profileImageFileId")
+      : await User.findOne({ userId: value, isActive: true }).select("profileImage profileImageFileId");
+
+    if (!user) return res.status(404).end();
+
+    if (!user.profileImageFileId || !mongoose.connection.db) {
+      // Keep compatibility with older filesystem-based profile photos.
+      return res.redirect(user.profileImage || "/images/default-avatar.svg");
+    }
+
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: "profileImages",
+    });
+    const fileId = new mongoose.Types.ObjectId(user.profileImageFileId);
+    const files = await bucket.find({ _id: fileId }).toArray();
+    if (!files.length) {
+      return res.redirect(user.profileImage || "/images/default-avatar.svg");
+    }
+
+    const file = files[0];
+    res.set("Content-Type", file.contentType || "image/jpeg");
+    res.set("Cache-Control", "public, max-age=86400");
+    bucket.openDownloadStream(fileId).on("error", () => {
+      if (!res.headersSent) res.status(404).end();
+    }).pipe(res);
+  } catch (e) {
+    console.error("Profile photo fetch error:", e);
+    if (!res.headersSent) res.status(404).end();
+  }
+});
+
 router.put("/password", authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
