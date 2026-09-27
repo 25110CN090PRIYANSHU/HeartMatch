@@ -806,11 +806,189 @@ socket.on("stopTyping", (data) => {
         ]);
         return !!(a && b);
     }
-    socket.on("callOffer", async d => { if (await callAllowed(d?.to)) io.to(d.to).emit("callOffer",{from:socket.userId,offer:d.offer,mode:d.mode === "audio" ? "audio" : "video"}); });
-    socket.on("callAnswer", async d => { if (await callAllowed(d?.to)) io.to(d.to).emit("callAnswer",{from:socket.userId,answer:d.answer}); });
-    socket.on("callIce", async d => { if (await callAllowed(d?.to)) io.to(d.to).emit("callIce",{from:socket.userId,candidate:d.candidate}); });
-    socket.on("callReject", async d => { if (await callAllowed(d?.to)) io.to(d.to).emit("callReject",{from:socket.userId}); });
-    socket.on("callEnd", async d => { if (await callAllowed(d?.to)) io.to(d.to).emit("callEnd",{from:socket.userId}); });
+    // ==================================================
+// WEBRTC SIGNALING
+// Keep signaling messages in order.
+// This prevents ICE candidates from overtaking
+// the call offer/answer.
+// ==================================================
+
+const signalingQueues = new Map();
+
+function queueSignal(socketId, task) {
+    const previous =
+        signalingQueues.get(socketId) || Promise.resolve();
+
+    const next = previous
+        .then(() => task())
+        .catch((error) => {
+            console.error("WebRTC signaling error:", error);
+        });
+
+    signalingQueues.set(socketId, next);
+
+    // Remove completed queue when nothing newer
+    // has replaced it.
+    next.finally(() => {
+        if (signalingQueues.get(socketId) === next) {
+            signalingQueues.delete(socketId);
+        }
+    });
+
+    return next;
+}
+
+
+// --------------------------------------------------
+// CALL OFFER
+// --------------------------------------------------
+
+socket.on("callOffer", (d) => {
+    queueSignal(socket.id, async () => {
+
+        if (!(await callAllowed(d?.to))) {
+            return;
+        }
+
+        if (!d?.to || !d?.offer) {
+            return;
+        }
+
+        console.log(
+            "📞 Forwarding CALL OFFER:",
+            socket.userId,
+            "→",
+            d.to
+        );
+
+        io.to(d.to).emit("callOffer", {
+            from: socket.userId,
+            offer: d.offer,
+            mode:
+                d.mode === "audio"
+                    ? "audio"
+                    : "video"
+        });
+    });
+});
+
+
+// --------------------------------------------------
+// CALL ANSWER
+// --------------------------------------------------
+
+socket.on("callAnswer", (d) => {
+    queueSignal(socket.id, async () => {
+
+        if (!(await callAllowed(d?.to))) {
+            return;
+        }
+
+        if (!d?.to || !d?.answer) {
+            return;
+        }
+
+        console.log(
+            "📞 Forwarding CALL ANSWER:",
+            socket.userId,
+            "→",
+            d.to
+        );
+
+        io.to(d.to).emit("callAnswer", {
+            from: socket.userId,
+            answer: d.answer
+        });
+    });
+});
+
+
+// --------------------------------------------------
+// ICE CANDIDATE
+// --------------------------------------------------
+
+socket.on("callIce", (d) => {
+    queueSignal(socket.id, async () => {
+
+        if (!(await callAllowed(d?.to))) {
+            return;
+        }
+
+        if (!d?.to || !d?.candidate) {
+            return;
+        }
+
+        console.log(
+            "🧊 Forwarding ICE:",
+            socket.userId,
+            "→",
+            d.to
+        );
+
+        io.to(d.to).emit("callIce", {
+            from: socket.userId,
+            candidate: d.candidate
+        });
+    });
+});
+
+
+// --------------------------------------------------
+// CALL REJECT
+// --------------------------------------------------
+
+socket.on("callReject", (d) => {
+    queueSignal(socket.id, async () => {
+
+        if (!(await callAllowed(d?.to))) {
+            return;
+        }
+
+        if (!d?.to) {
+            return;
+        }
+
+        console.log(
+            "📵 Forwarding CALL REJECT:",
+            socket.userId,
+            "→",
+            d.to
+        );
+
+        io.to(d.to).emit("callReject", {
+            from: socket.userId
+        });
+    });
+});
+
+
+// --------------------------------------------------
+// CALL END
+// --------------------------------------------------
+
+socket.on("callEnd", (d) => {
+    queueSignal(socket.id, async () => {
+
+        if (!(await callAllowed(d?.to))) {
+            return;
+        }
+
+        if (!d?.to) {
+            return;
+        }
+
+        console.log(
+            "📴 Forwarding CALL END:",
+            socket.userId,
+            "→",
+            d.to
+        );
+
+        io.to(d.to).emit("callEnd", {
+            from: socket.userId
+        });
+    });
+});
 
     // ==================================================
     // UNSEND MESSAGE (sender only, removed for both users)
