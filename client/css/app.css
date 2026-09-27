@@ -339,3 +339,5 @@ video {
     width: 100%;
   }
 }
+
+.search-input{padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;outline:none}.search-input:focus{border-color:rgba(255,77,141,.7);box-shadow:0 0 0 3px rgba(255,77,141,.08)}

@@ -151,20 +151,19 @@ app.get("/api/turn-config", (req, res) => {
 // Public profile endpoint for a matched person's profile page.
 app.get("/api/person/:id", authMiddleware, async (req, res) => {
     try {
-        const id = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "Invalid user ID" });
-        }
+        const lookup = String(req.params.id || "").trim().toLowerCase();
+        const user = mongoose.Types.ObjectId.isValid(lookup)
+            ? await User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified")
+            : await User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified");
+        if (!user) return res.status(404).json({ message: "User not found" });
         if (await Block.exists({
             $or: [
-                { blocker: req.userId, blocked: id },
-                { blocker: id, blocked: req.userId }
+                { blocker: req.userId, blocked: user._id },
+                { blocker: user._id, blocked: req.userId }
             ]
         })) {
             return res.status(403).json({ message: "This user is unavailable" });
         }
-        const user = await User.findById(id).select("name age gender location bio interests profileImage");
-        if (!user) return res.status(404).json({ message: "User not found" });
         res.json({ success: true, user });
     } catch (error) {
         console.error("Person profile error:", error);
@@ -377,51 +376,6 @@ io.on("connection", (socket) => {
     addOnlineUser(
         socket.userId
     );
-
-
-    // ==================================================
-    // DELIVER PENDING MESSAGES
-    // ==================================================
-    // If this user was offline when someone sent a message,
-    // mark those messages delivered as soon as the user
-    // establishes a Socket.IO connection.
-    (async () => {
-        try {
-            const pending = await Message.find({
-                receiver: socket.userId,
-                delivered: false
-            }).select("_id sender");
-
-            if (!pending.length) return;
-
-            const deliveredAt = new Date();
-
-            await Message.updateMany(
-                {
-                    receiver: socket.userId,
-                    delivered: false
-                },
-                {
-                    $set: {
-                        delivered: true,
-                        deliveredAt
-                    }
-                }
-            );
-
-            for (const item of pending) {
-                io.to(item.sender.toString()).emit(
-                    "messageDelivered",
-                    {
-                        messageId: item._id.toString(),
-                        deliveredAt
-                    }
-                );
-            }
-        } catch (error) {
-            console.error("Pending delivery status error:", error);
-        }
-    })();
 
 
     // ==================================================
@@ -667,7 +621,7 @@ socket.on("stopTyping", (data) => {
                 // CREATE MESSAGE
                 // ===============================
 
-                let message =
+                const message =
                     await Message.create({
 
                         sender:
@@ -677,31 +631,9 @@ socket.on("stopTyping", (data) => {
                             receiver,
 
                         content:
-                            content.trim(),
-
-                        delivered: false,
-                        deliveredAt: null,
-                        read: false,
-                        readAt: null
+                            content.trim()
 
                     });
-
-                // A message is considered delivered when at least one
-                // active Socket.IO connection exists for the receiver.
-                // This gives us the WhatsApp-style second tick without
-                // pretending the message was seen.
-                if (isUserOnline(receiver)) {
-                    message = await Message.findByIdAndUpdate(
-                        message._id,
-                        {
-                            $set: {
-                                delivered: true,
-                                deliveredAt: new Date()
-                            }
-                        },
-                        { new: true }
-                    );
-                }
 
 
                 // ===============================
@@ -848,24 +780,7 @@ socket.on("stopTyping", (data) => {
                 data: String(a.data)
             });
             if (payload.length > 6500000) return respond({success:false,message:"Attachment is too large"});
-            let message = await Message.create({
-                sender: socket.userId,
-                receiver,
-                content: "__HM_ATTACHMENT__" + payload,
-                delivered: false,
-                deliveredAt: null,
-                read: false,
-                readAt: null
-            });
-
-            if (isUserOnline(receiver)) {
-                message = await Message.findByIdAndUpdate(
-                    message._id,
-                    { $set: { delivered: true, deliveredAt: new Date() } },
-                    { new: true }
-                );
-            }
-
+            const message = await Message.create({sender:socket.userId,receiver,content:"__HM_ATTACHMENT__"+payload});
             const sender = await User.findById(socket.userId).select("name");
             const notification = await Notification.create({recipient:receiver,sender:socket.userId,type:"message",title:"New attachment 📎",message:`${sender?.name || "Someone"} sent you an attachment`});
             io.to(receiver).emit("newMessage",message);
@@ -1164,14 +1079,6 @@ socket.on("callEnd", (d) => {
                     });
                 }
 
-                const messagesToRead = await Message.find({
-                    sender: otherUserId,
-                    receiver: socket.userId,
-                    read: false
-                }).select("_id");
-
-                const readAt = new Date();
-
                 const result = await Message.updateMany(
                     {
                         sender: otherUserId,
@@ -1179,29 +1086,19 @@ socket.on("callEnd", (d) => {
                         read: false
                     },
                     {
-                        $set: {
-                            delivered: true,
-                            deliveredAt: readAt,
-                            read: true,
-                            readAt
-                        }
+                        $set: { read: true }
                     }
                 );
 
-                const messageIds = messagesToRead.map((item) => item._id.toString());
-
-                // Tell the sender exactly which messages became seen.
-                if (messageIds.length > 0) {
-                    io.to(otherUserId.toString()).emit(
-                        "messagesRead",
-                        {
-                            readerId: socket.userId.toString(),
-                            conversationWith: otherUserId.toString(),
-                            messageIds,
-                            count: result.modifiedCount
-                        }
-                    );
-                }
+                // Tell the other person that their messages have been read.
+                io.to(otherUserId.toString()).emit(
+                    "messagesRead",
+                    {
+                        readerId: socket.userId.toString(),
+                        conversationWith: otherUserId.toString(),
+                        count: result.modifiedCount
+                    }
+                );
 
                 respond({
                     success: true,

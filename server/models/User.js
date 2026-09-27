@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
+  userId: { type: String, unique: true, sparse: true, lowercase: true, trim: true, minlength: 3, maxlength: 24, match: /^[a-z0-9._-]+$/ },
   name: { type: String, required: true, trim: true, maxlength: 80 },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true, minlength: 8 },

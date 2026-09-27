@@ -62,6 +62,11 @@
         <section class="card">
           <h2>Edit profile</h2>
           <div class="field">
+            <label>User ID</label>
+            <input id="userId" autocomplete="off" maxlength="24" placeholder="your unique ID" />
+            <small class="muted">People can find you using this ID. 3–24 letters, numbers, dot, underscore or hyphen.</small>
+          </div>
+          <div class="field">
             <label>Name</label><input id="name" autocomplete="name" />
           </div>
           <div class="two">
@@ -138,6 +143,7 @@
         photo: document.getElementById("photo"),
         photoMsg: document.getElementById("photoMsg"),
         uploadPhotoBtn: document.getElementById("uploadPhotoBtn"),
+        userId: document.getElementById("userId"),
         name: document.getElementById("name"),
         age: document.getElementById("age"),
         gender: document.getElementById("gender"),
@@ -169,6 +175,7 @@
             return;
           }
           user = d.user || {};
+          els.userId.value = user.userId || "";
           els.name.value = user.name || "";
           els.age.value = user.age ?? "";
           els.gender.value = user.gender || "other";
@@ -195,10 +202,13 @@
       }
       async function save() {
         if (els.saveBtn.disabled) return;
-        const name = els.name.value.trim(),
+        const userId = els.userId.value.trim().toLowerCase(),
+          name = els.name.value.trim(),
           age = Number(els.age.value),
           minAge = Number(els.minAge.value),
           maxAge = Number(els.maxAge.value);
+        if (!/^[a-z0-9._-]{3,24}$/.test(userId))
+          return setMsg("User ID must be 3–24 characters and use only letters, numbers, dot, underscore or hyphen.");
         if (!name) return setMsg("Please enter your name.");
         if (!Number.isFinite(age) || age < 18)
           return setMsg("Age must be 18 or above.");
@@ -210,6 +220,7 @@
         )
           return setMsg("Please enter valid age preferences.");
         const body = {
+          userId,
           name,
           age,
           gender: els.gender.value,

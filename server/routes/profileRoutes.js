@@ -13,6 +13,20 @@ const PasswordReset = require("../models/PasswordReset");
 const bcrypt = require("bcryptjs");
 const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
+
+function userIdBase(name) {
+  return String(name || "user").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14) || "user";
+}
+async function ensureUserId(user) {
+  if (user.userId) return user.userId;
+  for (let i = 0; i < 20; i++) {
+    const candidate = `${userIdBase(user.name)}${Math.floor(1000 + Math.random() * 9000)}`.slice(0, 24);
+    if (!(await User.exists({ userId: candidate }))) { user.userId = candidate; await user.save(); return candidate; }
+  }
+  user.userId = `user${Date.now().toString(36)}`.slice(0, 24);
+  await user.save();
+  return user.userId;
+}
 const uploadDir = path.join(__dirname, "../uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
 const storage = multer.diskStorage({
@@ -34,6 +48,7 @@ router.get("/", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
+    await ensureUserId(user);
     res.json({ user });
   } catch (e) {
     console.error(e);
@@ -44,6 +59,7 @@ router.put("/", authMiddleware, async (req, res) => {
   try {
     const allowed = [
       "name",
+      "userId",
       "age",
       "gender",
       "bio",
@@ -55,6 +71,14 @@ router.put("/", authMiddleware, async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     for (const key of allowed)
       if (req.body[key] !== undefined) user[key] = req.body[key];
+    if (req.body.userId !== undefined) {
+      const requested = String(req.body.userId).trim().toLowerCase();
+      if (!/^[a-z0-9._-]{3,24}$/.test(requested))
+        return res.status(400).json({ message: "User ID must be 3–24 characters and use only letters, numbers, dot, underscore or hyphen." });
+      const taken = await User.findOne({ userId: requested, _id: { $ne: req.userId } });
+      if (taken) return res.status(409).json({ message: "That User ID is already taken." });
+      user.userId = requested;
+    }
     await user.save();
     res.json({
       message: "Profile updated successfully ❤️",
@@ -70,6 +94,18 @@ router.put("/", authMiddleware, async (req, res) => {
     res.status(400).json({ message: e.message || "Could not update profile" });
   }
 });
+router.get("/search/:userId", authMiddleware, async (req, res) => {
+  try {
+    const value = String(req.params.userId || "").trim().toLowerCase();
+    if (!value) return res.status(400).json({ message: "Enter a User ID." });
+    const user = await User.findOne({ userId: value, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified");
+    if (!user) return res.status(404).json({ message: "No user found with that User ID." });
+    if (await Block.exists({ $or: [{ blocker: req.userId, blocked: user._id }, { blocker: user._id, blocked: req.userId }] }))
+      return res.status(403).json({ message: "This user is unavailable." });
+    res.json({ user });
+  } catch (e) { console.error(e); res.status(500).json({ message: "Search failed" }); }
+});
+
 router.post(
   "/photo",
   authMiddleware,

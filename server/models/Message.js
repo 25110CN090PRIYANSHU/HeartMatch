@@ -21,27 +21,9 @@ const messageSchema = new mongoose.Schema(
             maxlength: 6500000
         },
 
-        // Message reached at least one active socket
-        // belonging to the receiver.
-        delivered: {
-            type: Boolean,
-            default: false
-        },
-
-        deliveredAt: {
-            type: Date,
-            default: null
-        },
-
-        // Receiver has opened/seen the conversation.
         read: {
             type: Boolean,
             default: false
-        },
-
-        readAt: {
-            type: Date,
-            default: null
         }
     },
     {

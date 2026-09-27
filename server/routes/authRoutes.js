@@ -10,6 +10,7 @@ const EmailVerification = require("../models/EmailVerification");
 const router = express.Router();
 const safeUser = (u) => ({
   id: u._id,
+  userId: u.userId,
   name: u.name,
   email: u.email,
   age: u.age,
@@ -18,6 +19,22 @@ const safeUser = (u) => ({
   isVerified: u.isVerified,
   isAdmin: u.isAdmin,
 });
+
+function makeUserIdBase(name) {
+  const base = String(name || "user").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14) || "user";
+  return base;
+}
+
+async function generateUniqueUserId(name) {
+  const base = makeUserIdBase(name);
+  for (let i = 0; i < 20; i++) {
+    const suffix = Math.floor(1000 + Math.random() * 9000);
+    const candidate = `${base}${suffix}`.slice(0, 24);
+    if (!(await User.exists({ userId: candidate }))) return candidate;
+  }
+  return `user${crypto.randomBytes(5).toString("hex")}`.slice(0, 24);
+}
+
 const tokenFor = (id) =>
   jwt.sign({ userId: id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
@@ -79,6 +96,7 @@ router.post("/signup", async (req, res) => {
       !!process.env.ADMIN_EMAIL &&
       normalizedEmail === process.env.ADMIN_EMAIL.toLowerCase().trim();
     const user = await User.create({
+      userId: await generateUniqueUserId(normalizedName),
       name: normalizedName,
       email: normalizedEmail,
       password: await bcrypt.hash(password, 12),
