@@ -88,7 +88,11 @@ router.get("/:userId", authMiddleware, async (req, res) => {
         })
         .sort({ createdAt: 1 });
 
-        // Mark received messages as read
+        // Opening the conversation means received messages have been
+        // delivered and seen. Update the database and also update the
+        // already-fetched documents so the UI gets the correct ticks.
+        const readAt = new Date();
+
         await Message.updateMany(
             {
                 sender: otherUserId,
@@ -97,10 +101,22 @@ router.get("/:userId", authMiddleware, async (req, res) => {
             },
             {
                 $set: {
-                    read: true
+                    delivered: true,
+                    deliveredAt: readAt,
+                    read: true,
+                    readAt
                 }
             }
         );
+
+        messages.forEach((message) => {
+            if (message.sender.toString() === otherUserId.toString()) {
+                message.delivered = true;
+                message.deliveredAt = message.deliveredAt || readAt;
+                message.read = true;
+                message.readAt = message.readAt || readAt;
+            }
+        });
 
         const me = await User.findById(req.userId).select("chatBackgrounds");
         const background = me?.chatBackgrounds?.get(otherUserId) || "";

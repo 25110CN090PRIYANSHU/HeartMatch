@@ -297,6 +297,43 @@
       }
 
       /* =========================
+         MESSAGE READ RECEIPTS
+      ========================= */
+      .message-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 5px;
+        margin-top: 5px;
+        min-height: 12px;
+      }
+
+      .message-meta .message-time {
+        margin-top: 0;
+      }
+
+      .message-status {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -2px;
+        min-width: 13px;
+      }
+
+      .message-status.sent {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .message-status.delivered {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .message-status.seen {
+        color: #38bdf8;
+      }
+
+      /* =========================
            EMPTY CHAT
         ========================= */
 
@@ -1402,6 +1439,7 @@
           });
 
           scrollToBottom();
+          markMessagesAsRead();
         } catch (error) {
           console.error(error);
 
@@ -1476,12 +1514,82 @@
           bubble.appendChild(content);
           row.dataset.text = message.content;
         }
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+
         const time = document.createElement("div");
         time.className = "message-time";
         time.textContent = formatTime(message.createdAt);
-        bubble.appendChild(time);
+        meta.appendChild(time);
+
+        if (isMine && message._id) {
+          const status = document.createElement("span");
+          status.className = "message-status";
+          status.dataset.statusFor = message._id.toString();
+
+          if (message.read) {
+            status.textContent = "✓✓";
+            status.classList.add("seen");
+          } else if (message.delivered) {
+            status.textContent = "✓✓";
+            status.classList.add("delivered");
+          } else {
+            status.textContent = "✓";
+            status.classList.add("sent");
+          }
+
+          meta.appendChild(status);
+        }
+
+        bubble.appendChild(meta);
         row.appendChild(bubble);
         messagesContainer.appendChild(row);
+      }
+
+      // =========================
+      // MESSAGE STATUS HELPERS
+      // =========================
+
+      function updateMessageStatus(messageId, statusType) {
+        if (!messageId) return;
+
+        const row = messagesContainer.querySelector(
+          `[data-message-id="${messageId}"]`
+        );
+
+        const status = row?.querySelector(".message-status");
+
+        if (!status) return;
+
+        status.classList.remove("sent", "delivered", "seen");
+
+        if (statusType === "seen") {
+          status.textContent = "✓✓";
+          status.classList.add("seen");
+        } else if (statusType === "delivered") {
+          status.textContent = "✓✓";
+          status.classList.add("delivered");
+        } else {
+          status.textContent = "✓";
+          status.classList.add("sent");
+        }
+      }
+
+      function markMessagesAsRead() {
+        if (!socket?.connected || !otherUserId) return;
+
+        socket.emit(
+          "markMessagesRead",
+          { userId: otherUserId },
+          (response) => {
+            if (!response?.success) {
+              console.warn(
+                "Read receipt update failed:",
+                response?.message
+              );
+            }
+          }
+        );
       }
 
       // =========================
@@ -1540,6 +1648,8 @@
             }
           },
         );
+
+        markMessagesAsRead();
       });
 
       // =========================
@@ -1618,8 +1728,41 @@
 
       socket.on("messageSent", (message) => {
         displayMessage(message);
-
         scrollToBottom();
+      });
+
+      // =========================
+      // MESSAGE DELIVERED
+      // =========================
+
+      socket.on("messageDelivered", (data) => {
+        if (!data?.messageId) return;
+
+        updateMessageStatus(
+          data.messageId,
+          "delivered"
+        );
+      });
+
+      // =========================
+      // MESSAGES SEEN
+      // =========================
+
+      socket.on("messagesRead", (data) => {
+        if (
+          !data?.readerId ||
+          data.readerId.toString() !== otherUserId.toString()
+        ) {
+          return;
+        }
+
+        const ids = Array.isArray(data.messageIds)
+          ? data.messageIds
+          : [];
+
+        ids.forEach((messageId) => {
+          updateMessageStatus(messageId, "seen");
+        });
       });
 
       // =========================
@@ -1629,8 +1772,10 @@
       socket.on("newMessage", (message) => {
         if (message.sender.toString() === otherUserId.toString()) {
           displayMessage(message);
-
           scrollToBottom();
+
+          // This chat page is open, so the incoming message is seen.
+          markMessagesAsRead();
         }
       });
 
@@ -2474,83 +2619,45 @@ function setupPeer(target) {
 // ----------------------------------------------
 
 peer.ontrack = (event) => {
-  console.log("🎥 REMOTE TRACK RECEIVED", event);
+    console.log("🎥 REMOTE TRACK RECEIVED", event);
 
-  if (!remoteVideo || !event.track) {
-    console.warn("⚠️ Remote video element or track missing");
-    return;
-  }
+    if (!remoteVideo || !event.track) {
+      console.warn("⚠️ Remote video element or track missing");
+      return;
+    }
 
-  // Create ONE stable MediaStream.
-  // Do not replace remoteVideo.srcObject every time
-  // ontrack fires.
-  if (!remoteMediaStream) {
-    remoteMediaStream = new MediaStream();
+    // Keep one stable MediaStream for both audio and video tracks.
+    // Do not repeatedly replace srcObject or call play() from ontrack;
+    // doing so can race with the browser's media load and cause the
+    // "play() request was interrupted by a new load request" warning.
+    if (!remoteMediaStream) {
+      remoteMediaStream = new MediaStream();
+      remoteVideo.srcObject = remoteMediaStream;
+      remoteVideo.autoplay = true;
+      remoteVideo.playsInline = true;
+      console.log("🎥 Created remote MediaStream");
+    }
 
-    remoteVideo.srcObject = remoteMediaStream;
-
-    console.log("🎥 Created remote MediaStream");
-  }
-
-  // Avoid adding the same track twice.
-  const alreadyAdded =
-    remoteMediaStream
+    const alreadyAdded = remoteMediaStream
       .getTracks()
       .some((track) => track.id === event.track.id);
 
-  if (!alreadyAdded) {
-    remoteMediaStream.addTrack(event.track);
-
-    console.log(
-      "🎥 Added remote track:",
-      event.track.kind,
-      event.track.id
-    );
-  }
-
-  // Make sure the video element is configured correctly.
-  remoteVideo.autoplay = true;
-  remoteVideo.playsInline = true;
-
-  // Only try to play when the browser has enough data.
-  // AbortError here is harmless because it means another
-  // media load/play request replaced the previous one.
-  const tryPlayRemoteVideo = async () => {
-    try {
-      if (
-        remoteVideo.paused &&
-        remoteVideo.readyState >= 2
-      ) {
-        await remoteVideo.play();
-
-        console.log(
-          "▶️ Remote video playing"
-        );
-      }
-    } catch (error) {
-      if (error?.name === "AbortError") {
-        console.log(
-          "ℹ️ Remote video play interrupted by stream update"
-        );
-        return;
-      }
-
-      console.warn(
-        "⚠️ Remote video play warning:",
-        error
+    if (!alreadyAdded) {
+      remoteMediaStream.addTrack(event.track);
+      console.log(
+        "🎥 Added remote track:",
+        event.track.kind,
+        event.track.id
       );
     }
-  };
 
-  if (remoteVideo.readyState >= 2) {
-    tryPlayRemoteVideo();
-  } else {
-    remoteVideo.onloadedmetadata =
-      () => {
-        tryPlayRemoteVideo();
-      };
-  }
-};
+    // The <video autoplay playsinline> element handles playback.
+    // No explicit play() call is needed here.
+    console.log(
+      "🎥 Remote stream attached:",
+      remoteMediaStream.getTracks().map((track) => track.kind)
+    );
+  };
 
 
   // ----------------------------------------------
