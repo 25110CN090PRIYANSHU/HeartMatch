@@ -2636,6 +2636,13 @@ async function cleanupCall(notify = true) {
   clearIceQueue();
 
   remoteMediaStream = null;
+  const remoteAudio = document.getElementById("remoteAudio");
+  if (remoteAudio) {
+    remoteAudio.srcObject = null;
+    remoteAudio.remove();
+  }
+  if (remoteVideo) remoteVideo.srcObject = null;
+  if (localVideo) localVideo.srcObject = null;
 
   callTarget = null;
 
@@ -2656,61 +2663,60 @@ function setupPeer(target) {
   console.log("🟢 RTCPeerConnection created");
   console.log("🧊 ICE servers:", rtcConfig.iceServers);
 
-  // Keep one stable remote stream. WebRTC can fire ontrack separately
-  // for audio and video, so replacing srcObject on every event can race
-  // playback and produce interrupted-load errors.
-  if (remoteVideo) {
-    remoteVideo.srcObject = remoteMediaStream;
-    remoteVideo.autoplay = true;
-    remoteVideo.playsInline = true;
-  }
+  // A WebRTC peer can deliver audio and video as separate ontrack events.
+  // Keep one MediaStream and attach it once so playback is not repeatedly
+  // interrupted by srcObject replacements.
+  peer.ontrack = (event) => {
+    const track = event?.track;
+    if (!track || !remoteMediaStream) return;
 
-  peer.ontrack = async (event) => {
-    if (!event.track) return;
-
-    console.log("🎥/🔊 Remote track received:", event.track.kind);
-
-    const alreadyAdded = remoteMediaStream
+    const exists = remoteMediaStream
       .getTracks()
-      .some((track) => track.id === event.track.id);
+      .some((existing) => existing.id === track.id);
 
-    if (!alreadyAdded) {
-      remoteMediaStream.addTrack(event.track);
-    }
+    if (!exists) remoteMediaStream.addTrack(track);
 
-    if (event.track.kind === "video" && remoteVideo) {
-      remoteVideo.style.display = "block";
-      try {
-        await remoteVideo.play();
-      } catch (error) {
-        console.warn("Remote video play error:", error);
+    if (remoteVideo) {
+      remoteVideo.srcObject = remoteMediaStream;
+      remoteVideo.autoplay = true;
+      remoteVideo.playsInline = true;
+
+      if (track.kind === "video") {
+        remoteVideo.play().catch((error) => {
+          console.warn("Remote video autoplay was blocked:", error);
+        });
       }
     }
 
-    if (event.track.kind === "audio") {
+    if (track.kind === "audio") {
       let remoteAudio = document.getElementById("remoteAudio");
-
       if (!remoteAudio) {
         remoteAudio = document.createElement("audio");
         remoteAudio.id = "remoteAudio";
         remoteAudio.autoplay = true;
         remoteAudio.playsInline = true;
-        remoteAudio.style.display = "none";
+        remoteAudio.setAttribute("playsinline", "");
+        remoteAudio.style.position = "fixed";
+        remoteAudio.style.width = "1px";
+        remoteAudio.style.height = "1px";
+        remoteAudio.style.opacity = "0";
+        remoteAudio.style.pointerEvents = "none";
         document.body.appendChild(remoteAudio);
       }
-
       remoteAudio.srcObject = remoteMediaStream;
-      try {
-        await remoteAudio.play();
-      } catch (error) {
-        console.warn("Remote audio play error:", error);
-      }
+      remoteAudio.play().catch((error) => {
+        console.warn("Remote audio autoplay was blocked:", error);
+      });
     }
+
+    console.log(
+      "🎥/🔊 Remote stream:",
+      remoteMediaStream.getTracks().map((t) => t.kind)
+    );
   };
 
   peer.onicecandidate = (event) => {
     if (!event.candidate) return;
-
     if (socket?.connected && target) {
       socket.emit("callIce", {
         to: String(target),
@@ -2719,12 +2725,18 @@ function setupPeer(target) {
     }
   };
 
+  peer.onicegatheringstatechange = () => {
+    console.log("🧊 ICE gathering state:", peer?.iceGatheringState);
+  };
+
   peer.oniceconnectionstatechange = () => {
     const state = peer?.iceConnectionState;
     console.log("🧊 ICE connection state:", state);
-
-    if (state === "failed" && callStatus) {
-      callStatus.textContent = "Connection failed";
+    if (state === "connected" || state === "completed") {
+      console.log("✅ ICE CONNECTION ESTABLISHED");
+    } else if (state === "failed") {
+      console.error("❌ ICE CONNECTION FAILED");
+      if (callStatus) callStatus.textContent = "Connection failed";
     }
   };
 
