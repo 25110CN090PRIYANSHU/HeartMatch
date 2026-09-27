@@ -2614,17 +2614,49 @@ function setupPeer(target) {
   // REMOTE TRACK
   // ----------------------------------------------
 
-  // ----------------------------------------------
-// REMOTE TRACK
-// ----------------------------------------------
+peer.ontrack = async (event) => {
+  console.log("🎥/🔊 Remote track received:", event.track.kind);
 
-peer.ontrack = (event) => {
-    console.log("🎥 REMOTE TRACK RECEIVED", event);
+  if (!event.streams?.[0]) return;
 
-    if (!remoteVideo || !event.track) {
-      console.warn("⚠️ Remote video element or track missing");
-      return;
+  const remoteStream = event.streams[0];
+
+  // Video
+  if (event.track.kind === "video" && remoteVideo) {
+    remoteVideo.srcObject = remoteStream;
+
+    try {
+      await remoteVideo.play();
+      console.log("▶️ Remote video playing");
+    } catch (error) {
+      console.warn("Video play error:", error);
     }
+  }
+
+  // Audio
+  if (event.track.kind === "audio") {
+    let remoteAudio = document.getElementById("remoteAudio");
+
+    if (!remoteAudio) {
+      remoteAudio = document.createElement("audio");
+      remoteAudio.id = "remoteAudio";
+      remoteAudio.autoplay = true;
+      remoteAudio.playsInline = true;
+      remoteAudio.style.display = "none";
+
+      document.body.appendChild(remoteAudio);
+    }
+
+    remoteAudio.srcObject = remoteStream;
+
+    try {
+      await remoteAudio.play();
+      console.log("🔊 Remote audio playing");
+    } catch (error) {
+      console.error("🔊 Audio play error:", error);
+    }
+  }
+};
 
     // Keep one stable MediaStream for both audio and video tracks.
     // Do not repeatedly replace srcObject or call play() from ontrack;
