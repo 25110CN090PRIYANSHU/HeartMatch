@@ -1,1 +1,25 @@
-(()=>{const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;if(!reduce){const layer=document.createElement('div');layer.setAttribute('aria-hidden','true');layer.style.cssText='position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:-1';document.body.appendChild(layer);['♥','♡','✦','·'].forEach((g,i)=>{for(let n=0;n<3;n++){const s=document.createElement('span');s.textContent=g;s.style.cssText=`position:absolute;left:${Math.random()*100}%;top:${55+Math.random()*45}%;font-size:${10+Math.random()*14}px;opacity:${.03+Math.random()*.06};animation:hmParticle ${12+Math.random()*16}s linear ${-Math.random()*18}s infinite`;layer.appendChild(s)}});const st=document.createElement('style');st.textContent='@keyframes hmParticle{0%{transform:translate3d(0,15vh,0) rotate(0deg);opacity:0}12%{opacity:.08}85%{opacity:.05}100%{transform:translate3d(6vw,-120vh,0) rotate(180deg);opacity:0}}';document.head.appendChild(st)}document.addEventListener('click',e=>{const b=e.target.closest('button,.btn,.chat-btn,.nav-btn,.profile-action-btn,.send-btn');if(!b||reduce||b.disabled)return;const r=b.getBoundingClientRect(),z=Math.max(r.width,r.height)*.55,q=document.createElement('span');q.style.cssText=`position:absolute;width:${z}px;height:${z}px;left:${e.clientX-r.left-z/2}px;top:${e.clientY-r.top-z/2}px;border-radius:50%;background:rgba(255,255,255,.18);pointer-events:none;transform:scale(0);animation:hmRipple .55s ease-out`;if(getComputedStyle(b).position==='static')b.style.position='relative';b.style.overflow='hidden';b.appendChild(q);setTimeout(()=>q.remove(),600)},{passive:true})})();
+/* HeartMatch Motion UI — visual only */
+(()=>{
+  const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if(!reduce){
+    const layer=document.createElement('div');
+    layer.className='hm-motion-layer'; layer.setAttribute('aria-hidden','true');
+    const glyphs=['♥','♡','✦','•'];
+    for(let i=0;i<24;i++){
+      const s=document.createElement('span'); s.className='hm-particle'; s.textContent=glyphs[i%glyphs.length];
+      s.style.left=(Math.random()*100)+'%'; s.style.setProperty('--s',(9+Math.random()*18)+'px');
+      s.style.setProperty('--d',(12+Math.random()*16)+'s'); s.style.setProperty('--delay',(-Math.random()*22)+'s');
+      s.style.setProperty('--x',(-90+Math.random()*180)+'px'); layer.appendChild(s);
+    }
+    document.body.appendChild(layer);
+  }
+  document.addEventListener('click',e=>{
+    if(reduce) return;
+    const b=e.target.closest('button,.btn,.chat-btn,.nav-btn,.profile-action-btn,.send-btn');
+    if(!b||b.disabled) return;
+    const r=b.getBoundingClientRect(),z=Math.max(r.width,r.height)*.55;
+    const q=document.createElement('span');
+    q.style.cssText=`position:absolute;width:${z}px;height:${z}px;left:${e.clientX-r.left-z/2}px;top:${e.clientY-r.top-z/2}px;border-radius:50%;background:rgba(255,255,255,.22);pointer-events:none;transform:scale(0);animation:ripple .58s ease-out;z-index:20`;
+    if(getComputedStyle(b).position==='static') b.style.position='relative'; b.appendChild(q); setTimeout(()=>q.remove(),650);
+  },{passive:true});
+})();
