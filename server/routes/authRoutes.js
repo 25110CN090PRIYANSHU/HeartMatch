@@ -16,7 +16,6 @@ const safeUser = (u) => ({
   age: u.age,
   gender: u.gender,
   profileImage: u.profileImage,
-  profileImageFileId: u.profileImageFileId,
   isVerified: u.isVerified,
   isAdmin: u.isAdmin,
 });

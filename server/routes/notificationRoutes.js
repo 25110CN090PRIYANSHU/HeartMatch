@@ -13,7 +13,7 @@ router.get("/", authMiddleware, async (req, res) => {
         const notifications = await Notification.find({
             recipient: req.userId
         })
-        .populate("sender", "name userId profileImage profileImageFileId")
+        .populate("sender", "name profileImage")
         .sort({ createdAt: -1 })
         .limit(50);
 

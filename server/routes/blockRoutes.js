@@ -11,7 +11,7 @@ router.get("/", auth, async (req, res) => {
     res.json({
       blocked: await Block.find({ blocker: req.userId }).populate(
         "blocked",
-        "name userId profileImage profileImageFileId",
+        "name profileImage",
       ),
     });
   } catch (e) {

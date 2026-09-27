@@ -145,9 +145,6 @@
             background: var(--panel-raised);
         }
 
-        .notification-avatar { width: 46px; height: 46px; min-width: 46px; border-radius: 50%; object-fit: cover; background: #25182f; display: block; }
-        .notification-avatar.fallback { display:flex; align-items:center; justify-content:center; font-size:20px; }
-
         .notification-main {
             min-width: 0;
             flex: 1;
@@ -280,7 +277,7 @@
             .toast { right: 15px; bottom: 15px; left: 15px; width: auto; }
         }
     </style>
-    <script src="/js/app.js"></script>
+  <link rel="stylesheet" href="css/animated-ui.css">
 </head>
 <body>
     <nav>
@@ -372,11 +369,6 @@
             const title = escapeHTML(notification.title);
             const message = escapeHTML(notification.message);
             const time = new Date(notification.createdAt).toLocaleString();
-            const senderPhoto = sender && typeof sender === "object" ? HM.img(sender) : "";
-            const senderName = sender && typeof sender === "object" ? sender.name || "User" : "User";
-            const senderVisual = senderPhoto
-                ? `<img class="notification-avatar" src="${escapeHTML(senderPhoto)}" alt="${escapeHTML(senderName)}" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'notification-avatar fallback',textContent:'❤️'}));">`
-                : `<div class="notification-avatar fallback">❤️</div>`;
 
             return `
                 <div class="notification ${notification.read ? "" : "unread"}"
@@ -385,7 +377,6 @@
                      data-sender-id="${senderValue}"
                      onclick="readNotification(this)">
                     <div class="notification-main">
-                        ${senderVisual}
                         <div class="icon">${icon}</div>
                         <div class="content">
                             <h3>${title}</h3>
@@ -514,5 +505,6 @@
 
         loadNotifications();
     </script>
+  <script src="js/animated-ui.js"></script>
 </body>
 </html>

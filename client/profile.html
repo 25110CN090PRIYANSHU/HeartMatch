@@ -21,7 +21,8 @@
         cursor: not-allowed;
       }
     </style>
-  </head>
+    <link rel="stylesheet" href="css/animated-ui.css">
+</head>
   <body>
     <nav class="nav">
       <div class="brand">❤️ <span>HeartMatch</span></div>
@@ -194,8 +195,7 @@
             : "Your profile";
           els.email.textContent = user.email || "";
           els.verified.textContent = user.isVerified ? "✓ Email verified" : "";
-          els.avatar.src = HM.img(user) || fallback;
-          els.avatar.onerror = () => { els.avatar.onerror = null; els.avatar.src = fallback; };
+          els.avatar.src = user.profileImage || fallback;
         } catch (e) {
           console.error(e);
           setMsg("Could not load profile. Please refresh.");
@@ -284,9 +284,8 @@
           });
           els.photoMsg.textContent = d.message || "Done";
           if (r.ok) {
-            user = { ...user, profileImage: d.profileImage, profileImageFileId: d.profileImageFileId || user.profileImageFileId };
-            els.avatar.src = HM.img(user) || fallback;
-            els.avatar.onerror = () => { els.avatar.onerror = null; els.avatar.src = fallback; };
+            els.avatar.src = d.profileImage;
+            user = { ...user, profileImage: d.profileImage };
             localStorage.setItem(
               "user",
               JSON.stringify({ ...HM.user(), profileImage: d.profileImage }),
@@ -303,5 +302,6 @@
       els.uploadPhotoBtn.addEventListener("click", uploadPhoto);
       load();
     </script>
-  </body>
+    <script src="js/animated-ui.js"></script>
+</body>
 </html>

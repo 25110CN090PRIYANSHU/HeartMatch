@@ -429,7 +429,7 @@
 
     </style>
 
-    <script src="/js/app.js"></script>
+  <link rel="stylesheet" href="css/animated-ui.css">
 </head>
 
 
@@ -635,15 +635,13 @@
                     let photo;
 
 
-                    const photoUrl = HM.img(user);
-
-                    if (photoUrl) {
+                    if (user.profileImage) {
 
                         photo = `
 
                             <img
                                 src="${escapeAttribute(
-                                    photoUrl
+                                    user.profileImage
                                 )}"
                                 alt="Profile photo"
                                 onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className:'default-photo', textContent:'❤️'}));"
@@ -831,6 +829,7 @@
 
     </script>
 
+  <script src="js/animated-ui.js"></script>
 </body>
 
 </html>

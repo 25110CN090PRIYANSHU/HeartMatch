@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login — HeartMatch</title><link rel="stylesheet" href="/css/app.css"></head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="signup.html">Sign up</a></div></nav><main class="form card"><h1>Welcome back 💕</h1><p class="muted" style="text-align:center">Log in to continue.</p><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="login()">Login</button><div id="msg" class="msg"></div><p style="text-align:center"><a class="muted" href="forgot-password.html">Forgot password?</a></p></main><script src="/js/app.js"></script><script>
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login — HeartMatch</title><link rel="stylesheet" href="/css/app.css">  <link rel="stylesheet" href="css/animated-ui.css">
+</head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="signup.html">Sign up</a></div></nav><main class="form card"><h1>Welcome back 💕</h1><p class="muted" style="text-align:center">Log in to continue.</p><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email"></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div><button class="btn" style="width:100%" onclick="login()">Login</button><div id="msg" class="msg"></div><p style="text-align:center"><a class="muted" href="forgot-password.html">Forgot password?</a></p></main><script src="/js/app.js"></script><script>
 async function login(){
   const msg=document.getElementById("msg");
   const email=document.getElementById("email").value.trim();
@@ -12,4 +13,5 @@ async function login(){
     location.href="discover.html";
   }catch(e){console.error(e);msg.textContent="Cannot connect to server. Open this page through http://localhost:5000";}
 }
-</script></body></html>
+</script>  <script src="js/animated-ui.js"></script>
+</body></html>

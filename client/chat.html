@@ -911,7 +911,7 @@
         }
       }
     </style>
-      <script src="/js/app.js"></script>
+    <link rel="stylesheet" href="css/animated-ui.css">
 </head>
 
   <body>
@@ -1348,11 +1348,9 @@
 
           chatUserName = data.user.name || "They";
 
-          const photoUrl = HM.img(data.user);
-
-          if (photoUrl) {
+          if (data.user.profileImage) {
             profilePhoto.innerHTML = `<img
-                            src="${escapeHTML(photoUrl)}"
+                            src="${escapeHTML(data.user.profileImage)}"
                             alt="Profile"
                         >`;
 
@@ -1368,7 +1366,7 @@
               event.preventDefault();
               event.stopPropagation();
               window.open(
-                photoUrl,
+                data.user.profileImage,
                 "_blank",
                 "noopener,noreferrer",
               );
@@ -3340,5 +3338,6 @@ window.addEventListener(
       loadWebRTCConfig();
       loadChat();
     </script>
-  </body>
+    <script src="js/animated-ui.js"></script>
+</body>
 </html>
