@@ -64,11 +64,13 @@
       msg.className = "msg" + (type ? " " + type : "");
     }
 
+    const HM_FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'
+    );
+
     function profileImage(u) {
       if (u.profileImage) return HM.esc(u.profileImage);
-      return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'
-      );
+      return HM_FALLBACK_IMAGE;
     }
 
     function renderUsers(users) {
@@ -79,7 +81,7 @@
 
       grid.innerHTML = users.map(u => `
         <article class="card">
-          <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" width=400 height=400><rect width=100% height=100% fill=\"#25182f\"/><text x=50% y=55% text-anchor=middle fill=white font-size=110>❤️</text></svg>')">
+          <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
           <h3>${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
           <p class="muted">@${HM.esc(u.userId || "user")}</p>
           <p class="muted">${HM.esc(u.location || "Location not set")}</p>
@@ -120,7 +122,6 @@
       } catch (error) {
         console.error("Discover load error:", error);
         grid.innerHTML = '<div class="card"><h2>Could not load Discover.</h2><p class="muted">Check your connection and try again.</p></div>';
-        preferenceText.textContent = "Could not load your preferences.";
         setMessage("Could not load Discover. Please try again.", "err");
       } finally {
         loading = false;

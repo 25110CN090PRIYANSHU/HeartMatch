@@ -250,3 +250,50 @@ img, video, canvas, iframe { max-width: 100%; }
     max-width: 100% !important;
   }
 }
+
+
+/* Final stability fixes */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+body {
+  overflow-y: auto;
+}
+body.call-open {
+  overflow: hidden !important;
+  height: 100dvh;
+  overscroll-behavior: none;
+}
+main, .wrap, #grid {
+  min-width: 0;
+}
+#grid {
+  width: 100%;
+}
+@media (max-width: 600px) {
+  #grid {
+    overflow: visible;
+  }
+}
+
+/* WhatsApp-style camera preview: fill the preview with the face/video, no black bars. */
+#localVideo {
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
+  background: #000;
+}
+#remoteVideo {
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
+}
+@media (max-width: 600px) {
+  #localVideo {
+    top: max(62px, env(safe-area-inset-top) + 52px) !important;
+    right: 12px !important;
+    width: 112px !important;
+    height: 150px !important;
+    border-radius: 10px !important;
+  }
+}

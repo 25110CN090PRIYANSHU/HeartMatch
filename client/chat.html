@@ -685,8 +685,8 @@
         max-width: none;
         max-height: none;
         aspect-ratio: auto;
-        object-fit: contain;
-        object-position: center;
+        object-fit: cover;
+        object-position: center center;
         background: #000;
         border-radius: 0;
       }
@@ -696,11 +696,11 @@
         position: absolute;
         top: 76px;
         right: 18px;
-        width: clamp(112px, 18vw, 190px);
-        height: clamp(150px, 24vw, 250px);
+        width: clamp(118px, 19vw, 200px);
+        height: clamp(158px, 25vw, 266px);
         aspect-ratio: 3 / 4;
-        object-fit: contain;
-        object-position: center;
+        object-fit: cover;
+        object-position: center center;
         transform: scaleX(-1);
         background: #111;
         border-radius: 12px;
@@ -2347,6 +2347,7 @@ function openCall(
   callMode = mode;
 
   callOverlay?.classList.add("open");
+  document.body.classList.add("call-open");
 
   if (callTitle) {
     callTitle.textContent =
@@ -2363,6 +2364,7 @@ function openCall(
 
 function closeCall() {
   callOverlay?.classList.remove("open");
+  document.body.classList.remove("call-open");
 
  if (remoteVideo) {
   remoteVideo.srcObject = null;
