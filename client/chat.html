@@ -2406,7 +2406,14 @@ async function getCallMedia(mode) {
 
   return navigator.mediaDevices.getUserMedia({
     audio: true,
-    video: mode === "video",
+    video: mode === "video"
+      ? {
+          facingMode: { ideal: "user" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: { ideal: 16 / 9 },
+        }
+      : false,
   });
 }
 
