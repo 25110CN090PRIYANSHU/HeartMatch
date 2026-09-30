@@ -1,172 +1,79 @@
-/* HEARTMATCH ROMANCE UI 4.0
-   Decorative frontend-only layer. No API, database, auth, routing or data logic is changed. */
+/* HEARTMATCH // MOTION UI 2.0
+   Visual-only layer. No API, form, navigation or data behaviour changes. */
 :root{
-  --love:#ff3f8e;
-  --love2:#ff78b5;
-  --rose:#ff557d;
-  --violet:#9b6cff;
-  --peach:#ffb38a;
-  --glass:rgba(28,12,30,.68);
-  --glass-soft:rgba(255,255,255,.065);
-  --line:rgba(255,170,205,.18);
-  --romance-shadow:0 24px 90px rgba(255,35,115,.14),0 20px 70px rgba(0,0,0,.34);
+  --hm-pink:#ff3d8d;--hm-pink2:#ff6aa9;--hm-purple:#8b5cf6;--hm-blue:#38bdf8;
+  --hm-glass:rgba(20,16,34,.68);--hm-glass2:rgba(255,255,255,.055);
+  --hm-line:rgba(255,255,255,.11);--hm-shadow:0 30px 90px rgba(0,0,0,.42);
 }
+html{scroll-behavior:smooth}
+body{position:relative;isolation:isolate;overflow-x:hidden;background-attachment:fixed!important;animation:hmEnter .8s cubic-bezier(.16,1,.3,1) both}
+body:before,body:after{content:"";position:fixed;z-index:-3;pointer-events:none;border-radius:50%;filter:blur(70px);opacity:.27;mix-blend-mode:screen}
+body:before{width:55vw;height:55vw;left:-25vw;top:-18vw;background:radial-gradient(circle,#a855f7 0,rgba(168,85,247,.25) 38%,transparent 70%);animation:orbA 16s ease-in-out infinite alternate}
+body:after{width:50vw;height:50vw;right:-20vw;bottom:-18vw;background:radial-gradient(circle,#ff3d8d 0,rgba(255,61,141,.22) 40%,transparent 72%);animation:orbB 19s ease-in-out infinite alternate}
+@keyframes hmEnter{from{opacity:0;transform:translateY(18px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes orbA{0%{transform:translate(0,0) scale(1)}50%{transform:translate(15vw,8vh) scale(1.18)}100%{transform:translate(4vw,22vh) scale(.92)}}
+@keyframes orbB{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-12vw,-10vh) scale(1.2)}100%{transform:translate(-4vw,-20vh) scale(.9)}}
+@keyframes shine{0%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,61,141,0)}50%{box-shadow:0 0 0 9px rgba(255,61,141,.08),0 0 32px rgba(255,61,141,.16)}}
+@keyframes gradientMove{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes ripple{to{transform:scale(2.7);opacity:0}}
+@keyframes borderSpin{to{transform:rotate(360deg)}}
 
-html{
-  scroll-behavior:smooth;
-  background:
-    radial-gradient(circle at 12% 8%,rgba(154,76,255,.25),transparent 28%),
-    radial-gradient(circle at 88% 8%,rgba(255,53,126,.24),transparent 30%),
-    radial-gradient(circle at 50% 100%,rgba(255,110,163,.16),transparent 38%),
-    linear-gradient(145deg,#09050e 0%,#170916 42%,#0b0711 100%) fixed;
-}
-body{
-  position:relative;
-  isolation:isolate;
-  background:transparent!important;
-  overflow-x:hidden;
-  animation:hmPageIn .75s cubic-bezier(.16,1,.3,1) both;
-}
-body::before{
-  content:"";position:fixed;inset:-30%;z-index:-4;pointer-events:none;
-  background:
-    radial-gradient(circle at 30% 35%,rgba(255,48,126,.10),transparent 20%),
-    radial-gradient(circle at 70% 65%,rgba(151,83,255,.11),transparent 22%);
-  filter:blur(35px);animation:hmUniverse 20s ease-in-out infinite alternate;
-}
-@keyframes hmPageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@keyframes hmUniverse{0%{transform:translate3d(-3%,0,0) scale(1)}50%{transform:translate3d(3%,-2%,0) scale(1.06)}100%{transform:translate3d(-1%,3%,0) scale(1.02)}}
+/* NAVIGATION */
+nav,.nav,.navbar{position:sticky!important;top:0;z-index:1000;background:rgba(9,7,18,.72)!important;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.1)!important;box-shadow:0 12px 45px rgba(0,0,0,.22)!important}
+.brand,.logo,.brand-name{font-weight:900!important;letter-spacing:-.03em;transition:.3s ease;filter:drop-shadow(0 0 12px rgba(255,61,141,.18))}
+.brand:hover,.logo:hover,.brand-name:hover{transform:scale(1.04);filter:drop-shadow(0 0 22px rgba(255,61,141,.48))}
+.navlinks a,.navlinks button,.nav-btn,.nav-links a{position:relative;overflow:hidden!important;transition:transform .25s ease,background .25s ease,box-shadow .25s ease!important}
+.navlinks a:hover,.navlinks button:hover,.nav-btn:hover,.nav-links a:hover{transform:translateY(-2px)!important;box-shadow:0 10px 30px rgba(255,61,141,.14)!important}
 
-/* Romantic decorative layer */
-.hm-motion-layer{
-  position:fixed!important;inset:0!important;overflow:hidden!important;pointer-events:none!important;
-  z-index:-1!important;
-}
-.hm-romance-glow{position:absolute;border-radius:50%;filter:blur(55px);opacity:.25;mix-blend-mode:screen}
-.hm-romance-glow.g1{width:42vw;height:42vw;left:-17vw;top:8vh;background:#a855f7;animation:hmGlow1 15s ease-in-out infinite alternate}
-.hm-romance-glow.g2{width:45vw;height:45vw;right:-19vw;top:22vh;background:#ff3f8e;animation:hmGlow2 18s ease-in-out infinite alternate}
-.hm-romance-glow.g3{width:35vw;height:35vw;left:33vw;bottom:-22vw;background:#ff8aaf;animation:hmGlow3 13s ease-in-out infinite alternate}
-@keyframes hmGlow1{to{transform:translate(18vw,13vh) scale(1.3)}}
-@keyframes hmGlow2{to{transform:translate(-17vw,-13vh) scale(1.22)}}
-@keyframes hmGlow3{to{transform:translate(2vw,-16vh) scale(1.25)}}
+/* HEADINGS */
+h1{letter-spacing:-.045em!important;text-shadow:0 10px 40px rgba(0,0,0,.2)}
+.gradient{background:linear-gradient(100deg,#ff3d8d,#a855f7,#38bdf8,#ff3d8d)!important;background-size:300% 100%!important;background-clip:text!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;animation:gradientMove 7s ease infinite!important}
 
-.hm-heart,.hm-romance-icon,.hm-sparkle,.hm-petal,.hm-doll{
-  position:absolute;bottom:-100px;display:block;user-select:none;
-  filter:drop-shadow(0 8px 16px rgba(255,60,135,.18));
-  will-change:transform,opacity;
-}
-.hm-heart{font-size:var(--s);color:var(--c);animation:hmHeartRise var(--d) linear var(--delay) infinite}
-.hm-romance-icon{font-size:var(--s);opacity:.75;animation:hmIconRise var(--d) ease-in-out var(--delay) infinite}
-.hm-sparkle{font-size:var(--s);color:#ffd9e8;animation:hmSpark var(--d) ease-in-out var(--delay) infinite}
-.hm-petal{width:10px;height:18px;border-radius:100% 0 100% 0;background:linear-gradient(135deg,#ffb2cf,#ff477f);opacity:.6;animation:hmPetal var(--d) linear var(--delay) infinite}
-.hm-doll{font-size:var(--s);animation:hmDoll var(--d) ease-in-out var(--delay) infinite}
-@keyframes hmHeartRise{0%{transform:translate3d(0,0,0) rotate(-12deg) scale(.7);opacity:0}10%{opacity:.8}45%{transform:translate3d(var(--x),-48vh,0) rotate(12deg) scale(1)}80%{opacity:.45}100%{transform:translate3d(calc(var(--x)*-1),-118vh,0) rotate(35deg) scale(1.35);opacity:0}}
-@keyframes hmIconRise{0%,100%{transform:translate3d(0,0,0) rotate(-4deg) scale(.82);opacity:0}15%{opacity:.8}50%{transform:translate3d(var(--x),-52vh,0) rotate(5deg) scale(1)}85%{opacity:.5}100%{transform:translate3d(calc(var(--x)*-1),-112vh,0) rotate(-8deg) scale(1.12);opacity:0}}
-@keyframes hmSpark{0%,100%{transform:translateY(0) scale(.4) rotate(0);opacity:0}25%{opacity:.8}55%{transform:translate3d(var(--x),-42vh,0) scale(1.25) rotate(90deg)}100%{transform:translate3d(calc(var(--x)*-.5),-100vh,0) scale(.2) rotate(180deg);opacity:0}}
-@keyframes hmPetal{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}12%{opacity:.65}50%{transform:translate3d(var(--x),-50vh,0) rotate(180deg)}100%{transform:translate3d(calc(var(--x)*-1),-112vh,0) rotate(430deg);opacity:0}}
-@keyframes hmDoll{0%,100%{transform:translate3d(0,0,0) rotate(-5deg) scale(.72);opacity:0}15%{opacity:.85}45%{transform:translate3d(var(--x),-45vh,0) rotate(5deg) scale(1)}75%{opacity:.55}100%{transform:translate3d(calc(var(--x)*-.8),-110vh,0) rotate(-7deg) scale(.9);opacity:0}}
+/* GLASS CARDS */
+.card,.profile-card,.match-card,.notification,.form,.person-card,.user-card{position:relative!important;overflow:hidden!important;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025))!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:0 18px 55px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.05)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:transform .42s cubic-bezier(.16,1,.3,1),box-shadow .42s ease,border-color .3s ease!important}
+.card:before,.profile-card:before,.match-card:before,.notification:before,.form:before,.person-card:before,.user-card:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.12) 48%,transparent 70%);transform:translateX(-130%);z-index:0}
+.card:hover,.profile-card:hover,.match-card:hover,.notification:hover,.person-card:hover,.user-card:hover{transform:translateY(-8px) scale(1.012)!important;border-color:rgba(255,61,141,.3)!important;box-shadow:var(--hm-shadow),0 0 0 1px rgba(255,61,141,.05)!important}
+.card:hover:before,.profile-card:hover:before,.match-card:hover:before,.notification:hover:before,.person-card:hover:before,.user-card:hover:before{animation:shine 1s ease}
+.card>* ,.profile-card>* ,.match-card>* ,.notification>* ,.form>* ,.person-card>* ,.user-card>*{position:relative;z-index:1}
 
-/* A subtle romantic vignette on every page */
-.hm-romantic-vignette{position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(circle at center,transparent 30%,rgba(10,3,12,.18) 100%)}
-
-/* Navigation */
-.nav,nav,.navbar{
-  position:sticky!important;top:0;z-index:1000!important;
-  background:linear-gradient(90deg,rgba(18,7,20,.88),rgba(35,10,31,.78),rgba(14,7,20,.88))!important;
-  backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
-  border-bottom:1px solid rgba(255,141,190,.16)!important;
-  box-shadow:0 12px 45px rgba(0,0,0,.3),0 1px 0 rgba(255,130,180,.06) inset!important;
-}
-.brand,.logo,.brand-name{filter:drop-shadow(0 0 14px rgba(255,61,141,.35));transition:.35s ease!important}
-.brand:hover,.logo:hover,.brand-name:hover{transform:scale(1.045) rotate(-1deg);filter:drop-shadow(0 0 25px rgba(255,61,141,.7))}
-.brand::after,.logo::after{content:" ✦";color:#ffb2d1;font-size:.55em;vertical-align:top;opacity:.7}
-.navlinks a,.navlinks button,.nav-btn,.nav-links a{position:relative;overflow:hidden!important;border-radius:12px!important;transition:.25s ease!important}
-.navlinks a::after,.navlinks button::after,.nav-btn::after,.nav-links a::after{content:"";position:absolute;left:-100%;bottom:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,#ff77b2,transparent);transition:left .35s ease}
-.navlinks a:hover::after,.navlinks button:hover::after,.nav-btn:hover::after,.nav-links a:hover::after{left:100%}
-.navlinks a:hover,.navlinks button:hover,.nav-btn:hover,.nav-links a:hover{transform:translateY(-2px)!important;background:rgba(255,75,145,.08)!important;box-shadow:0 10px 30px rgba(255,61,141,.13)!important}
-
-/* Headings / romantic title glow */
-h1{letter-spacing:-.045em!important;text-shadow:0 8px 40px rgba(255,55,135,.09)}
-.gradient{background:linear-gradient(110deg,#ff5b9f,#ffd0e3,#b27cff,#ff5b9f)!important;background-size:300% 100%!important;background-clip:text!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;animation:hmGradient 5s ease infinite!important;filter:drop-shadow(0 0 16px rgba(255,71,145,.2))}
-@keyframes hmGradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-
-/* Cards */
-.card,.profile-card,.match-card,.notification,.form,.person-card,.user-card,.notice{
-  position:relative!important;overflow:hidden!important;
-  background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,80,145,.025) 48%,rgba(255,255,255,.018))!important;
-  border:1px solid rgba(255,156,200,.13)!important;
-  box-shadow:var(--romance-shadow),inset 0 1px rgba(255,255,255,.06)!important;
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  transition:transform .42s cubic-bezier(.16,1,.3,1),box-shadow .42s ease,border-color .3s ease!important;
-}
-.card::before,.profile-card::before,.match-card::before,.notification::before,.form::before,.person-card::before,.user-card::before,.notice::before{
-  content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 20%,rgba(255,180,215,.13) 48%,transparent 72%);transform:translateX(-130%);z-index:0
-}
-.card:hover,.profile-card:hover,.match-card:hover,.notification:hover,.form:hover,.person-card:hover,.user-card:hover,.notice:hover{transform:translateY(-8px) scale(1.012)!important;border-color:rgba(255,89,154,.34)!important;box-shadow:0 30px 100px rgba(255,35,115,.12),0 20px 70px rgba(0,0,0,.38)!important}
-.card:hover::before,.profile-card:hover::before,.match-card:hover::before,.notification:hover::before,.form:hover::before,.person-card:hover::before,.user-card:hover::before,.notice:hover::before{animation:hmShine 1s ease}
-.card>* ,.profile-card>* ,.match-card>* ,.notification>* ,.form>* ,.person-card>* ,.user-card>* ,.notice>*{position:relative;z-index:1}
-@keyframes hmShine{to{transform:translateX(130%)}}
-
-/* Buttons */
-.btn,.chat-btn,.profile-action-btn,.send-btn,.call-btn{
-  position:relative;overflow:hidden;isolation:isolate;
-  transition:transform .2s cubic-bezier(.16,1,.3,1),box-shadow .25s ease,filter .25s ease!important;
-}
-.btn:not(.ghost):not(.alt),.profile-action-btn.like,.send-btn{
-  background:linear-gradient(110deg,#ff397f,#ff65a4,#a56dff,#ff397f)!important;
-  background-size:260% 100%!important;animation:hmGradient 5s ease infinite;
-  box-shadow:0 12px 32px rgba(255,52,130,.16)!important;
-}
-.btn:hover,.chat-btn:hover,.profile-action-btn:hover,.send-btn:hover{transform:translateY(-3px) scale(1.025)!important;box-shadow:0 17px 45px rgba(255,61,141,.25)!important;filter:saturate(1.2)}
+/* BUTTONS */
+.btn,.chat-btn,.profile-action-btn,.send-btn,.call-btn{position:relative;overflow:hidden;transition:transform .2s cubic-bezier(.16,1,.3,1),box-shadow .25s ease,filter .25s ease!important}
+.btn:not(.ghost):not(.alt),.profile-action-btn.like,.send-btn{background:linear-gradient(110deg,#ff3d8d,#a855f7,#ff3d8d)!important;background-size:220% 100%!important;animation:gradientMove 6s ease infinite}
+.btn:hover,.chat-btn:hover,.profile-action-btn:hover,.send-btn:hover{transform:translateY(-3px) scale(1.025)!important;box-shadow:0 15px 38px rgba(255,61,141,.22)!important;filter:saturate(1.18)}
 .btn:active,.chat-btn:active,.profile-action-btn:active,.send-btn:active,.call-btn:active{transform:scale(.96)!important}
 
-/* Inputs */
-input,textarea,select,.field input,.field textarea,.field select,.search-input{
-  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,background .25s ease!important;
-  background:rgba(255,255,255,.045)!important;border-color:rgba(255,145,190,.13)!important;
-}
-input:hover,textarea:hover,select:hover{background:rgba(255,90,150,.055)!important;border-color:rgba(255,91,155,.28)!important}
-input:focus,textarea:focus,select:focus{transform:translateY(-2px)!important;border-color:rgba(255,91,155,.7)!important;box-shadow:0 0 0 4px rgba(255,61,141,.08),0 15px 35px rgba(0,0,0,.18),0 0 24px rgba(255,61,141,.08)!important;outline:none!important}
+/* FORMS */
+input,textarea,select,.field input,.field textarea,.field select,.search-input{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,background .25s ease!important;background:rgba(255,255,255,.045)!important;border-color:rgba(255,255,255,.1)!important}
+input:hover,textarea:hover,select:hover{background:rgba(255,255,255,.07)!important;border-color:rgba(255,61,141,.22)!important}
+input:focus,textarea:focus,select:focus{transform:translateY(-2px)!important;border-color:rgba(255,61,141,.65)!important;box-shadow:0 0 0 4px rgba(255,61,141,.08),0 15px 35px rgba(0,0,0,.18)!important;outline:none!important}
 
-/* Profile imagery */
-.profile-img,.avatar,.photo,.profile-photo,.default-photo{transition:transform .55s cubic-bezier(.16,1,.3,1),box-shadow .4s ease,filter .4s ease!important}
-.card:hover .profile-img,.card:hover .avatar,.match-card:hover .photo,.profile-card:hover .avatar{transform:scale(1.075)!important;filter:saturate(1.14) brightness(1.03)!important;box-shadow:0 0 0 5px rgba(255,75,145,.1),0 18px 50px rgba(0,0,0,.35)!important}
-.profile-photo{box-shadow:0 0 0 1px rgba(255,130,185,.18),0 0 30px rgba(255,54,135,.12);animation:hmPhotoPulse 3.2s ease-in-out infinite}
-@keyframes hmPhotoPulse{50%{box-shadow:0 0 0 5px rgba(255,80,150,.08),0 0 36px rgba(255,54,135,.2)}}
+/* PROFILE PHOTOS */
+.profile-img,.avatar,.photo,.profile-photo,.default-photo{transition:transform .5s cubic-bezier(.16,1,.3,1),box-shadow .4s ease,filter .4s ease!important}
+.card:hover .profile-img,.card:hover .avatar,.match-card:hover .photo,.profile-card:hover .avatar{transform:scale(1.07)!important;filter:saturate(1.12)!important;box-shadow:0 0 0 5px rgba(255,61,141,.08),0 15px 45px rgba(0,0,0,.3)!important}
+.profile-photo{animation:pulseGlow 3s infinite}
 
-/* Tags and online indicators */
+/* TAGS / STATUS */
 .tag,.chip{transition:.22s ease!important}
-.tag:hover,.chip:hover{transform:translateY(-3px) scale(1.04)!important;background:rgba(255,61,141,.13)!important;border-color:rgba(255,61,141,.42)!important}
-.status-dot,.online-status .status-dot{animation:hmStatus 2s ease-in-out infinite}
-@keyframes hmStatus{50%{box-shadow:0 0 0 7px rgba(82,229,165,.09),0 0 18px rgba(82,229,165,.28)}}
+.tag:hover,.chip:hover{transform:translateY(-3px) scale(1.03)!important;background:rgba(255,61,141,.12)!important;border-color:rgba(255,61,141,.4)!important}
+.status-dot,.online-status .status-dot{animation:pulseGlow 2.2s infinite}
 
-/* Chat */
-.chat-container{box-shadow:0 30px 100px rgba(0,0,0,.48),0 0 80px rgba(255,50,130,.05)!important;border-color:rgba(255,145,190,.12)!important}
-.chat-header{backdrop-filter:blur(22px)!important;background:linear-gradient(180deg,rgba(36,12,34,.95),rgba(28,11,29,.78))!important}
+/* CHAT */
+.chat-container{box-shadow:0 30px 100px rgba(0,0,0,.42)!important;border-color:rgba(255,255,255,.1)!important}
+.chat-header{backdrop-filter:blur(22px)!important;background:linear-gradient(180deg,rgba(25,20,38,.94),rgba(25,20,38,.72))!important}
 .message{transition:transform .22s ease,filter .22s ease,box-shadow .22s ease!important}
-.message-row:hover .message{transform:translateY(-2px)!important;filter:brightness(1.06);box-shadow:0 10px 30px rgba(255,55,135,.08)}
+.message-row:hover .message{transform:translateY(-2px)!important;filter:brightness(1.06);box-shadow:0 10px 28px rgba(0,0,0,.16)}
 
-/* Forms / page entrance */
-main>*{animation:hmStagger .65s cubic-bezier(.16,1,.3,1) both}
+/* PAGE LOAD STAGGER */
+main>*{animation:hmEnter .65s cubic-bezier(.16,1,.3,1) both}
 main>*:nth-child(2){animation-delay:.06s}main>*:nth-child(3){animation-delay:.12s}main>*:nth-child(4){animation-delay:.18s}main>*:nth-child(5){animation-delay:.24s}
-@keyframes hmStagger{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
 
-/* Decorative romantic halo behind major cards */
-.wrap::before,.hero::before{
-  content:"";position:absolute;left:50%;top:10%;width:min(620px,85vw);height:300px;transform:translateX(-50%);pointer-events:none;
-  background:radial-gradient(ellipse,rgba(255,58,135,.10),transparent 68%);filter:blur(22px);z-index:-1
-}
+/* FLOATING MOTION LAYER */
+.hm-motion-layer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+.hm-particle{position:absolute;bottom:-30px;color:rgba(255,110,170,.2);font-size:var(--s);animation:hmParticle var(--d) linear var(--delay) infinite}
+@keyframes hmParticle{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}12%{opacity:.7}50%{transform:translate3d(var(--x),-55vh,0) rotate(90deg)}90%{opacity:.25}100%{transform:translate3d(calc(var(--x) * -1),-115vh,0) rotate(180deg);opacity:0}}
 
-/* Ripple */
-@keyframes hmRipple{to{transform:scale(3);opacity:0}}
-
-/* Mobile */
-@media(max-width:700px){
-  .hm-romance-icon,.hm-doll{font-size:calc(var(--s)*.8)}
-  body::before{filter:blur(28px)}
-  .card:hover,.profile-card:hover,.match-card:hover,.form:hover{transform:translateY(-3px) scale(1.005)!important}
-}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
-@keyframes hmBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0px)),calc(-50% - 34px)) scale(1.15)}}
-.hm-love-note{width:max-content;max-width:100%;margin:0 auto 18px;padding:9px 16px;border:1px solid rgba(255,142,190,.2);border-radius:999px;background:rgba(255,75,145,.065);color:#ffc8dd;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 10px 35px rgba(255,45,125,.08);animation:hmNote 2.8s ease-in-out infinite}
-@keyframes hmNote{50%{transform:translateY(-3px);box-shadow:0 14px 42px rgba(255,45,125,.14)}}
+/* REDUCED MOTION */
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+@media(max-width:700px){body:before,body:after{width:90vw;height:90vw;filter:blur(55px)}.card:hover,.profile-card:hover,.match-card:hover{transform:translateY(-3px) scale(1.005)!important}}
