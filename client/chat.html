@@ -628,85 +628,125 @@
         text-decoration: none;
         margin-left: auto;
       }
+      /* WhatsApp-style video call */
       .call-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(5, 4, 10, 0.97);
+        background: #000;
         display: none;
-        z-index: 100;
+        z-index: 100000;
         flex-direction: column;
+        overflow: hidden;
       }
-      .call-overlay.open {
-        display: flex;
-      }
+      .call-overlay.open { display: flex; }
+
       .call-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
+        padding: 22px 24px 42px;
         text-align: center;
-        padding: 15px;
+        color: #fff;
+        background: linear-gradient(to bottom, rgba(0,0,0,.72), rgba(0,0,0,0));
+        pointer-events: none;
       }
       .call-top h3 {
+        margin: 0;
         font-size: 17px;
+        font-weight: 600;
+        letter-spacing: .1px;
+        text-shadow: 0 1px 3px rgba(0,0,0,.5);
       }
       .call-status {
         font-size: 12px;
-        color: #aaa;
-        margin-top: 5px;
+        color: rgba(255,255,255,.78);
+        margin-top: 4px;
       }
+
       .video-stage {
-        position: relative;
-        flex: 1 1 auto;
-        min-height: 0;
+        position: absolute;
+        inset: 0;
         width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 10px 20px;
+        background: #000;
         overflow: hidden;
       }
+
+      /* Keep the COMPLETE camera frame visible. No crop/zoom. */
       #remoteVideo {
         display: block;
-        width: min(100%, 1200px);
-        height: auto;
-        max-height: 100%;
-        aspect-ratio: 16 / 9;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
         object-fit: contain;
-        object-position: center center;
+        object-position: center;
         background: #000;
-        border-radius: 15px;
+        border-radius: 0;
       }
+
+      /* WhatsApp-style floating self preview */
       #localVideo {
         position: absolute;
-        right: 34px;
-        bottom: 24px;
-        width: 190px;
-        height: auto;
-        aspect-ratio: 4 / 3;
+        top: 76px;
+        right: 18px;
+        width: clamp(112px, 18vw, 190px);
+        height: clamp(150px, 24vw, 250px);
+        aspect-ratio: 3 / 4;
         object-fit: contain;
-        object-position: center center;
+        object-position: center;
         transform: scaleX(-1);
         background: #111;
         border-radius: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        z-index: 2;
+        border: 2px solid rgba(255,255,255,.88);
+        box-shadow: 0 5px 20px rgba(0,0,0,.45);
+        z-index: 6;
       }
+
       .call-controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 7;
         display: flex;
+        align-items: center;
         justify-content: center;
-        gap: 12px;
-        padding: 18px;
+        gap: 18px;
+        padding: 26px 18px calc(28px + env(safe-area-inset-bottom));
+        background: linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,0));
       }
       .call-control {
-        width: 52px;
-        height: 52px;
+        width: 56px;
+        height: 56px;
+        flex: 0 0 56px;
         border: 0;
         border-radius: 50%;
-        background: #302b3c;
+        background: rgba(42,42,42,.92);
         color: #fff;
-        font-size: 20px;
+        font-size: 21px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0,0,0,.35);
+        -webkit-tap-highlight-color: transparent;
       }
       .call-control.end {
-        background: #e5395f;
+        background: #e53935;
+        width: 62px;
+        height: 62px;
+        flex-basis: 62px;
+        font-size: 22px;
       }
+      .call-control:active { transform: scale(.94); }
+
       .messages {
         transition: background 0.25s ease;
       }
@@ -914,21 +954,30 @@
         .attach-option {
           width: min(190px, calc(100vw - 32px));
         }
-        .video-stage {
-          padding: 8px;
-        }
-        #remoteVideo {
-          width: 100%;
-          max-height: 100%;
-          aspect-ratio: 16 / 9;
-          object-fit: contain;
-          border-radius: 10px;
+        .call-top {
+          padding-top: 18px;
+          padding-bottom: 38px;
         }
         #localVideo {
-          width: 125px;
-          right: 14px;
-          bottom: 14px;
-          object-fit: contain;
+          top: 68px;
+          right: 12px;
+          width: 108px;
+          height: 144px;
+          border-radius: 10px;
+        }
+        .call-controls {
+          gap: 14px;
+          padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+        .call-control {
+          width: 52px;
+          height: 52px;
+          flex-basis: 52px;
+        }
+        .call-control.end {
+          width: 58px;
+          height: 58px;
+          flex-basis: 58px;
         }
       }
     </style>
