@@ -1,232 +1,1019 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Discover — HeartMatch</title>
+  <title>Discover — HeartMatch</title>
 
-    <link rel="stylesheet" href="/css/app.css" />
-    <link rel="stylesheet" href="css/animated-ui.css" />
-    <link rel="stylesheet" href="/css/universe.css" />
-  </head>
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="css/animated-ui.css" />
+  <link rel="stylesheet" href="/css/universe.css" />
 
-  <body>
-    <nav class="nav">
-      <div class="brand">
-        ❤️ <span>HeartMatch</span>
-      </div>
+  <style>
+    /* Safe profile placeholder */
+    .profile-placeholder {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          rgba(139, 92, 246, 0.35),
+          transparent 40%
+        ),
+        linear-gradient(
+          135deg,
+          #171525,
+          #25182f,
+          #10101a
+        );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-      <div class="navlinks">
-        <a href="profile.html">Profile</a>
-        <a href="matches.html">Matches</a>
-        <a href="notifications.html">Notifications</a>
-        <a href="settings.html">Settings</a>
+    .profile-placeholder span {
+      font-size: 70px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.18);
+      text-transform: uppercase;
+    }
 
-        <button type="button" onclick="HM.logout()">
-          Logout
-        </button>
-      </div>
-    </nav>
+    .profile-img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 16px;
+      display: block;
+    }
+  </style>
+</head>
 
-    <main class="wrap">
+<body>
 
-      <!-- HEADER -->
-      <div class="section-title">
-        <div>
-          <h1>Discover</h1>
-          <p class="muted">
-            Discover all HeartMatch users.
-          </p>
-        </div>
+  <!-- NAVBAR -->
+  <nav class="nav">
 
-        <button
-          id="refreshBtn"
-          class="btn ghost"
-          type="button"
-        >
-          Refresh
-        </button>
-      </div>
+    <div class="brand">
+      <span>HeartMatch</span>
+    </div>
 
-      <div id="msg" class="msg"></div>
+    <div class="navlinks">
 
+      <a href="profile.html">
+        Profile
+      </a>
 
-      <!-- USER SEARCH -->
-      <section
-        class="card"
-        style="margin-bottom: 18px"
+      <a href="matches.html">
+        Matches
+      </a>
+
+      <a href="notifications.html">
+        Notifications
+      </a>
+
+      <a href="settings.html">
+        Settings
+      </a>
+
+      <button
+        type="button"
+        onclick="HM.logout()"
       >
+        Logout
+      </button>
 
-        <h2>
-          Find someone by User ID 🔎
-        </h2>
+    </div>
+
+  </nav>
+
+
+  <!-- MAIN -->
+  <main class="wrap">
+
+    <!-- HEADER -->
+    <div class="section-title">
+
+      <div>
+
+        <h1>
+          Discover
+        </h1>
 
         <p class="muted">
-          Enter their unique User ID to open their profile.
+          Discover all HeartMatch users.
         </p>
 
-        <div
+      </div>
+
+      <button
+        id="refreshBtn"
+        class="btn ghost"
+        type="button"
+      >
+        Refresh
+      </button>
+
+    </div>
+
+
+    <!-- MESSAGE -->
+    <div
+      id="msg"
+      class="msg"
+    ></div>
+
+
+    <!-- SEARCH -->
+    <section
+      class="card"
+      style="margin-bottom: 18px"
+    >
+
+      <h2>
+        Find someone by User ID
+      </h2>
+
+      <p class="muted">
+        Enter their unique User ID to open their profile.
+      </p>
+
+      <div
+        style="
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        "
+      >
+
+        <input
+          id="userSearch"
+          class="search-input"
+          autocomplete="off"
+          placeholder="e.g. priyanshu123"
+          maxlength="24"
           style="
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            flex: 1;
+            min-width: 220px;
           "
+        />
+
+        <button
+          id="findUserBtn"
+          class="btn"
+          type="button"
         >
+          Find user
+        </button>
 
-          <input
-            id="userSearch"
-            class="search-input"
-            autocomplete="off"
-            placeholder="e.g. priyanshu123"
-            maxlength="24"
-            style="
-              flex: 1;
-              min-width: 220px;
-            "
-          />
+      </div>
 
-          <button
-            id="findUserBtn"
-            class="btn"
-            type="button"
-          >
-            Find user
-          </button>
+      <div
+        id="searchResult"
+        class="msg"
+      ></div>
 
-        </div>
-
-        <div
-          id="searchResult"
-          class="msg"
-        ></div>
-
-      </section>
+    </section>
 
 
-      <!-- DISCOVER USERS -->
-      <div id="grid" class="grid"></div>
+    <!-- USERS -->
+    <div
+      id="grid"
+      class="grid"
+    ></div>
 
-    </main>
-
-
-    <script src="/js/app.js"></script>
-
-    <script>
-      /* =========================================
-         AUTH
-      ========================================= */
-
-      HM.requireAuth();
+  </main>
 
 
-      /* =========================================
-         ELEMENTS
-      ========================================= */
+  <script src="/js/app.js"></script>
 
-      const grid =
-        document.getElementById("grid");
+  <script>
 
-      const msg =
-        document.getElementById("msg");
+    /* =========================================
+       AUTH
+    ========================================= */
 
-      const refreshBtn =
-        document.getElementById("refreshBtn");
-
-      const userSearch =
-        document.getElementById("userSearch");
-
-      const findUserBtn =
-        document.getElementById("findUserBtn");
-
-      const searchResult =
-        document.getElementById("searchResult");
+    HM.requireAuth();
 
 
-      let loading = false;
+    /* =========================================
+       ELEMENTS
+    ========================================= */
+
+    const grid =
+      document.getElementById("grid");
+
+    const msg =
+      document.getElementById("msg");
+
+    const refreshBtn =
+      document.getElementById("refreshBtn");
+
+    const userSearch =
+      document.getElementById("userSearch");
+
+    const findUserBtn =
+      document.getElementById("findUserBtn");
+
+    const searchResult =
+      document.getElementById("searchResult");
 
 
-      /* =========================================
-         MESSAGE
-      ========================================= */
+    let loading = false;
 
-      function setMessage(
-        text,
-        type = ""
+
+    /* =========================================
+       MESSAGE
+    ========================================= */
+
+    function setMessage(
+      text,
+      type = ""
+    ) {
+
+      msg.textContent =
+        text || "";
+
+      msg.className =
+        "msg" +
+        (
+          type
+            ? " " + type
+            : ""
+        );
+    }
+
+
+    /* =========================================
+       SAFE PROFILE IMAGE
+       
+       IMPORTANT:
+       No inline onerror.
+       No heart SVG.
+       No escaped HTML.
+    ========================================= */
+
+    function getInitials(user) {
+
+      const name =
+        String(
+          user?.name || "U"
+        ).trim();
+
+      if (!name) {
+        return "U";
+      }
+
+      const parts =
+        name.split(/\s+/);
+
+      if (parts.length === 1) {
+        return parts[0]
+          .substring(0, 2)
+          .toUpperCase();
+      }
+
+      return (
+        parts[0][0] +
+        parts[parts.length - 1][0]
+      ).toUpperCase();
+    }
+
+
+    function createPlaceholder(user) {
+
+      const wrapper =
+        document.createElement("div");
+
+      wrapper.className =
+        "profile-placeholder";
+
+      const span =
+        document.createElement("span");
+
+      span.textContent =
+        getInitials(user);
+
+      wrapper.appendChild(span);
+
+      return wrapper;
+    }
+
+
+    /* =========================================
+       RENDER USERS
+    ========================================= */
+
+    function renderUsers(users) {
+
+      grid.innerHTML = "";
+
+
+      if (
+        !Array.isArray(users) ||
+        users.length === 0
       ) {
 
-        msg.textContent =
-          text || "";
+        grid.innerHTML = `
+          <div class="card">
 
-        msg.className =
-          "msg" +
-          (type
-            ? " " + type
-            : "");
+            <h2>
+              No users found.
+            </h2>
+
+            <p class="muted">
+              There are no other users
+              to display right now.
+            </p>
+
+          </div>
+        `;
+
+        return;
       }
 
 
-      /* =========================================
-         PROFILE IMAGE
-         
-         IMPORTANT:
-         There is NO inline onerror attribute.
-         This prevents the ❤️')"> bug.
-      ========================================= */
+      users.forEach((u) => {
 
-      function profileImage(user) {
+        const card =
+          document.createElement("article");
+
+        card.className =
+          "card";
+
+
+        /* =====================================
+           PROFILE IMAGE
+        ===================================== */
+
+        const imageContainer =
+          document.createElement("div");
+
 
         if (
-          user &&
-          user.profileImage
+          u.profileImage &&
+          typeof u.profileImage === "string"
         ) {
-          return HM.esc(
-            user.profileImage
+
+          const image =
+            document.createElement("img");
+
+          image.className =
+            "profile-img";
+
+          image.alt =
+            "Profile";
+
+          image.loading =
+            "lazy";
+
+          image.src =
+            u.profileImage;
+
+
+          /*
+            If the actual profile image is broken,
+            replace it safely with initials.
+
+            NO inline onerror.
+          */
+
+          image.addEventListener(
+            "error",
+            () => {
+
+              image.replaceWith(
+                createPlaceholder(u)
+              );
+
+            },
+            {
+              once: true
+            }
           );
+
+
+          imageContainer.appendChild(
+            image
+          );
+
+        } else {
+
+          imageContainer.appendChild(
+            createPlaceholder(u)
+          );
+
         }
 
 
-        const svg = `
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="400"
-            height="400"
-          >
+        card.appendChild(
+          imageContainer
+        );
 
-            <rect
-              width="100%"
-              height="100%"
-              fill="#25182f"
-            />
 
-            <text
-              x="50%"
-              y="55%"
-              text-anchor="middle"
-              fill="white"
-              font-size="110"
-            >❤️</text>
+        /* =====================================
+           NAME
+        ===================================== */
 
-          </svg>
+        const title =
+          document.createElement("h3");
+
+        title.textContent =
+          `${u.name || "Unknown"}, ${u.age ?? ""}`;
+
+        if (u.isVerified) {
+          title.textContent +=
+            " ✓";
+        }
+
+        card.appendChild(title);
+
+
+        /* =====================================
+           USER ID
+        ===================================== */
+
+        const userId =
+          document.createElement("p");
+
+        userId.className =
+          "muted";
+
+        userId.textContent =
+          `@${u.userId || "user"}`;
+
+        card.appendChild(userId);
+
+
+        /* =====================================
+           LOCATION
+        ===================================== */
+
+        const location =
+          document.createElement("p");
+
+        location.className =
+          "muted";
+
+        location.textContent =
+          u.location ||
+          "Location not set";
+
+        card.appendChild(location);
+
+
+        /* =====================================
+           BIO
+        ===================================== */
+
+        const bio =
+          document.createElement("p");
+
+        bio.textContent =
+          u.bio ||
+          "No bio yet.";
+
+        card.appendChild(bio);
+
+
+        /* =====================================
+           INTERESTS
+        ===================================== */
+
+        const tags =
+          document.createElement("div");
+
+        tags.className =
+          "tags";
+
+
+        if (
+          Array.isArray(u.interests)
+        ) {
+
+          u.interests
+            .slice(0, 6)
+            .forEach((interest) => {
+
+              const tag =
+                document.createElement("span");
+
+              tag.className =
+                "tag";
+
+              tag.textContent =
+                interest;
+
+              tags.appendChild(tag);
+
+            });
+
+        }
+
+
+        card.appendChild(tags);
+
+
+        /* =====================================
+           LIKE / PASS
+        ===================================== */
+
+        const actions =
+          document.createElement("div");
+
+        actions.className =
+          "card-actions";
+
+
+        const passButton =
+          document.createElement("button");
+
+        passButton.className =
+          "btn ghost";
+
+        passButton.type =
+          "button";
+
+        passButton.textContent =
+          "Pass";
+
+
+        passButton.addEventListener(
+          "click",
+          () => {
+
+            act(
+              u._id,
+              "pass",
+              passButton
+            );
+
+          }
+        );
+
+
+        const likeButton =
+          document.createElement("button");
+
+        likeButton.className =
+          "btn";
+
+        likeButton.type =
+          "button";
+
+        likeButton.textContent =
+          "Like";
+
+
+        likeButton.addEventListener(
+          "click",
+          () => {
+
+            act(
+              u._id,
+              "like",
+              likeButton
+            );
+
+          }
+        );
+
+
+        actions.appendChild(
+          passButton
+        );
+
+        actions.appendChild(
+          likeButton
+        );
+
+        card.appendChild(
+          actions
+        );
+
+
+        /* =====================================
+           BLOCK / REPORT
+        ===================================== */
+
+        const secondaryActions =
+          document.createElement("div");
+
+        secondaryActions.style.display =
+          "flex";
+
+        secondaryActions.style.gap =
+          "8px";
+
+        secondaryActions.style.marginTop =
+          "9px";
+
+
+        const blockButton =
+          document.createElement("button");
+
+        blockButton.className =
+          "btn ghost";
+
+        blockButton.style.flex =
+          "1";
+
+        blockButton.type =
+          "button";
+
+        blockButton.textContent =
+          "Block";
+
+
+        blockButton.addEventListener(
+          "click",
+          () => {
+
+            blockUser(
+              u._id
+            );
+
+          }
+        );
+
+
+        const reportButton =
+          document.createElement("button");
+
+        reportButton.className =
+          "btn ghost";
+
+        reportButton.style.flex =
+          "1";
+
+        reportButton.type =
+          "button";
+
+        reportButton.textContent =
+          "Report";
+
+
+        reportButton.addEventListener(
+          "click",
+          () => {
+
+            reportUser(
+              u._id
+            );
+
+          }
+        );
+
+
+        secondaryActions.appendChild(
+          blockButton
+        );
+
+        secondaryActions.appendChild(
+          reportButton
+        );
+
+
+        card.appendChild(
+          secondaryActions
+        );
+
+
+        grid.appendChild(
+          card
+        );
+
+      });
+
+    }
+
+
+    /* =========================================
+       LOAD DISCOVER
+    ========================================= */
+
+    async function load() {
+
+      if (loading) {
+        return;
+      }
+
+      loading = true;
+
+      refreshBtn.disabled =
+        true;
+
+      refreshBtn.textContent =
+        "Refreshing...";
+
+      setMessage("");
+
+
+      grid.innerHTML = `
+        <div class="card">
+          Finding people...
+        </div>
+      `;
+
+
+      try {
+
+        const {
+          r,
+          d
+        } =
+          await HM.api(
+            "/api/discover"
+          );
+
+
+        if (!r.ok) {
+
+          grid.innerHTML =
+            "";
+
+          setMessage(
+            d?.message ||
+            "Could not load Discover. Please try again.",
+            "err"
+          );
+
+          return;
+        }
+
+
+        renderUsers(
+          d?.users || []
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Discover load error:",
+          error
+        );
+
+
+        grid.innerHTML = `
+          <div class="card">
+
+            <h2>
+              Could not load Discover.
+            </h2>
+
+            <p class="muted">
+              Check your connection
+              and try again.
+            </p>
+
+          </div>
         `;
 
 
-        return (
-          "data:image/svg+xml;charset=UTF-8," +
-          encodeURIComponent(svg)
+        setMessage(
+          "Could not load Discover. Please try again.",
+          "err"
         );
+
+
+      } finally {
+
+        loading = false;
+
+        refreshBtn.disabled =
+          false;
+
+        refreshBtn.textContent =
+          "Refresh";
+
+      }
+
+    }
+
+
+    /* =========================================
+       SEARCH USER
+    ========================================= */
+
+    async function searchUser() {
+
+      const value =
+        userSearch.value
+          .trim()
+          .toLowerCase();
+
+
+      searchResult.textContent =
+        "";
+
+
+      if (!value) {
+
+        searchResult.textContent =
+          "Enter a User ID.";
+
+        return;
       }
 
 
-      /* =========================================
-         RENDER USERS
-      ========================================= */
+      findUserBtn.disabled =
+        true;
 
-      function renderUsers(users) {
+      findUserBtn.textContent =
+        "Searching...";
+
+      searchResult.textContent =
+        "Searching...";
+
+
+      try {
+
+        const {
+          r,
+          d
+        } =
+          await HM.api(
+            "/api/profile/search/" +
+            encodeURIComponent(value)
+          );
+
 
         if (
-          !Array.isArray(users) ||
-          users.length === 0
+          !r.ok ||
+          !d?.user
+        ) {
+
+          searchResult.textContent =
+            d?.message ||
+            "No user found with that User ID.";
+
+          return;
+        }
+
+
+        const user =
+          d.user;
+
+
+        searchResult.innerHTML = "";
+
+
+        const text =
+          document.createTextNode(
+            "Found "
+          );
+
+        const username =
+          document.createElement("b");
+
+        username.textContent =
+          `@${user.userId}`;
+
+
+        const name =
+          document.createTextNode(
+            ` — ${user.name} `
+          );
+
+
+        const openButton =
+          document.createElement("button");
+
+        openButton.className =
+          "btn ghost";
+
+        openButton.style.marginLeft =
+          "8px";
+
+        openButton.type =
+          "button";
+
+        openButton.textContent =
+          "Open profile";
+
+
+        openButton.addEventListener(
+          "click",
+          () => {
+
+            window.location.href =
+              "person.html?user=" +
+              encodeURIComponent(
+                user.userId
+              );
+
+          }
+        );
+
+
+        searchResult.appendChild(
+          text
+        );
+
+        searchResult.appendChild(
+          username
+        );
+
+        searchResult.appendChild(
+          name
+        );
+
+        searchResult.appendChild(
+          openButton
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "User search error:",
+          error
+        );
+
+        searchResult.textContent =
+          "Search failed. Please try again.";
+
+      } finally {
+
+        findUserBtn.disabled =
+          false;
+
+        findUserBtn.textContent =
+          "Find user";
+
+      }
+
+    }
+
+
+    /* =========================================
+       LIKE / PASS
+    ========================================= */
+
+    async function act(
+      id,
+      type,
+      button
+    ) {
+
+      if (!button) {
+        return;
+      }
+
+
+      const card =
+        button.closest(
+          "article.card"
+        );
+
+
+      button.disabled =
+        true;
+
+
+      try {
+
+        const {
+          r,
+          d
+        } =
+          await HM.api(
+            "/api/likes",
+            {
+              method: "POST",
+
+              body: {
+                to: id,
+                type: type
+              }
+            }
+          );
+
+
+        if (!r.ok) {
+
+          alert(
+            d?.message ||
+            "Action failed"
+          );
+
+          button.disabled =
+            false;
+
+          return;
+        }
+
+
+        card?.remove();
+
+
+        if (
+          !grid.querySelector(
+            "article.card"
+          )
         ) {
 
           grid.innerHTML = `
@@ -244,665 +1031,185 @@
             </div>
           `;
 
-          return;
         }
 
 
-        grid.innerHTML = users
-          .map((u) => {
+      } catch (error) {
 
-            const name =
-              HM.esc(
-                u.name ||
-                "Unknown"
-              );
+        console.error(
+          "Action error:",
+          error
+        );
 
-            const age =
-              HM.esc(
-                u.age ??
-                ""
-              );
 
-            const userId =
-              HM.esc(
-                u.userId ||
-                "user"
-              );
-
-            const location =
-              HM.esc(
-                u.location ||
-                "Location not set"
-              );
-
-            const bio =
-              HM.esc(
-                u.bio ||
-                "No bio yet."
-              );
-
-
-            const interests =
-              Array.isArray(
-                u.interests
-              )
-                ? u.interests
-                    .slice(0, 6)
-                    .map(
-                      (interest) => `
-                        <span class="tag">
-                          ${HM.esc(interest)}
-                        </span>
-                      `
-                    )
-                    .join("")
-                : "";
-
-
-            /*
-              IMPORTANT:
-
-              DO NOT add:
-
-              onerror="..."
-
-              here.
-
-              That was the source of the
-              ❤️')"> text appearing on the page.
-            */
-
-            return `
-              <article class="card">
-
-                <img
-                  class="profile-img"
-                  src="${profileImage(u)}"
-                  alt="Profile"
-                >
-
-                <h3>
-                  ${name},
-                  ${age}
-                  ${u.isVerified ? "✓" : ""}
-                </h3>
-
-                <p class="muted">
-                  @${userId}
-                </p>
-
-                <p class="muted">
-                  ${location}
-                </p>
-
-                <p>
-                  ${bio}
-                </p>
-
-                <div class="tags">
-                  ${interests}
-                </div>
-
-
-                <!-- LIKE / PASS -->
-
-                <div class="card-actions">
-
-                  <button
-                    class="btn ghost"
-                    type="button"
-                    onclick="
-                      act(
-                        '${u._id}',
-                        'pass',
-                        this
-                      )
-                    "
-                  >
-                    Pass
-                  </button>
-
-
-                  <button
-                    class="btn"
-                    type="button"
-                    onclick="
-                      act(
-                        '${u._id}',
-                        'like',
-                        this
-                      )
-                    "
-                  >
-                    Like ❤️
-                  </button>
-
-                </div>
-
-
-                <!-- BLOCK / REPORT -->
-
-                <div
-                  style="
-                    display: flex;
-                    gap: 8px;
-                    margin-top: 9px;
-                  "
-                >
-
-                  <button
-                    class="btn ghost"
-                    style="flex: 1"
-                    type="button"
-                    onclick="
-                      blockUser(
-                        '${u._id}'
-                      )
-                    "
-                  >
-                    Block
-                  </button>
-
-
-                  <button
-                    class="btn ghost"
-                    style="flex: 1"
-                    type="button"
-                    onclick="
-                      reportUser(
-                        '${u._id}'
-                      )
-                    "
-                  >
-                    Report
-                  </button>
-
-                </div>
-
-              </article>
-            `;
-          })
-          .join("");
-      }
-
-
-      /* =========================================
-         LOAD DISCOVER
-      ========================================= */
-
-      async function load() {
-
-        if (loading) {
-          return;
-        }
-
-
-        loading = true;
-
-        refreshBtn.disabled =
-          true;
-
-        refreshBtn.textContent =
-          "Refreshing...";
-
-        setMessage("");
-
-
-        grid.innerHTML = `
-          <div class="card">
-            Finding people... 💕
-          </div>
-        `;
-
-
-        try {
-
-          const {
-            r,
-            d
-          } =
-            await HM.api(
-              "/api/discover"
-            );
-
-
-          if (!r.ok) {
-
-            grid.innerHTML = "";
-
-            setMessage(
-              d?.message ||
-                "Could not load Discover. Please try again.",
-              "err"
-            );
-
-            return;
-          }
-
-
-          renderUsers(
-            d?.users || []
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Discover load error:",
-            error
-          );
-
-
-          grid.innerHTML = `
-            <div class="card">
-
-              <h2>
-                Could not load Discover.
-              </h2>
-
-              <p class="muted">
-                Check your connection
-                and try again.
-              </p>
-
-            </div>
-          `;
-
-
-          setMessage(
-            "Could not load Discover. Please try again.",
-            "err"
-          );
-
-        } finally {
-
-          loading = false;
-
-          refreshBtn.disabled =
-            false;
-
-          refreshBtn.textContent =
-            "Refresh";
-        }
-      }
-
-
-      /* =========================================
-         SEARCH USER
-      ========================================= */
-
-      async function searchUser() {
-
-        const value =
-          userSearch.value
-            .trim()
-            .toLowerCase();
-
-
-        searchResult.textContent =
-          "";
-
-
-        if (!value) {
-
-          searchResult.textContent =
-            "Enter a User ID.";
-
-          return;
-        }
-
-
-        findUserBtn.disabled =
-          true;
-
-        findUserBtn.textContent =
-          "Searching...";
-
-        searchResult.textContent =
-          "Searching...";
-
-
-        try {
-
-          const {
-            r,
-            d
-          } =
-            await HM.api(
-              "/api/profile/search/" +
-              encodeURIComponent(value)
-            );
-
-
-          if (
-            !r.ok ||
-            !d?.user
-          ) {
-
-            searchResult.textContent =
-              d?.message ||
-              "No user found with that User ID.";
-
-            return;
-          }
-
-
-          const user =
-            d.user;
-
-
-          searchResult.innerHTML = `
-            Found
-            <b>
-              @${HM.esc(user.userId)}
-            </b>
-            —
-            ${HM.esc(user.name)}
-
-            <button
-              id="openFoundProfile"
-              class="btn ghost"
-              style="margin-left: 8px"
-              type="button"
-            >
-              Open profile
-            </button>
-          `;
-
-
-          const openButton =
-            document.getElementById(
-              "openFoundProfile"
-            );
-
-
-          if (openButton) {
-
-            openButton.addEventListener(
-              "click",
-              () => {
-
-                window.location.href =
-                  "person.html?user=" +
-                  encodeURIComponent(
-                    user.userId
-                  );
-
-              }
-            );
-          }
-
-
-        } catch (error) {
-
-          console.error(
-            "User search error:",
-            error
-          );
-
-          searchResult.textContent =
-            "Search failed. Please try again.";
-
-        } finally {
-
-          findUserBtn.disabled =
-            false;
-
-          findUserBtn.textContent =
-            "Find user";
-        }
-      }
-
-
-      /* =========================================
-         LIKE / PASS
-      ========================================= */
-
-      async function act(
-        id,
-        type,
-        button
-      ) {
-
-        if (!button) {
-          return;
-        }
-
-
-        const card =
-          button.closest(
-            "article.card"
-          );
+        alert(
+          "Action failed. Please try again."
+        );
 
 
         button.disabled =
-          true;
+          false;
+
+      }
+
+    }
 
 
-        try {
+    /* =========================================
+       BLOCK
+    ========================================= */
 
-          const {
-            r,
-            d
-          } =
-            await HM.api(
-              "/api/likes",
-              {
-                method: "POST",
+    async function blockUser(id) {
 
-                body: {
-                  to: id,
-                  type: type
-                }
-              }
-            );
-
-
-          if (!r.ok) {
-
-            alert(
-              d?.message ||
-              "Action failed"
-            );
-
-            button.disabled =
-              false;
-
-            return;
-          }
-
-
-          card?.remove();
-
-
-          if (
-            !grid.querySelector(
-              "article.card"
-            )
-          ) {
-
-            grid.innerHTML = `
-              <div class="card">
-
-                <h2>
-                  No users found.
-                </h2>
-
-                <p class="muted">
-                  There are no other users
-                  to display right now.
-                </p>
-
-              </div>
-            `;
-          }
-
-
-        } catch (error) {
-
-          console.error(
-            "Like/pass error:",
-            error
-          );
-
-
-          alert(
-            "Action failed. Please try again."
-          );
-
-
-          button.disabled =
-            false;
-        }
+      if (
+        !confirm(
+          "Block this user?"
+        )
+      ) {
+        return;
       }
 
 
-      /* =========================================
-         BLOCK USER
-      ========================================= */
+      try {
 
-      async function blockUser(id) {
+        const {
+          d
+        } =
+          await HM.api(
+            "/api/blocks/" +
+            encodeURIComponent(id),
+            {
+              method: "POST"
+            }
+          );
+
+
+        alert(
+          d?.message ||
+          "Blocked"
+        );
+
+
+        await load();
+
+
+      } catch (error) {
+
+        console.error(
+          "Block error:",
+          error
+        );
+
+
+        alert(
+          "Could not block this user."
+        );
+
+      }
+
+    }
+
+
+    /* =========================================
+       REPORT
+    ========================================= */
+
+    async function reportUser(id) {
+
+      const reason =
+        prompt(
+          "Why are you reporting this profile?"
+        );
+
+
+      if (!reason) {
+        return;
+      }
+
+
+      try {
+
+        const {
+          d
+        } =
+          await HM.api(
+            "/api/reports/" +
+            encodeURIComponent(id),
+            {
+              method: "POST",
+
+              body: {
+                reason: reason
+              }
+            }
+          );
+
+
+        alert(
+          d?.message ||
+          "Report sent"
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Report error:",
+          error
+        );
+
+
+        alert(
+          "Could not send report."
+        );
+
+      }
+
+    }
+
+
+    /* =========================================
+       EVENTS
+    ========================================= */
+
+    refreshBtn.addEventListener(
+      "click",
+      load
+    );
+
+
+    findUserBtn.addEventListener(
+      "click",
+      searchUser
+    );
+
+
+    userSearch.addEventListener(
+      "keydown",
+      (event) => {
 
         if (
-          !confirm(
-            "Block this user?"
-          )
+          event.key === "Enter"
         ) {
-          return;
+
+          searchUser();
+
         }
 
-
-        try {
-
-          const {
-            d
-          } =
-            await HM.api(
-              "/api/blocks/" +
-              encodeURIComponent(id),
-              {
-                method: "POST"
-              }
-            );
-
-
-          alert(
-            d?.message ||
-            "Blocked"
-          );
-
-
-          await load();
-
-        } catch (error) {
-
-          console.error(
-            "Block error:",
-            error
-          );
-
-
-          alert(
-            "Could not block this user."
-          );
-        }
       }
+    );
 
 
-      /* =========================================
-         REPORT USER
-      ========================================= */
+    /* =========================================
+       START
+    ========================================= */
 
-      async function reportUser(id) {
+    load();
 
-        const reason =
-          prompt(
-            "Why are you reporting this profile?"
-          );
+  </script>
 
 
-        if (!reason) {
-          return;
-        }
+  <script src="js/animated-ui.js"></script>
 
-
-        try {
-
-          const {
-            d
-          } =
-            await HM.api(
-              "/api/reports/" +
-              encodeURIComponent(id),
-              {
-                method: "POST",
-
-                body: {
-                  reason: reason
-                }
-              }
-            );
-
-
-          alert(
-            d?.message ||
-            "Report sent"
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Report error:",
-            error
-          );
-
-
-          alert(
-            "Could not send report."
-          );
-        }
-      }
-
-
-      /* =========================================
-         EVENTS
-      ========================================= */
-
-      refreshBtn.addEventListener(
-        "click",
-        load
-      );
-
-
-      findUserBtn.addEventListener(
-        "click",
-        searchUser
-      );
-
-
-      userSearch.addEventListener(
-        "keydown",
-        (event) => {
-
-          if (
-            event.key === "Enter"
-          ) {
-            searchUser();
-          }
-
-        }
-      );
-
-
-      /* =========================================
-         START
-      ========================================= */
-
-      load();
-
-    </script>
-
-
-    <script src="js/animated-ui.js"></script>
-
-  </body>
+</body>
 </html>
