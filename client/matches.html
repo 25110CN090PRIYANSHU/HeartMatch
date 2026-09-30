@@ -244,7 +244,27 @@
         }
 
         .default-photo {
-            font-size: 75px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: radial-gradient(circle at 50% 35%, rgba(255, 71, 132, .22), transparent 42%), linear-gradient(145deg, #24122f, #351735 55%, #1b1027);
+            color: #ffd0e3;
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            user-select: none;
+        }
+
+        .default-photo::after {
+            content: "No photo";
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: .2px;
+            opacity: .72;
         }
 
         /* MATCH BADGE */
@@ -644,7 +664,7 @@
                                     user.profileImage
                                 )}"
                                 alt="Profile photo"
-                                onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className:'default-photo', textContent:'❤️'}));"
+                                onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'default-photo', textContent:'HM'}));"
                             >
 
                         `;
@@ -654,7 +674,7 @@
                         photo = `
 
                             <div class="default-photo">
-                                ❤️
+                                HM
                             </div>
 
                         `;
