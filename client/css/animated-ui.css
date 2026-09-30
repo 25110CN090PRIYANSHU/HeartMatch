@@ -32,7 +32,7 @@ body::before{
   background:
     radial-gradient(circle at 30% 35%,rgba(255,48,126,.10),transparent 20%),
     radial-gradient(circle at 70% 65%,rgba(151,83,255,.11),transparent 22%);
-  filter:blur(20px);animation:hmUniverse 28s ease-in-out infinite alternate;
+  filter:blur(35px);animation:hmUniverse 20s ease-in-out infinite alternate;
 }
 @keyframes hmPageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes hmUniverse{0%{transform:translate3d(-3%,0,0) scale(1)}50%{transform:translate3d(3%,-2%,0) scale(1.06)}100%{transform:translate3d(-1%,3%,0) scale(1.02)}}
@@ -42,7 +42,7 @@ body::before{
   position:fixed!important;inset:0!important;overflow:hidden!important;pointer-events:none!important;
   z-index:-1!important;
 }
-.hm-romance-glow{position:absolute;border-radius:50%;filter:blur(32px);opacity:.12;mix-blend-mode:screen}
+.hm-romance-glow{position:absolute;border-radius:50%;filter:blur(55px);opacity:.25;mix-blend-mode:screen}
 .hm-romance-glow.g1{width:42vw;height:42vw;left:-17vw;top:8vh;background:#a855f7;animation:hmGlow1 15s ease-in-out infinite alternate}
 .hm-romance-glow.g2{width:45vw;height:45vw;right:-19vw;top:22vh;background:#ff3f8e;animation:hmGlow2 18s ease-in-out infinite alternate}
 .hm-romance-glow.g3{width:35vw;height:35vw;left:33vw;bottom:-22vw;background:#ff8aaf;animation:hmGlow3 13s ease-in-out infinite alternate}
@@ -73,7 +73,7 @@ body::before{
 .nav,nav,.navbar{
   position:sticky!important;top:0;z-index:1000!important;
   background:linear-gradient(90deg,rgba(18,7,20,.88),rgba(35,10,31,.78),rgba(14,7,20,.88))!important;
-  backdrop-filter:blur(10px) saturate(120%);-webkit-backdrop-filter:blur(10px) saturate(120%);
+  backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
   border-bottom:1px solid rgba(255,141,190,.16)!important;
   box-shadow:0 12px 45px rgba(0,0,0,.3),0 1px 0 rgba(255,130,180,.06) inset!important;
 }
@@ -96,7 +96,7 @@ h1{letter-spacing:-.045em!important;text-shadow:0 8px 40px rgba(255,55,135,.09)}
   background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,80,145,.025) 48%,rgba(255,255,255,.018))!important;
   border:1px solid rgba(255,156,200,.13)!important;
   box-shadow:var(--romance-shadow),inset 0 1px rgba(255,255,255,.06)!important;
-  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   transition:transform .42s cubic-bezier(.16,1,.3,1),box-shadow .42s ease,border-color .3s ease!important;
 }
 .card::before,.profile-card::before,.match-card::before,.notification::before,.form::before,.person-card::before,.user-card::before,.notice::before{
@@ -142,7 +142,7 @@ input:focus,textarea:focus,select:focus{transform:translateY(-2px)!important;bor
 
 /* Chat */
 .chat-container{box-shadow:0 30px 100px rgba(0,0,0,.48),0 0 80px rgba(255,50,130,.05)!important;border-color:rgba(255,145,190,.12)!important}
-.chat-header{backdrop-filter:blur(10px)!important;background:linear-gradient(180deg,rgba(36,12,34,.95),rgba(28,11,29,.78))!important}
+.chat-header{backdrop-filter:blur(22px)!important;background:linear-gradient(180deg,rgba(36,12,34,.95),rgba(28,11,29,.78))!important}
 .message{transition:transform .22s ease,filter .22s ease,box-shadow .22s ease!important}
 .message-row:hover .message{transform:translateY(-2px)!important;filter:brightness(1.06);box-shadow:0 10px 30px rgba(255,55,135,.08)}
 
@@ -170,26 +170,3 @@ main>*:nth-child(2){animation-delay:.06s}main>*:nth-child(3){animation-delay:.12
 @keyframes hmBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0px)),calc(-50% - 34px)) scale(1.15)}}
 .hm-love-note{width:max-content;max-width:100%;margin:0 auto 18px;padding:9px 16px;border:1px solid rgba(255,142,190,.2);border-radius:999px;background:rgba(255,75,145,.065);color:#ffc8dd;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 10px 35px rgba(255,45,125,.08);animation:hmNote 2.8s ease-in-out infinite}
 @keyframes hmNote{50%{transform:translateY(-3px);box-shadow:0 14px 42px rgba(255,45,125,.14)}}
-
-/* =========================================================
-   PERFORMANCE PATCH
-   Keeps the visual style while removing expensive continuous
-   blur/animation/compositing effects that can cause lag.
-========================================================= */
-html{scroll-behavior:auto!important}
-body{animation:none!important}
-body::before{filter:none!important;animation:none!important;opacity:.7}
-.hm-motion-layer{display:none!important}
-.hm-romantic-vignette{display:none!important}
-.nav,.navbar,nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.card,.profile-card,.match-card,.notification,.form,.person-card,.user-card,.notice{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transition:transform .18s ease,border-color .18s ease!important}
-.card:hover,.profile-card:hover,.match-card:hover,.notification:hover,.form:hover,.person-card:hover,.user-card:hover,.notice:hover{transform:translateY(-3px)!important;box-shadow:0 14px 40px rgba(0,0,0,.24)!important}
-.card::before,.profile-card::before,.match-card::before,.notification::before,.form::before,.person-card::before,.user-card::before,.notice::before{display:none!important}
-.gradient,.btn:not(.ghost):not(.alt),.profile-action-btn.like,.send-btn{animation:none!important}
-.profile-photo,.status-dot,.online-status .status-dot,.hm-love-note{animation:none!important}
-main>*{animation:none!important}
-.chat-header{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.wrap::before,.hero::before{filter:none!important;opacity:.55}
-input:focus,textarea:focus,select:focus{transform:none!important}
-input,textarea,select,.field input,.field textarea,.field select,.search-input{transition:border-color .15s ease,box-shadow .15s ease,background .15s ease!important}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
