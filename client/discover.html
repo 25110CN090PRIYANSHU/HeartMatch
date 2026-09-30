@@ -78,11 +78,7 @@
 
       grid.innerHTML = users.map(u => `
         <article class="card">
-          <img
-  class="profile-img"
-  src="${profileImage(u)}"
-  alt="Profile"
->
+          <img class="profile-img" src="${profileImage(u)}" alt="Profile">
           <h3>${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
           <p class="muted">@${HM.esc(u.userId || "user")}</p>
           <p class="muted">${HM.esc(u.location || "Location not set")}</p>
