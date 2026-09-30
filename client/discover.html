@@ -1,234 +1,908 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Discover — HeartMatch</title>
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="css/animated-ui.css">
-</head>
-<body>
-  <nav class="nav">
-    <div class="brand">❤️ <span>HeartMatch</span></div>
-    <div class="navlinks">
-      <a href="profile.html">Profile</a>
-      <a href="matches.html">Matches</a>
-      <a href="notifications.html">Notifications</a>
-      <a href="settings.html">Settings</a>
-      <button type="button" onclick="HM.logout()">Logout</button>
-    </div>
-  </nav>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <main class="wrap">
-    <div class="section-title">
-      <div>
-        <h1>Discover</h1>
-        <p class="muted">Discover all HeartMatch users.</p>
+    <title>Discover — HeartMatch</title>
+
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="css/animated-ui.css" />
+    <link rel="stylesheet" href="/css/universe.css" />
+  </head>
+
+  <body>
+    <nav class="nav">
+      <div class="brand">
+        ❤️ <span>HeartMatch</span>
       </div>
-      <button id="refreshBtn" class="btn ghost" type="button">Refresh</button>
-    </div>
 
-    <div id="msg" class="msg"></div>
+      <div class="navlinks">
+        <a href="profile.html">Profile</a>
+        <a href="matches.html">Matches</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="settings.html">Settings</a>
 
-
-
-    <section class="card" style="margin-bottom:18px">
-      <h2>Find someone by User ID 🔎</h2>
-      <p class="muted">Enter their unique User ID to open their profile.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <input id="userSearch" class="search-input" autocomplete="off" placeholder="e.g. priyanshu123" maxlength="24" style="flex:1;min-width:220px">
-        <button id="findUserBtn" class="btn" type="button">Find user</button>
+        <button type="button" onclick="HM.logout()">
+          Logout
+        </button>
       </div>
-      <div id="searchResult" class="msg"></div>
-    </section>
+    </nav>
 
-    <div id="grid" class="grid"></div>
-  </main>
+    <main class="wrap">
 
-  <script src="/js/app.js"></script>
-  <script>
-    HM.requireAuth();
+      <!-- HEADER -->
+      <div class="section-title">
+        <div>
+          <h1>Discover</h1>
+          <p class="muted">
+            Discover all HeartMatch users.
+          </p>
+        </div>
 
-    const grid = document.getElementById("grid");
-    const msg = document.getElementById("msg");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const userSearch = document.getElementById("userSearch");
-    const findUserBtn = document.getElementById("findUserBtn");
-    const searchResult = document.getElementById("searchResult");
+        <button
+          id="refreshBtn"
+          class="btn ghost"
+          type="button"
+        >
+          Refresh
+        </button>
+      </div>
 
-    let loading = false;
+      <div id="msg" class="msg"></div>
 
-    function setMessage(text, type = "") {
-      msg.textContent = text || "";
-      msg.className = "msg" + (type ? " " + type : "");
-    }
 
-    function profileImage(u) {
-      if (u.profileImage) return HM.esc(u.profileImage);
-      return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#25182f"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-size="110">❤️</text></svg>'
-      );
-    }
+      <!-- USER SEARCH -->
+      <section
+        class="card"
+        style="margin-bottom: 18px"
+      >
 
-    function renderUsers(users) {
-      if (!Array.isArray(users) || users.length === 0) {
-        grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
-        return;
+        <h2>
+          Find someone by User ID 🔎
+        </h2>
+
+        <p class="muted">
+          Enter their unique User ID to open their profile.
+        </p>
+
+        <div
+          style="
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+          "
+        >
+
+          <input
+            id="userSearch"
+            class="search-input"
+            autocomplete="off"
+            placeholder="e.g. priyanshu123"
+            maxlength="24"
+            style="
+              flex: 1;
+              min-width: 220px;
+            "
+          />
+
+          <button
+            id="findUserBtn"
+            class="btn"
+            type="button"
+          >
+            Find user
+          </button>
+
+        </div>
+
+        <div
+          id="searchResult"
+          class="msg"
+        ></div>
+
+      </section>
+
+
+      <!-- DISCOVER USERS -->
+      <div id="grid" class="grid"></div>
+
+    </main>
+
+
+    <script src="/js/app.js"></script>
+
+    <script>
+      /* =========================================
+         AUTH
+      ========================================= */
+
+      HM.requireAuth();
+
+
+      /* =========================================
+         ELEMENTS
+      ========================================= */
+
+      const grid =
+        document.getElementById("grid");
+
+      const msg =
+        document.getElementById("msg");
+
+      const refreshBtn =
+        document.getElementById("refreshBtn");
+
+      const userSearch =
+        document.getElementById("userSearch");
+
+      const findUserBtn =
+        document.getElementById("findUserBtn");
+
+      const searchResult =
+        document.getElementById("searchResult");
+
+
+      let loading = false;
+
+
+      /* =========================================
+         MESSAGE
+      ========================================= */
+
+      function setMessage(
+        text,
+        type = ""
+      ) {
+
+        msg.textContent =
+          text || "";
+
+        msg.className =
+          "msg" +
+          (type
+            ? " " + type
+            : "");
       }
 
-      grid.innerHTML = users.map(u => `
-        <article class="card">
-          <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" width=400 height=400><rect width=100% height=100% fill=\"#25182f\"/><text x=50% y=55% text-anchor=middle fill=white font-size=110>❤️</text></svg>')">
-          <h3>${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
-          <p class="muted">@${HM.esc(u.userId || "user")}</p>
-          <p class="muted">${HM.esc(u.location || "Location not set")}</p>
-          <p>${HM.esc(u.bio || "No bio yet.")}</p>
-          <div class="tags">
-            ${(u.interests || []).slice(0, 6).map(i => `<span class="tag">${HM.esc(i)}</span>`).join("")}
-          </div>
-          <div class="card-actions">
-            <button class="btn ghost" type="button" onclick="act('${u._id}','pass',this)">Pass</button>
-            <button class="btn" type="button" onclick="act('${u._id}','like',this)">Like ❤️</button>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:9px">
-            <button class="btn ghost" style="flex:1" type="button" onclick="blockUser('${u._id}')">Block</button>
-            <button class="btn ghost" style="flex:1" type="button" onclick="reportUser('${u._id}')">Report</button>
-          </div>
-        </article>
-      `).join("");
-    }
 
-    async function load() {
-      if (loading) return;
-      loading = true;
-      refreshBtn.disabled = true;
-      refreshBtn.textContent = "Refreshing...";
-      setMessage("");
-      grid.innerHTML = '<div class="card">Finding people... 💕</div>';
+      /* =========================================
+         PROFILE IMAGE
+         
+         IMPORTANT:
+         There is NO inline onerror attribute.
+         This prevents the ❤️')"> bug.
+      ========================================= */
 
-      try {
-        const { r, d } = await HM.api("/api/discover");
+      function profileImage(user) {
 
-        if (!r.ok) {
-          grid.innerHTML = "";
-          setMessage(d?.message || "Could not load Discover. Please try again.", "err");
-          return;
+        if (
+          user &&
+          user.profileImage
+        ) {
+          return HM.esc(
+            user.profileImage
+          );
         }
 
-        renderUsers(d?.users || []);
-      } catch (error) {
-        console.error("Discover load error:", error);
-        grid.innerHTML = '<div class="card"><h2>Could not load Discover.</h2><p class="muted">Check your connection and try again.</p></div>';
-        preferenceText.textContent = "Could not load your preferences.";
-        setMessage("Could not load Discover. Please try again.", "err");
-      } finally {
-        loading = false;
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = "Refresh";
-      }
-    }
 
-    async function searchUser() {
-      const value = userSearch.value.trim().toLowerCase();
-      searchResult.textContent = "";
+        const svg = `
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="400"
+            height="400"
+          >
 
-      if (!value) {
-        searchResult.textContent = "Enter a User ID.";
-        return;
-      }
+            <rect
+              width="100%"
+              height="100%"
+              fill="#25182f"
+            />
 
-      findUserBtn.disabled = true;
-      findUserBtn.textContent = "Searching...";
-      searchResult.textContent = "Searching...";
+            <text
+              x="50%"
+              y="55%"
+              text-anchor="middle"
+              fill="white"
+              font-size="110"
+            >❤️</text>
 
-      try {
-        const { r, d } = await HM.api("/api/profile/search/" + encodeURIComponent(value));
-
-        if (!r.ok || !d?.user) {
-          searchResult.textContent = d?.message || "No user found with that User ID.";
-          return;
-        }
-
-        const user = d.user;
-        searchResult.innerHTML = `
-          Found <b>@${HM.esc(user.userId)}</b> — ${HM.esc(user.name)}
-          <button id="openFoundProfile" class="btn ghost" style="margin-left:8px" type="button">Open profile</button>
+          </svg>
         `;
 
-        document.getElementById("openFoundProfile").addEventListener("click", () => {
-          window.location.href = "person.html?user=" + encodeURIComponent(user.userId);
-        });
-      } catch (error) {
-        console.error("User search error:", error);
-        searchResult.textContent = "Search failed. Please try again.";
-      } finally {
-        findUserBtn.disabled = false;
-        findUserBtn.textContent = "Find user";
-      }
-    }
 
-    async function act(id, type, button) {
-      const card = button?.closest("article.card");
-      button.disabled = true;
-      try {
-        const { r, d } = await HM.api("/api/likes", {
-          method: "POST",
-          body: { to: id, type }
-        });
-        if (!r.ok) {
-          alert(d?.message || "Action failed");
-          button.disabled = false;
+        return (
+          "data:image/svg+xml;charset=UTF-8," +
+          encodeURIComponent(svg)
+        );
+      }
+
+
+      /* =========================================
+         RENDER USERS
+      ========================================= */
+
+      function renderUsers(users) {
+
+        if (
+          !Array.isArray(users) ||
+          users.length === 0
+        ) {
+
+          grid.innerHTML = `
+            <div class="card">
+
+              <h2>
+                No users found.
+              </h2>
+
+              <p class="muted">
+                There are no other users
+                to display right now.
+              </p>
+
+            </div>
+          `;
+
           return;
         }
 
-        // Remove the acted-on profile immediately. The server also excludes
-        // acted-on users on the next Discover refresh.
-        card?.remove();
-        if (!grid.querySelector("article.card")) {
-          grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+
+        grid.innerHTML = users
+          .map((u) => {
+
+            const name =
+              HM.esc(
+                u.name ||
+                "Unknown"
+              );
+
+            const age =
+              HM.esc(
+                u.age ??
+                ""
+              );
+
+            const userId =
+              HM.esc(
+                u.userId ||
+                "user"
+              );
+
+            const location =
+              HM.esc(
+                u.location ||
+                "Location not set"
+              );
+
+            const bio =
+              HM.esc(
+                u.bio ||
+                "No bio yet."
+              );
+
+
+            const interests =
+              Array.isArray(
+                u.interests
+              )
+                ? u.interests
+                    .slice(0, 6)
+                    .map(
+                      (interest) => `
+                        <span class="tag">
+                          ${HM.esc(interest)}
+                        </span>
+                      `
+                    )
+                    .join("")
+                : "";
+
+
+            /*
+              IMPORTANT:
+
+              DO NOT add:
+
+              onerror="..."
+
+              here.
+
+              That was the source of the
+              ❤️')"> text appearing on the page.
+            */
+
+            return `
+              <article class="card">
+
+                <img
+                  class="profile-img"
+                  src="${profileImage(u)}"
+                  alt="Profile"
+                >
+
+                <h3>
+                  ${name},
+                  ${age}
+                  ${u.isVerified ? "✓" : ""}
+                </h3>
+
+                <p class="muted">
+                  @${userId}
+                </p>
+
+                <p class="muted">
+                  ${location}
+                </p>
+
+                <p>
+                  ${bio}
+                </p>
+
+                <div class="tags">
+                  ${interests}
+                </div>
+
+
+                <!-- LIKE / PASS -->
+
+                <div class="card-actions">
+
+                  <button
+                    class="btn ghost"
+                    type="button"
+                    onclick="
+                      act(
+                        '${u._id}',
+                        'pass',
+                        this
+                      )
+                    "
+                  >
+                    Pass
+                  </button>
+
+
+                  <button
+                    class="btn"
+                    type="button"
+                    onclick="
+                      act(
+                        '${u._id}',
+                        'like',
+                        this
+                      )
+                    "
+                  >
+                    Like ❤️
+                  </button>
+
+                </div>
+
+
+                <!-- BLOCK / REPORT -->
+
+                <div
+                  style="
+                    display: flex;
+                    gap: 8px;
+                    margin-top: 9px;
+                  "
+                >
+
+                  <button
+                    class="btn ghost"
+                    style="flex: 1"
+                    type="button"
+                    onclick="
+                      blockUser(
+                        '${u._id}'
+                      )
+                    "
+                  >
+                    Block
+                  </button>
+
+
+                  <button
+                    class="btn ghost"
+                    style="flex: 1"
+                    type="button"
+                    onclick="
+                      reportUser(
+                        '${u._id}'
+                      )
+                    "
+                  >
+                    Report
+                  </button>
+
+                </div>
+
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+
+      /* =========================================
+         LOAD DISCOVER
+      ========================================= */
+
+      async function load() {
+
+        if (loading) {
+          return;
         }
-      } catch (error) {
-        console.error(error);
-        alert("Action failed. Please try again.");
-        button.disabled = false;
+
+
+        loading = true;
+
+        refreshBtn.disabled =
+          true;
+
+        refreshBtn.textContent =
+          "Refreshing...";
+
+        setMessage("");
+
+
+        grid.innerHTML = `
+          <div class="card">
+            Finding people... 💕
+          </div>
+        `;
+
+
+        try {
+
+          const {
+            r,
+            d
+          } =
+            await HM.api(
+              "/api/discover"
+            );
+
+
+          if (!r.ok) {
+
+            grid.innerHTML = "";
+
+            setMessage(
+              d?.message ||
+                "Could not load Discover. Please try again.",
+              "err"
+            );
+
+            return;
+          }
+
+
+          renderUsers(
+            d?.users || []
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Discover load error:",
+            error
+          );
+
+
+          grid.innerHTML = `
+            <div class="card">
+
+              <h2>
+                Could not load Discover.
+              </h2>
+
+              <p class="muted">
+                Check your connection
+                and try again.
+              </p>
+
+            </div>
+          `;
+
+
+          setMessage(
+            "Could not load Discover. Please try again.",
+            "err"
+          );
+
+        } finally {
+
+          loading = false;
+
+          refreshBtn.disabled =
+            false;
+
+          refreshBtn.textContent =
+            "Refresh";
+        }
       }
-    }
 
-    async function blockUser(id) {
-      if (!confirm("Block this user?")) return;
-      try {
-        const { d } = await HM.api("/api/blocks/" + encodeURIComponent(id), { method: "POST" });
-        alert(d?.message || "Blocked");
-        await load();
-      } catch (error) {
-        console.error(error);
-        alert("Could not block this user.");
+
+      /* =========================================
+         SEARCH USER
+      ========================================= */
+
+      async function searchUser() {
+
+        const value =
+          userSearch.value
+            .trim()
+            .toLowerCase();
+
+
+        searchResult.textContent =
+          "";
+
+
+        if (!value) {
+
+          searchResult.textContent =
+            "Enter a User ID.";
+
+          return;
+        }
+
+
+        findUserBtn.disabled =
+          true;
+
+        findUserBtn.textContent =
+          "Searching...";
+
+        searchResult.textContent =
+          "Searching...";
+
+
+        try {
+
+          const {
+            r,
+            d
+          } =
+            await HM.api(
+              "/api/profile/search/" +
+              encodeURIComponent(value)
+            );
+
+
+          if (
+            !r.ok ||
+            !d?.user
+          ) {
+
+            searchResult.textContent =
+              d?.message ||
+              "No user found with that User ID.";
+
+            return;
+          }
+
+
+          const user =
+            d.user;
+
+
+          searchResult.innerHTML = `
+            Found
+            <b>
+              @${HM.esc(user.userId)}
+            </b>
+            —
+            ${HM.esc(user.name)}
+
+            <button
+              id="openFoundProfile"
+              class="btn ghost"
+              style="margin-left: 8px"
+              type="button"
+            >
+              Open profile
+            </button>
+          `;
+
+
+          const openButton =
+            document.getElementById(
+              "openFoundProfile"
+            );
+
+
+          if (openButton) {
+
+            openButton.addEventListener(
+              "click",
+              () => {
+
+                window.location.href =
+                  "person.html?user=" +
+                  encodeURIComponent(
+                    user.userId
+                  );
+
+              }
+            );
+          }
+
+
+        } catch (error) {
+
+          console.error(
+            "User search error:",
+            error
+          );
+
+          searchResult.textContent =
+            "Search failed. Please try again.";
+
+        } finally {
+
+          findUserBtn.disabled =
+            false;
+
+          findUserBtn.textContent =
+            "Find user";
+        }
       }
-    }
 
-    async function reportUser(id) {
-      const reason = prompt("Why are you reporting this profile?");
-      if (!reason) return;
-      try {
-        const { d } = await HM.api("/api/reports/" + encodeURIComponent(id), {
-          method: "POST",
-          body: { reason }
-        });
-        alert(d?.message || "Report sent");
-      } catch (error) {
-        console.error(error);
-        alert("Could not send report.");
+
+      /* =========================================
+         LIKE / PASS
+      ========================================= */
+
+      async function act(
+        id,
+        type,
+        button
+      ) {
+
+        if (!button) {
+          return;
+        }
+
+
+        const card =
+          button.closest(
+            "article.card"
+          );
+
+
+        button.disabled =
+          true;
+
+
+        try {
+
+          const {
+            r,
+            d
+          } =
+            await HM.api(
+              "/api/likes",
+              {
+                method: "POST",
+
+                body: {
+                  to: id,
+                  type: type
+                }
+              }
+            );
+
+
+          if (!r.ok) {
+
+            alert(
+              d?.message ||
+              "Action failed"
+            );
+
+            button.disabled =
+              false;
+
+            return;
+          }
+
+
+          card?.remove();
+
+
+          if (
+            !grid.querySelector(
+              "article.card"
+            )
+          ) {
+
+            grid.innerHTML = `
+              <div class="card">
+
+                <h2>
+                  No users found.
+                </h2>
+
+                <p class="muted">
+                  There are no other users
+                  to display right now.
+                </p>
+
+              </div>
+            `;
+          }
+
+
+        } catch (error) {
+
+          console.error(
+            "Like/pass error:",
+            error
+          );
+
+
+          alert(
+            "Action failed. Please try again."
+          );
+
+
+          button.disabled =
+            false;
+        }
       }
-    }
 
-    refreshBtn.addEventListener("click", load);
-    findUserBtn.addEventListener("click", searchUser);
-    userSearch.addEventListener("keydown", event => {
-      if (event.key === "Enter") searchUser();
-    });
 
-    load();
-  </script>
-  <script src="js/animated-ui.js"></script>
-</body>
+      /* =========================================
+         BLOCK USER
+      ========================================= */
+
+      async function blockUser(id) {
+
+        if (
+          !confirm(
+            "Block this user?"
+          )
+        ) {
+          return;
+        }
+
+
+        try {
+
+          const {
+            d
+          } =
+            await HM.api(
+              "/api/blocks/" +
+              encodeURIComponent(id),
+              {
+                method: "POST"
+              }
+            );
+
+
+          alert(
+            d?.message ||
+            "Blocked"
+          );
+
+
+          await load();
+
+        } catch (error) {
+
+          console.error(
+            "Block error:",
+            error
+          );
+
+
+          alert(
+            "Could not block this user."
+          );
+        }
+      }
+
+
+      /* =========================================
+         REPORT USER
+      ========================================= */
+
+      async function reportUser(id) {
+
+        const reason =
+          prompt(
+            "Why are you reporting this profile?"
+          );
+
+
+        if (!reason) {
+          return;
+        }
+
+
+        try {
+
+          const {
+            d
+          } =
+            await HM.api(
+              "/api/reports/" +
+              encodeURIComponent(id),
+              {
+                method: "POST",
+
+                body: {
+                  reason: reason
+                }
+              }
+            );
+
+
+          alert(
+            d?.message ||
+            "Report sent"
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Report error:",
+            error
+          );
+
+
+          alert(
+            "Could not send report."
+          );
+        }
+      }
+
+
+      /* =========================================
+         EVENTS
+      ========================================= */
+
+      refreshBtn.addEventListener(
+        "click",
+        load
+      );
+
+
+      findUserBtn.addEventListener(
+        "click",
+        searchUser
+      );
+
+
+      userSearch.addEventListener(
+        "keydown",
+        (event) => {
+
+          if (
+            event.key === "Enter"
+          ) {
+            searchUser();
+          }
+
+        }
+      );
+
+
+      /* =========================================
+         START
+      ========================================= */
+
+      load();
+
+    </script>
+
+
+    <script src="js/animated-ui.js"></script>
+
+  </body>
 </html>
