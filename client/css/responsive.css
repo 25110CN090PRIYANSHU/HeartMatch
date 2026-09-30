@@ -297,3 +297,10 @@ main, .wrap, #grid {
     border-radius: 10px !important;
   }
 }
+
+/* Final Discover page stability: one document scroll, no nested scrollbar/jump. */
+html { overflow-x: hidden !important; }
+body { overflow-x: hidden !important; overflow-y: auto !important; }
+#grid { overflow: visible !important; align-items: start; }
+#grid .card { overflow: hidden; }
+#grid .profile-img { display: block; width: 100%; aspect-ratio: 1 / 1; height: auto; object-fit: cover; }
