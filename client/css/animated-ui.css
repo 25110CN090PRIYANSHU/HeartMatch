@@ -37,8 +37,37 @@ body::before{
 @keyframes hmPageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes hmUniverse{0%{transform:translate3d(-3%,0,0) scale(1)}50%{transform:translate3d(3%,-2%,0) scale(1.06)}100%{transform:translate3d(-1%,3%,0) scale(1.02)}}
 
+/* Romantic decorative layer */
+.hm-motion-layer{
+  position:fixed!important;inset:0!important;overflow:hidden!important;pointer-events:none!important;
+  z-index:-1!important;
+}
+.hm-romance-glow{position:absolute;border-radius:50%;filter:blur(55px);opacity:.25;mix-blend-mode:screen}
+.hm-romance-glow.g1{width:42vw;height:42vw;left:-17vw;top:8vh;background:#a855f7;animation:hmGlow1 15s ease-in-out infinite alternate}
+.hm-romance-glow.g2{width:45vw;height:45vw;right:-19vw;top:22vh;background:#ff3f8e;animation:hmGlow2 18s ease-in-out infinite alternate}
+.hm-romance-glow.g3{width:35vw;height:35vw;left:33vw;bottom:-22vw;background:#ff8aaf;animation:hmGlow3 13s ease-in-out infinite alternate}
+@keyframes hmGlow1{to{transform:translate(18vw,13vh) scale(1.3)}}
+@keyframes hmGlow2{to{transform:translate(-17vw,-13vh) scale(1.22)}}
+@keyframes hmGlow3{to{transform:translate(2vw,-16vh) scale(1.25)}}
+
+.hm-heart,.hm-romance-icon,.hm-sparkle,.hm-petal,.hm-doll{
+  position:absolute;bottom:-100px;display:block;user-select:none;
+  filter:drop-shadow(0 8px 16px rgba(255,60,135,.18));
+  will-change:transform,opacity;
+}
+.hm-heart{font-size:var(--s);color:var(--c);animation:hmHeartRise var(--d) linear var(--delay) infinite}
+.hm-romance-icon{font-size:var(--s);opacity:.75;animation:hmIconRise var(--d) ease-in-out var(--delay) infinite}
+.hm-sparkle{font-size:var(--s);color:#ffd9e8;animation:hmSpark var(--d) ease-in-out var(--delay) infinite}
+.hm-petal{width:10px;height:18px;border-radius:100% 0 100% 0;background:linear-gradient(135deg,#ffb2cf,#ff477f);opacity:.6;animation:hmPetal var(--d) linear var(--delay) infinite}
+.hm-doll{font-size:var(--s);animation:hmDoll var(--d) ease-in-out var(--delay) infinite}
+@keyframes hmHeartRise{0%{transform:translate3d(0,0,0) rotate(-12deg) scale(.7);opacity:0}10%{opacity:.8}45%{transform:translate3d(var(--x),-48vh,0) rotate(12deg) scale(1)}80%{opacity:.45}100%{transform:translate3d(calc(var(--x)*-1),-118vh,0) rotate(35deg) scale(1.35);opacity:0}}
+@keyframes hmIconRise{0%,100%{transform:translate3d(0,0,0) rotate(-4deg) scale(.82);opacity:0}15%{opacity:.8}50%{transform:translate3d(var(--x),-52vh,0) rotate(5deg) scale(1)}85%{opacity:.5}100%{transform:translate3d(calc(var(--x)*-1),-112vh,0) rotate(-8deg) scale(1.12);opacity:0}}
+@keyframes hmSpark{0%,100%{transform:translateY(0) scale(.4) rotate(0);opacity:0}25%{opacity:.8}55%{transform:translate3d(var(--x),-42vh,0) scale(1.25) rotate(90deg)}100%{transform:translate3d(calc(var(--x)*-.5),-100vh,0) scale(.2) rotate(180deg);opacity:0}}
+@keyframes hmPetal{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}12%{opacity:.65}50%{transform:translate3d(var(--x),-50vh,0) rotate(180deg)}100%{transform:translate3d(calc(var(--x)*-1),-112vh,0) rotate(430deg);opacity:0}}
+@keyframes hmDoll{0%,100%{transform:translate3d(0,0,0) rotate(-5deg) scale(.72);opacity:0}15%{opacity:.85}45%{transform:translate3d(var(--x),-45vh,0) rotate(5deg) scale(1)}75%{opacity:.55}100%{transform:translate3d(calc(var(--x)*-.8),-110vh,0) rotate(-7deg) scale(.9);opacity:0}}
 
 /* A subtle romantic vignette on every page */
+.hm-romantic-vignette{position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(circle at center,transparent 30%,rgba(10,3,12,.18) 100%)}
 
 /* Navigation */
 .nav,nav,.navbar{
@@ -133,29 +162,11 @@ main>*:nth-child(2){animation-delay:.06s}main>*:nth-child(3){animation-delay:.12
 
 /* Mobile */
 @media(max-width:700px){
+  .hm-romance-icon,.hm-doll{font-size:calc(var(--s)*.8)}
   body::before{filter:blur(28px)}
   .card:hover,.profile-card:hover,.match-card:hover,.form:hover{transform:translateY(-3px) scale(1.005)!important}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
-
-
-/* =========================================================
-   ROMANTIC MOTION PACK — intentionally rich visual effects
-========================================================= */
-body{animation:hmPageIn .9s cubic-bezier(.16,1,.3,1) both}
-body::before{filter:blur(35px);animation:hmUniverse 20s ease-in-out infinite alternate;opacity:1}
-.nav,.navbar,nav{backdrop-filter:blur(24px) saturate(160%)!important;-webkit-backdrop-filter:blur(24px) saturate(160%)!important}
-.card,.profile-card,.match-card,.notification,.form,.person-card,.user-card,.notice{backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
-.gradient{animation:hmGradient 5s ease infinite!important}
-.btn:not(.ghost):not(.alt),.profile-action-btn.like,.send-btn{animation:hmGradient 5s ease infinite!important}
-.profile-photo{animation:hmPhotoPulse 3.2s ease-in-out infinite!important}
-.card:hover,.profile-card:hover,.match-card:hover,.notification:hover,.form:hover,.person-card:hover,.user-card:hover,.notice:hover{transform:translateY(-8px) scale(1.012)!important}
-.card:hover::before,.profile-card:hover::before,.match-card:hover::before,.notification:hover::before,.form:hover::before,.person-card:hover::before,.user-card:hover::before,.notice:hover::before{animation:hmShine 1s ease}
-main>*{animation:hmStagger .65s cubic-bezier(.16,1,.3,1) both!important}
-main>*:nth-child(2){animation-delay:.06s}main>*:nth-child(3){animation-delay:.12s}main>*:nth-child(4){animation-delay:.18s}main>*:nth-child(5){animation-delay:.24s}main>*:nth-child(6){animation-delay:.30s}
-.hm-romance-vignette{display:block!important}
-.hm-romance-glow{filter:blur(55px)!important}
-@media(max-width:700px){.card:hover,.profile-card:hover,.match-card:hover,.form:hover{transform:translateY(-5px) scale(1.008)!important}}
-
-/* Global decorative-particle safety: disabled on every HeartMatch page. */
-.hm-floating-hearts,.floating-hearts,.heart-particles,.petals,.petal-container,.sparkles,.sparkle-container,.particles,.particle-container,.floating-particles,.floating-elements,.romantic-particles,.butterflies,.floating-butterflies,.dolls,.floating-dolls,.hm-romance-vignette{display:none!important;animation:none!important;}
+@keyframes hmBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--bx,0px)),calc(-50% - 34px)) scale(1.15)}}
+.hm-love-note{width:max-content;max-width:100%;margin:0 auto 18px;padding:9px 16px;border:1px solid rgba(255,142,190,.2);border-radius:999px;background:rgba(255,75,145,.065);color:#ffc8dd;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 10px 35px rgba(255,45,125,.08);animation:hmNote 2.8s ease-in-out infinite}
+@keyframes hmNote{50%{transform:translateY(-3px);box-shadow:0 14px 42px rgba(255,45,125,.14)}}
