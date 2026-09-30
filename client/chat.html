@@ -653,30 +653,40 @@
       }
       .video-stage {
         position: relative;
-        flex: 1;
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 15px;
+        padding: 10px 20px;
+        overflow: hidden;
       }
       #remoteVideo {
-        width: 100%;
-        height: 100%;
-        max-width: 1000px;
-        object-fit: cover;
-        background: #111;
+        display: block;
+        width: min(100%, 1200px);
+        height: auto;
+        max-height: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: contain;
+        object-position: center center;
+        background: #000;
         border-radius: 15px;
       }
       #localVideo {
         position: absolute;
-        right: 30px;
-        bottom: 30px;
+        right: 34px;
+        bottom: 24px;
         width: 190px;
-        aspect-ratio: 4/3;
-        object-fit: cover;
-        background: #222;
+        height: auto;
+        aspect-ratio: 4 / 3;
+        object-fit: contain;
+        object-position: center center;
+        transform: scaleX(-1);
+        background: #111;
         border-radius: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.25);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        z-index: 2;
       }
       .call-controls {
         display: flex;
@@ -904,10 +914,21 @@
         .attach-option {
           width: min(190px, calc(100vw - 32px));
         }
+        .video-stage {
+          padding: 8px;
+        }
+        #remoteVideo {
+          width: 100%;
+          max-height: 100%;
+          aspect-ratio: 16 / 9;
+          object-fit: contain;
+          border-radius: 10px;
+        }
         #localVideo {
           width: 125px;
-          right: 20px;
-          bottom: 20px;
+          right: 14px;
+          bottom: 14px;
+          object-fit: contain;
         }
       }
     </style>
@@ -2409,9 +2430,8 @@ async function getCallMedia(mode) {
     video: mode === "video"
       ? {
           facingMode: { ideal: "user" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          aspectRatio: { ideal: 16 / 9 },
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
         }
       : false,
   });
