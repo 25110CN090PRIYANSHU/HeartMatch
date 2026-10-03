@@ -12,7 +12,10 @@ async function login(){
     if(!result.r.ok){msg.textContent=result.d.message||"Login failed";return;}
     localStorage.setItem("token",result.d.token);localStorage.setItem("user",JSON.stringify(result.d.user));
     location.href="discover.html";
-  }catch(e){console.error(e);msg.textContent="Cannot connect to server. Open this page through http://localhost:5000";}
+  }catch(e){
+    console.error(e);
+    msg.textContent = e?.message || "Cannot connect to the HeartMatch server. Check /api/health and the server logs.";
+  }
 }
 </script>  <script src="js/animated-ui.js"></script>
 </body></html>

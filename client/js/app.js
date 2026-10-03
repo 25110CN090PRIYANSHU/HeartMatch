@@ -31,6 +31,7 @@ const HM = {
   img(u) {
     return u?.profileImage || "";
   },
+  apiBase: (window.HEARTMATCH_API_URL || "").replace(/\/$/, ""),
   async api(url, opt = {}) {
     const headers = {
       ...(opt.headers || {}),
@@ -44,7 +45,8 @@ const HM = {
       headers["Content-Type"] = "application/json";
       opt.body = JSON.stringify(opt.body);
     }
-    const r = await fetch(url, { ...opt, headers });
+    const target = this.apiBase ? `${this.apiBase}${url}` : url;
+    const r = await fetch(target, { ...opt, headers });
     const d = await r.json().catch(() => ({}));
     if (r.status === 401) {
       localStorage.clear();

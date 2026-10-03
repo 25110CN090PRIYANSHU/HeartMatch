@@ -69,13 +69,28 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "2mb" }));
 
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: "draft-8", legacyHeaders: false });
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false, skipSuccessfulRequests: true, message: { message: "Too many failed login attempts. Please wait 15 minutes." } });
+const signupLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many signup attempts. Please wait 15 minutes." } });
+const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many password-reset attempts. Please wait 15 minutes." } });
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 180, standardHeaders: "draft-8", legacyHeaders: false });
 const socketEventLimiter = new Map();
-app.use("/api/auth/login", authLimiter);
-app.use("/api/auth/signup", authLimiter);
-app.use("/api/auth/forgot-password", authLimiter);
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth/signup", signupLimiter);
+app.use("/api/auth/forgot-password", resetLimiter);
 app.use("/api/", apiLimiter);
+
+// ===============================
+// HEALTH / CONFIG CHECK
+// ===============================
+app.get("/api/health", (req, res) => {
+    res.json({
+        ok: true,
+        database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+        authConfigured: Boolean(process.env.JWT_SECRET),
+        appUrlConfigured: Boolean(process.env.APP_URL),
+        allowedOriginsConfigured: Boolean(process.env.ALLOWED_ORIGINS || process.env.APP_URL)
+    });
+});
 
 // ===============================
 // SERVE FRONTEND
@@ -1220,6 +1235,13 @@ socket.on("callEnd", (d) => {
 // ==================================================
 // MONGODB CONNECTION
 // ==================================================
+
+if (!process.env.MONGO_URI) {
+    console.error("MONGO_URI is missing. Set it in Render Environment Variables or server/.env.");
+}
+if (!process.env.JWT_SECRET) {
+    console.error("JWT_SECRET is missing. Set it in Render Environment Variables or server/.env.");
+}
 
 mongoose.connect(
     process.env.MONGO_URI,
