@@ -468,6 +468,22 @@
                 const actionStatus = document.getElementById("actionStatus");
                 const targetObjectId = String(user._id || "");
 
+                // Load the relationship state so a recipient can immediately see "Like Back".
+                try {
+                    const statusResponse = await fetch(
+                        "/api/likes/status/" + encodeURIComponent(targetObjectId),
+                        { headers: { Authorization: "Bearer " + token } }
+                    );
+                    const status = await statusResponse.json().catch(() => ({}));
+                    if (statusResponse.ok && status.canLikeBack) {
+                        likeButton.textContent = "💗 Like Back";
+                    } else if (statusResponse.ok && status.likedByMe) {
+                        likeButton.textContent = "❤️ Liked";
+                    }
+                } catch (statusError) {
+                    console.warn("Could not load like status:", statusError);
+                }
+
                 function setActionState(disabled) {
                     [likeButton, passButton, reportButton, blockButton].forEach((button) => {
                         if (button) button.disabled = disabled;
@@ -511,6 +527,9 @@
                                 ? (data.matched ? "It's a match! ❤️💕" : "Liked ❤️")
                                 : "Passed 👋"
                         );
+                        if (type === "like") {
+                            likeButton.textContent = data.matched ? "💕 Matched" : "❤️ Liked";
+                        }
                     } catch (error) {
                         console.error("Profile action error:", error);
                         showActionStatus(error.message || "Action failed. Please try again.");

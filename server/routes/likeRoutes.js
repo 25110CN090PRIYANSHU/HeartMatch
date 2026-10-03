@@ -12,6 +12,31 @@ module.exports = (io) => {
 
     const router = express.Router();
 
+    // Return relationship state so the profile can show "Like Back".
+    router.get("/status/:to", authMiddleware, async (req, res) => {
+        try {
+            const to = String(req.params.to || "");
+            if (!mongoose.Types.ObjectId.isValid(to)) {
+                return res.status(400).json({ message: "Invalid user ID" });
+            }
+            if (to === req.userId.toString()) {
+                return res.status(400).json({ message: "Invalid target user" });
+            }
+            const [mine, theirs] = await Promise.all([
+                Like.findOne({ from: req.userId, to, type: "like" }).select("_id"),
+                Like.findOne({ from: to, to: req.userId, type: "like" }).select("_id")
+            ]);
+            res.json({
+                likedByMe: !!mine,
+                likedMe: !!theirs,
+                canLikeBack: !!theirs && !mine
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+
     router.post("/", authMiddleware, async (req, res) => {
 
         try {
@@ -79,6 +104,26 @@ module.exports = (io) => {
                 }
 
             );
+
+            // Notify the recipient on a new LIKE (not on pass, and not repeatedly).
+            if (type === "like") {
+                const existingLikeNotification = await Notification.findOne({
+                    recipient: to,
+                    sender: req.userId,
+                    type: "like"
+                });
+                if (!existingLikeNotification) {
+                    const liker = await User.findById(req.userId).select("name");
+                    const likeNotification = await Notification.create({
+                        recipient: to,
+                        sender: req.userId,
+                        type: "like",
+                        title: "Someone liked you ❤️",
+                        message: `${liker?.name || "Someone"} liked your profile. View their profile to like back.`
+                    });
+                    io.to(to.toString()).emit("newNotification", likeNotification);
+                }
+            }
 
             // Only check match for LIKE
             if (type === "like") {
