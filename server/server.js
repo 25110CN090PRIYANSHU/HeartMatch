@@ -50,17 +50,23 @@ app.use(
         }
     })
 );
+const normalizeOrigin = (value) => String(value || "").trim().replace(/\/$/, "");
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.APP_URL || "")
-    .split(",").map(v => v.trim()).filter(Boolean);
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        if (process.env.NODE_ENV !== "production" && allowedOrigins.length === 0) return callback(null, true);
-        return callback(new Error("Origin not allowed"));
-    },
-    credentials: false
-}));
+    .split(",").map(normalizeOrigin).filter(Boolean);
+app.use((req, res, next) => {
+    const origin = normalizeOrigin(req.headers.origin);
+    if (!origin) return next();
+    const requestOrigin = normalizeOrigin(`${req.protocol}://${req.get("host")}`);
+    if (origin === requestOrigin || allowedOrigins.includes(origin) || (process.env.NODE_ENV !== "production" && allowedOrigins.length === 0)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Vary", "Origin");
+        res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+        if (req.method === "OPTIONS") return res.sendStatus(204);
+        return next();
+    }
+    return res.status(403).json({ message: "Origin not allowed" });
+});
 app.use(express.json({ limit: "2mb" }));
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: "draft-8", legacyHeaders: false });
@@ -97,7 +103,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     maxHttpBufferSize: 6e6,
     cors: {
-        origin: allowedOrigins.length ? allowedOrigins : false
+        origin: allowedOrigins.length ? allowedOrigins : true
     }
 });
 
