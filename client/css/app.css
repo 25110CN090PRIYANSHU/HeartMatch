@@ -341,3 +341,43 @@ video {
 }
 
 .search-input{padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;outline:none}.search-input:focus{border-color:rgba(255,77,141,.7);box-shadow:0 0 0 3px rgba(255,77,141,.08)}
+
+/* Notification unread badge */
+.hm-notification-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hm-notification-badge {
+  position: absolute;
+  top: -9px;
+  right: -10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #08080d;
+  border-radius: 999px;
+  background: #ff263f;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+  box-shadow: 0 3px 12px rgba(255, 38, 63, .45);
+  pointer-events: none;
+  z-index: 5;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hm-notification-badge {
+    animation: hmNotificationPulse 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes hmNotificationPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
