@@ -33,64 +33,16 @@ const app = express();
 app.use(
     helmet({
         crossOriginResourcePolicy: false,
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "'unsafe-inline'"],
-                styleSrc: ["'self'", "'unsafe-inline'"],
-                imgSrc: ["'self'", "data:", "blob:"],
-                mediaSrc: ["'self'", "data:", "blob:"],
-                connectSrc: ["'self'", "ws:", "wss:"],
-                fontSrc: ["'self'", "data:"],
-                objectSrc: ["'none'"],
-                baseUri: ["'self'"],
-                frameAncestors: ["'self'"],
-                formAction: ["'self'"]
-            }
-        }
+        contentSecurityPolicy: false
     })
 );
-const normalizeOrigin = (value) => String(value || "").trim().replace(/\/$/, "");
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.APP_URL || "")
-    .split(",").map(normalizeOrigin).filter(Boolean);
-app.use((req, res, next) => {
-    const origin = normalizeOrigin(req.headers.origin);
-    if (!origin) return next();
-    const requestOrigin = normalizeOrigin(`${req.protocol}://${req.get("host")}`);
-    if (origin === requestOrigin || allowedOrigins.includes(origin) || (process.env.NODE_ENV !== "production" && allowedOrigins.length === 0)) {
-        res.setHeader("Access-Control-Allow-Origin", origin);
-        res.setHeader("Vary", "Origin");
-        res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-        res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-        if (req.method === "OPTIONS") return res.sendStatus(204);
-        return next();
-    }
-    return res.status(403).json({ message: "Origin not allowed" });
-});
-app.use(express.json({ limit: "2mb" }));
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
 
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false, skipSuccessfulRequests: true, message: { message: "Too many failed login attempts. Please wait 15 minutes." } });
-const signupLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many signup attempts. Please wait 15 minutes." } });
-const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many password-reset attempts. Please wait 15 minutes." } });
-const apiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 180, standardHeaders: "draft-8", legacyHeaders: false });
-const socketEventLimiter = new Map();
-app.use("/api/auth/login", loginLimiter);
-app.use("/api/auth/signup", signupLimiter);
-app.use("/api/auth/forgot-password", resetLimiter);
-app.use("/api/", apiLimiter);
-
-// ===============================
-// HEALTH / CONFIG CHECK
-// ===============================
-app.get("/api/health", (req, res) => {
-    res.json({
-        ok: true,
-        database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-        authConfigured: Boolean(process.env.JWT_SECRET),
-        appUrlConfigured: Boolean(process.env.APP_URL),
-        allowedOriginsConfigured: Boolean(process.env.ALLOWED_ORIGINS || process.env.APP_URL)
-    });
-});
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 50, standardHeaders: "draft-8", legacyHeaders: false });
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/signup", authLimiter);
+app.use("/api/auth/forgot-password", authLimiter);
 
 // ===============================
 // SERVE FRONTEND
@@ -116,9 +68,9 @@ const server = http.createServer(app);
 // ===============================
 
 const io = new Server(server, {
-    maxHttpBufferSize: 6e6,
+    maxHttpBufferSize: 8e6,
     cors: {
-        origin: allowedOrigins.length ? allowedOrigins : true
+        origin: "*"
     }
 });
 
@@ -147,7 +99,7 @@ app.use("/api/chat", chatRoutes);
 // TURN credentials are stored in Render Environment Variables.
 // They are NOT stored in GitHub or exposed in your source code.
 
-app.get("/api/turn-config", authMiddleware, (req, res) => {
+app.get("/api/turn-config", (req, res) => {
     try {
         const urls = (process.env.TURN_URLS || "")
             .split(",")
@@ -376,11 +328,9 @@ io.use((socket, next) => {
             return next(new Error("Invalid or expired token"));
         }
 
-        User.findOne({ _id: decoded.userId, isActive: true }).select("tokenVersion")
-            .then((user) => {
-                if (!user || (decoded.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
-                    return next(new Error("Session expired"));
-                }
+        User.exists({ _id: decoded.userId, isActive: true })
+            .then((userExists) => {
+                if (!userExists) return next(new Error("Account is unavailable"));
                 socket.userId = decoded.userId.toString();
                 next();
             })
@@ -403,16 +353,6 @@ io.use((socket, next) => {
 // ==================================================
 
 io.on("connection", (socket) => {
-
-    const eventWindows = new Map();
-    const allowEvent = (name, limit, windowMs = 60_000) => {
-        const now = Date.now();
-        const times = (eventWindows.get(name) || []).filter(t => now - t < windowMs);
-        if (times.length >= limit) return false;
-        times.push(now);
-        eventWindows.set(name, times);
-        return true;
-    };
 
     console.log(
         "User connected:",
@@ -444,7 +384,7 @@ io.on("connection", (socket) => {
 
     socket.on(
         "checkUserOnline",
-        async (data, callback) => {
+        (data, callback) => {
 
             try {
 
@@ -474,15 +414,17 @@ io.on("connection", (socket) => {
                 }
 
 
-                if (userId === socket.userId || await usersBlocked(socket.userId, userId)) {
-                    return callback({ success: false, message: "Unavailable" });
-                }
-                const [a,b] = await Promise.all([
-                    Like.exists({from:socket.userId,to:userId,type:"like"}),
-                    Like.exists({from:userId,to:socket.userId,type:"like"})
-                ]);
-                if (!a || !b) return callback({ success: false, message: "You can only check your matches" });
-                callback({ success: true, online: isUserOnline(userId) });
+                const online =
+                    isUserOnline(userId);
+
+
+                callback({
+
+                    success: true,
+
+                    online: online
+
+                });
 
             } catch (error) {
 
@@ -519,15 +461,9 @@ socket.on("typing", (data) => {
             return;
         }
 
-        if (receiver === socket.userId) return;
-        usersBlocked(socket.userId, receiver).then(async blocked => {
-            if (blocked) return;
-            const [a,b] = await Promise.all([
-                Like.exists({from:socket.userId,to:receiver,type:"like"}),
-                Like.exists({from:receiver,to:socket.userId,type:"like"})
-            ]);
-            if (a && b) io.to(receiver).emit("userTyping", { userId: socket.userId });
-        }).catch(() => {});
+        io.to(receiver).emit("userTyping", {
+            userId: socket.userId
+        });
 
     } catch (error) {
         console.error("Typing error:", error);
@@ -549,15 +485,9 @@ socket.on("stopTyping", (data) => {
             return;
         }
 
-        if (receiver === socket.userId) return;
-        usersBlocked(socket.userId, receiver).then(async blocked => {
-            if (blocked) return;
-            const [a,b] = await Promise.all([
-                Like.exists({from:socket.userId,to:receiver,type:"like"}),
-                Like.exists({from:receiver,to:socket.userId,type:"like"})
-            ]);
-            if (a && b) io.to(receiver).emit("userStoppedTyping", { userId: socket.userId });
-        }).catch(() => {});
+        io.to(receiver).emit("userStoppedTyping", {
+            userId: socket.userId
+        });
 
     } catch (error) {
         console.error("Stop typing error:", error);
@@ -570,9 +500,6 @@ socket.on("stopTyping", (data) => {
     socket.on(
         "sendMessage",
         async (data, callback) => {
-
-            const respondEarly = typeof callback === "function" ? callback : () => {};
-            if (!allowEvent("message", 30)) return respondEarly({ success:false, message:"Too many messages. Please slow down." });
 
             // Prevent error if callback
             // wasn't provided.
@@ -846,24 +773,13 @@ socket.on("stopTyping", (data) => {
                 Like.exists({from:receiver,to:socket.userId,type:"like"})
             ]);
             if (!myLike || !theirLike) return respond({success:false,message:"You can only message your matches"});
-            const kind = a.kind === "image" || a.kind === "video" ? a.kind : "file";
-            const name = String(a.name || "attachment").replace(/[\\x00-\\x1f\\x7f]/g, "").slice(0, 120);
-            const type = String(a.type || "application/octet-stream").toLowerCase().slice(0, 120);
-            const data = String(a.data || "");
-            const allowedTypes = {
-                image: new Set(["image/jpeg","image/png","image/webp","image/gif"]),
-                video: new Set(["video/mp4","video/webm"]),
-                file: new Set(["application/pdf","text/plain"])
-            };
-            if (!allowedTypes[kind].has(type)) return respond({success:false,message:"Unsupported attachment type"});
-            const prefix = `data:${type};base64,`;
-            if (!data.startsWith(prefix)) return respond({success:false,message:"Invalid attachment data"});
-            const encoded = data.slice(prefix.length);
-            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) || encoded.length > 4 * 1024 * 1024 * 1.4) {
-                return respond({success:false,message:"Attachment is too large or invalid"});
-            }
-            const payload = JSON.stringify({ kind, name, type, data });
-            if (payload.length > 5000000) return respond({success:false,message:"Attachment is too large"});
+            const payload = JSON.stringify({
+                kind: a.kind === "image" || a.kind === "video" ? a.kind : "file",
+                name: String(a.name).slice(0,180),
+                type: String(a.type || "application/octet-stream").slice(0,120),
+                data: String(a.data)
+            });
+            if (payload.length > 6500000) return respond({success:false,message:"Attachment is too large"});
             const message = await Message.create({sender:socket.userId,receiver,content:"__HM_ATTACHMENT__"+payload});
             const sender = await User.findById(socket.userId).select("name");
             const notification = await Notification.create({recipient:receiver,sender:socket.userId,type:"message",title:"New attachment 📎",message:`${sender?.name || "Someone"} sent you an attachment`});
@@ -1235,13 +1151,6 @@ socket.on("callEnd", (d) => {
 // ==================================================
 // MONGODB CONNECTION
 // ==================================================
-
-if (!process.env.MONGO_URI) {
-    console.error("MONGO_URI is missing. Set it in Render Environment Variables or server/.env.");
-}
-if (!process.env.JWT_SECRET) {
-    console.error("JWT_SECRET is missing. Set it in Render Environment Variables or server/.env.");
-}
 
 mongoose.connect(
     process.env.MONGO_URI,

@@ -19,7 +19,7 @@ router.get("/", authMiddleware, async (req, res) => {
                 from: like.to,
                 to: req.userId,
                 type: "like"
-            }).populate("from", "userId name age gender location bio interests profileImage isVerified");
+            }).populate("from", "-password");
 
             if (mutualLike) {
                 matches.push(mutualLike.from);

@@ -25,10 +25,9 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        const user = await User.findOne({ _id: decoded.userId, isActive: true }).select("tokenVersion");
-        if (!user || (decoded.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+        if (!(await User.exists({ _id: decoded.userId, isActive: true }))) {
             return res.status(401).json({
-                message: "Session expired. Please log in again."
+                message: "Account is unavailable"
             });
         }
 

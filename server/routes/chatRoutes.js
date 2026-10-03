@@ -21,9 +21,9 @@ router.get("/:userId", authMiddleware, async (req, res) => {
         // Chat links may contain either the MongoDB _id or the user's public
         // HeartMatch User ID. Resolve the public ID to the real _id first.
         if (mongoose.Types.ObjectId.isValid(requestedUserId)) {
-            otherUser = await User.findById(requestedUserId).select("-password -email -isAdmin -tokenVersion -preferences -chatBackgrounds");
+            otherUser = await User.findById(requestedUserId).select("-password");
         } else {
-            otherUser = await User.findOne({ userId: requestedUserId.toLowerCase(), isActive: true }).select("-password -email -isAdmin -tokenVersion -preferences -chatBackgrounds");
+            otherUser = await User.findOne({ userId: requestedUserId.toLowerCase(), isActive: true }).select("-password");
         }
 
         if (!otherUser) {

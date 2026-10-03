@@ -468,29 +468,6 @@
                 const actionStatus = document.getElementById("actionStatus");
                 const targetObjectId = String(user._id || "");
 
-                // If this person has already liked the current user, make the
-                // action explicit so the profile visitor knows they can like back.
-                async function loadRelationshipStatus() {
-                    if (!targetObjectId || !likeButton) return;
-                    try {
-                        const response = await fetch(`/api/likes/status/${encodeURIComponent(targetObjectId)}`, {
-                            headers: { Authorization: "Bearer " + token }
-                        });
-                        const data = await response.json().catch(() => ({}));
-                        if (response.ok && data.canLikeBack) {
-                            likeButton.textContent = "💗 Like Back";
-                            likeButton.dataset.likeBack = "true";
-                        } else if (response.ok && data.outgoing === "like") {
-                            likeButton.textContent = data.incoming === "like" ? "💕 Matched" : "❤️ Liked";
-                            likeButton.disabled = true;
-                        }
-                    } catch (error) {
-                        console.warn("Could not load like status", error);
-                    }
-                }
-
-                loadRelationshipStatus();
-
                 function setActionState(disabled) {
                     [likeButton, passButton, reportButton, blockButton].forEach((button) => {
                         if (button) button.disabled = disabled;
@@ -534,21 +511,11 @@
                                 ? (data.matched ? "It's a match! ❤️💕" : "Liked ❤️")
                                 : "Passed 👋"
                         );
-
-                        if (type === "like") {
-                            likeButton.textContent = data.matched ? "💕 Matched" : "❤️ Liked";
-                            likeButton.disabled = true;
-                        }
-
-                        return;
                     } catch (error) {
                         console.error("Profile action error:", error);
                         showActionStatus(error.message || "Action failed. Please try again.");
                     } finally {
                         setActionState(false);
-                        if (type === "like" && likeButton?.textContent.includes("Liked")) {
-                            likeButton.disabled = true;
-                        }
                     }
                 }
 

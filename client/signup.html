@@ -16,10 +16,7 @@ async function signup(){
     msg.textContent=result.d.message||"Account created successfully ❤️";
     if(result.d.verificationUrl){const a=document.createElement("a");a.href=result.d.verificationUrl;a.textContent=" Verify email";a.style.display="block";a.style.marginTop="10px";msg.appendChild(a);}
     setTimeout(()=>location.href="login.html",5000);
-  }catch(e){
-    console.error(e);
-    msg.textContent = e?.message || "Cannot connect to the HeartMatch server. Check /api/health and the server logs.";
-  }
+  }catch(e){console.error(e);msg.textContent="Cannot connect to server. Open this page through http://localhost:5000";}
 }
 </script>  <script src="js/animated-ui.js"></script>
 </body></html>
