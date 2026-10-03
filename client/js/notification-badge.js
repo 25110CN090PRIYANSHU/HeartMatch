@@ -37,12 +37,8 @@
       const badge = ensureBadge(link);
       badge.textContent = display;
       badge.classList.toggle("hm-badge-visible", unread > 0);
-      // Keep the number visible even if another stylesheet affects span text.
-      badge.style.setProperty("color", "#ffffff", "important");
-      badge.style.setProperty("font-size", "11px", "important");
-      badge.style.setProperty("line-height", "16px", "important");
-      badge.style.setProperty("text-align", "center", "important");
-      badge.style.setProperty("visibility", "visible", "important");
+      // Styling is handled entirely by notification-badge.css so the count
+      // remains centered inside the red circle.
       link.setAttribute(
         "aria-label",
         unread > 0 ? `Notifications, ${unread} unread` : "Notifications"

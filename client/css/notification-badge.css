@@ -1,46 +1,61 @@
-/* HeartMatch - large notification count badge */
+/* HeartMatch notification count badge */
+
+/* The nav link is the positioning anchor for the badge. */
 .hm-notification-link {
   position: relative !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: visible !important;
-  isolation: isolate;
+  z-index: 20 !important;
+}
+
+/* On desktop the badge is allowed to sit outside the nav row, like the
+   reference design. */
+@media (min-width: 901px) {
+  .navlinks {
+    overflow: visible !important;
+  }
 }
 
 .hm-notification-badge {
   position: absolute !important;
-  top: -32px !important;
-  right: -18px !important;
-  width: 58px !important;
-  height: 58px !important;
-  min-width: 58px !important;
+  top: -24px !important;
+  right: -14px !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
   padding: 0 !important;
   margin: 0 !important;
+
   display: none !important;
   align-items: center !important;
   justify-content: center !important;
+
   box-sizing: border-box !important;
   border: 0 !important;
   border-radius: 50% !important;
-  background: #ff2525 !important;
-  color: #fff !important;
+  background: #ff2028 !important;
+  color: #ffffff !important;
+
   font-family: Arial, Helvetica, sans-serif !important;
-  font-size: 29px !important;
-  line-height: 1 !important;
+  font-size: 28px !important;
   font-weight: 900 !important;
+  line-height: 52px !important;
   text-align: center !important;
   text-indent: 0 !important;
   white-space: nowrap !important;
-  text-shadow: none !important;
+
   opacity: 1 !important;
   visibility: visible !important;
+  text-shadow: none !important;
   box-shadow:
-    0 0 0 1px rgba(255,255,255,.05),
-    0 7px 24px rgba(255,37,37,.55),
-    0 0 34px rgba(255,37,37,.25) !important;
+    0 5px 18px rgba(255, 32, 40, 0.45),
+    0 0 24px rgba(255, 32, 40, 0.25) !important;
+
   pointer-events: none !important;
-  z-index: 99999 !important;
+  z-index: 9999 !important;
 }
 
 .hm-notification-badge.hm-badge-visible {
@@ -55,16 +70,33 @@
 
 @keyframes hmNotificationPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.04); }
 }
 
-@media (max-width: 600px) {
+/* Keep the badge usable on narrow screens without breaking the horizontal
+   navigation scroller. */
+@media (max-width: 900px) {
   .hm-notification-badge {
-    width: 43px !important;
-    height: 43px !important;
-    min-width: 43px !important;
-    top: -23px !important;
-    right: -12px !important;
-    font-size: 22px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    top: -9px !important;
+    right: -5px !important;
+    font-size: 18px !important;
+    line-height: 34px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .hm-notification-badge {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    top: -7px !important;
+    right: -4px !important;
+    font-size: 16px !important;
+    line-height: 30px !important;
   }
 }
