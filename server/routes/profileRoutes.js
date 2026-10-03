@@ -15,14 +15,6 @@ const bcrypt = require("bcryptjs");
 const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
-function hasValidImageSignature(buffer, mimetype) {
-  if (!Buffer.isBuffer(buffer)) return false;
-  if (mimetype === "image/jpeg") return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-  if (mimetype === "image/png") return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
-  if (mimetype === "image/webp") return buffer.length >= 12 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
-  return false;
-}
-
 function userIdBase(name) {
   return String(name || "user").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14) || "user";
 }
@@ -114,7 +106,7 @@ router.post(
   upload.single("profileImage"),
   async (req, res) => {
     try {
-      if (!req.file || !hasValidImageSignature(req.file.buffer, req.file.mimetype))
+      if (!req.file)
         return res
           .status(400)
           .json({

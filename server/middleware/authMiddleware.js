@@ -25,15 +25,10 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        const user = await User.findById(decoded.userId).select("isActive tokenVersion").lean();
-        if (!user || !user.isActive) {
+        if (!(await User.exists({ _id: decoded.userId, isActive: true }))) {
             return res.status(401).json({
                 message: "Account is unavailable"
             });
-        }
-
-        if (Number(decoded.tv || 0) !== Number(user.tokenVersion || 0)) {
-            return res.status(401).json({ message: "Session expired. Please log in again." });
         }
 
         req.userId = decoded.userId;

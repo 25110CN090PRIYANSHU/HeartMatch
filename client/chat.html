@@ -2252,7 +2252,6 @@ async function loadWebRTCConfig() {
   try {
     const response = await fetch("/api/turn-config", {
       cache: "no-store",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` }
     });
 
     if (!response.ok) {

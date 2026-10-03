@@ -21,7 +21,6 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
-  tokenVersion: { type: Number, default: 0, min: 0 },
   lastSeen: { type: Date, default: Date.now },
   // Per-conversation chat wallpaper, keyed by the other user's id. Only visible to this user.
   chatBackgrounds: { type: Map, of: String, default: {} }

@@ -35,62 +35,19 @@ const app = express();
 // correct public URLs for password-reset and verification links.
 app.set("trust proxy", 1);
 
-const publicOrigin = String(process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || "").trim().replace(/\/$/, "");
-const isProduction = process.env.NODE_ENV === "production";
-const allowedOrigins = new Set([
-    publicOrigin,
-    "http://localhost:5000",
-    "http://127.0.0.1:5000"
-].filter(Boolean));
-
 app.use(
     helmet({
-        crossOriginResourcePolicy: { policy: "cross-origin" },
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                baseUri: ["'self'"],
-                objectSrc: ["'none'"],
-                frameAncestors: ["'self'"],
-                formAction: ["'self'"],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.socket.io"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-                imgSrc: ["'self'", "data:", "blob:", "https:"],
-                fontSrc: ["'self'", "data:", "https:"],
-                connectSrc: ["'self'", "https:", "wss:"],
-                mediaSrc: ["'self'", "blob:", "https:"],
-                frameSrc: ["'self'", "https:"],
-                ...(isProduction ? { upgradeInsecureRequests: [] } : {})
-            }
-        }
+        crossOriginResourcePolicy: false,
+        contentSecurityPolicy: false
     })
 );
-app.use(cors({
-    origin(origin, callback) {
-        if (!origin || allowedOrigins.has(origin)) return callback(null, true);
-        return callback(new Error("CORS origin not allowed"));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 300,
-    standardHeaders: "draft-8",
-    legacyHeaders: false,
-    message: { message: "Too many requests. Please try again later." }
-});
-app.use("/api", apiLimiter);
-
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many login attempts. Please try again later." } });
-const signupLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 10, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many signup attempts. Please try again later." } });
-const forgotLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: "draft-8", legacyHeaders: false, message: { message: "Too many password-reset requests. Please try again later." } });
-app.use("/api/auth/login", loginLimiter);
-app.use("/api/auth/signup", signupLimiter);
-app.use("/api/auth/forgot-password", forgotLimiter);
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 50, standardHeaders: "draft-8", legacyHeaders: false });
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/signup", authLimiter);
+app.use("/api/auth/forgot-password", authLimiter);
 
 // ===============================
 // SERVE FRONTEND
@@ -126,11 +83,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     maxHttpBufferSize: 8e6,
     cors: {
-        origin(origin, callback) {
-            if (!origin || !allowedOrigins.size || allowedOrigins.has(origin)) return callback(null, true);
-            return callback(new Error("CORS origin not allowed"));
-        },
-        credentials: true
+        origin: "*"
     }
 });
 
@@ -159,7 +112,7 @@ app.use("/api/chat", chatRoutes);
 // TURN credentials are stored in Render Environment Variables.
 // They are NOT stored in GitHub or exposed in your source code.
 
-app.get("/api/turn-config", authMiddleware, (req, res) => {
+app.get("/api/turn-config", (req, res) => {
     try {
         const urls = (process.env.TURN_URLS || "")
             .split(",")
@@ -388,10 +341,9 @@ io.use((socket, next) => {
             return next(new Error("Invalid or expired token"));
         }
 
-        User.findById(decoded.userId).select("isActive tokenVersion").lean()
-            .then((user) => {
-                if (!user || !user.isActive) return next(new Error("Account is unavailable"));
-                if (Number(decoded.tv || 0) !== Number(user.tokenVersion || 0)) return next(new Error("Session expired"));
+        User.exists({ _id: decoded.userId, isActive: true })
+            .then((userExists) => {
+                if (!userExists) return next(new Error("Account is unavailable"));
                 socket.userId = decoded.userId.toString();
                 next();
             })
@@ -514,9 +466,6 @@ io.on("connection", (socket) => {
 
 socket.on("typing", (data) => {
     try {
-        const now = Date.now();
-        if (socket._lastTypingAt && now - socket._lastTypingAt < 250) return;
-        socket._lastTypingAt = now;
         const receiver = data?.receiver;
 
         if (!receiver) return;
@@ -541,9 +490,6 @@ socket.on("typing", (data) => {
 
 socket.on("stopTyping", (data) => {
     try {
-        const now = Date.now();
-        if (socket._lastStopTypingAt && now - socket._lastStopTypingAt < 250) return;
-        socket._lastStopTypingAt = now;
         const receiver = data?.receiver;
 
         if (!receiver) return;
@@ -567,15 +513,6 @@ socket.on("stopTyping", (data) => {
     socket.on(
         "sendMessage",
         async (data, callback) => {
-
-            const now = Date.now();
-            socket._messageWindow = socket._messageWindow || [];
-            socket._messageWindow = socket._messageWindow.filter((ts) => now - ts < 60_000);
-            if (socket._messageWindow.length >= 30) {
-                if (typeof callback === "function") callback({ success: false, message: "Too many messages. Please slow down." });
-                return;
-            }
-            socket._messageWindow.push(now);
 
             // Prevent error if callback
             // wasn't provided.
