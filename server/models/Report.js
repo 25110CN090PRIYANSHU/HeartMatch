@@ -6,4 +6,5 @@ const reportSchema = new mongoose.Schema({
   status: { type: String, enum: ["open", "reviewed", "dismissed"], default: "open" },
   adminNote: { type: String, default: "" }
 }, { timestamps: true });
+reportSchema.index({ reporter: 1, reported: 1, createdAt: -1 });
 module.exports = mongoose.model("Report", reportSchema);

@@ -21,7 +21,7 @@ function userIdBase(name) {
 async function ensureUserId(user) {
   if (user.userId) return user.userId;
   for (let i = 0; i < 20; i++) {
-    const candidate = `${userIdBase(user.name)}${Math.floor(1000 + Math.random() * 9000)}`.slice(0, 24);
+    const candidate = `${userIdBase(user.name)}${require("crypto").randomInt(1000, 10000)}`.slice(0, 24);
     if (!(await User.exists({ userId: candidate }))) { user.userId = candidate; await user.save(); return candidate; }
   }
   user.userId = `user${Date.now().toString(36)}`.slice(0, 24);
@@ -65,6 +65,16 @@ router.put("/", authMiddleware, async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     for (const key of allowed)
       if (req.body[key] !== undefined) user[key] = req.body[key];
+    if (req.body.interests !== undefined) {
+      if (!Array.isArray(req.body.interests) || req.body.interests.length > 30 ||
+          req.body.interests.some(v => typeof v !== "string" || v.length > 40)) {
+        return res.status(400).json({ message: "Invalid interests" });
+      }
+      user.interests = req.body.interests.map(v => v.trim()).filter(Boolean).slice(0, 30);
+    }
+    if (req.body.preferences !== undefined && (typeof req.body.preferences !== "object" || Array.isArray(req.body.preferences))) {
+      return res.status(400).json({ message: "Invalid preferences" });
+    }
     if (req.body.userId !== undefined) {
       const requested = String(req.body.userId).trim().toLowerCase();
       if (!/^[a-z0-9._-]{3,24}$/.test(requested))
@@ -107,11 +117,12 @@ router.post(
   async (req, res) => {
     try {
       if (!req.file)
-        return res
-          .status(400)
-          .json({
-            message: "Please upload a JPG, PNG or WebP image under 5MB",
-          });
+        return res.status(400).json({ message: "Please upload a JPG, PNG or WebP image under 5MB" });
+      const b = req.file.buffer;
+      const isJpeg = b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+      const isPng = b.length > 8 && b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
+      const isWebp = b.length > 12 && b.toString("ascii",0,4) === "RIFF" && b.toString("ascii",8,12) === "WEBP";
+      if (!isJpeg && !isPng && !isWebp) return res.status(400).json({ message: "Invalid image file" });
       const user = await User.findById(req.userId);
       if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -216,6 +227,7 @@ router.put("/password", authMiddleware, async (req, res) => {
     if (!user || !(await bcrypt.compare(currentPassword, user.password)))
       return res.status(401).json({ message: "Current password is incorrect" });
     user.password = await bcrypt.hash(newPassword, 12);
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     await user.save();
     res.json({ message: "Password changed successfully 🔐" });
   } catch (e) {
@@ -224,6 +236,15 @@ router.put("/password", authMiddleware, async (req, res) => {
 });
 router.delete("/account", authMiddleware, async (req, res) => {
   try {
+    const userToDelete = await User.findById(req.userId).select("profileImageFileId");
+    if (userToDelete?.profileImageFileId && mongoose.connection.db) {
+      try {
+        const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: "profileImages" });
+        await bucket.delete(new mongoose.Types.ObjectId(userToDelete.profileImageFileId));
+      } catch (e) {
+        console.warn("Could not delete profile image from GridFS:", e.message);
+      }
+    }
     await Promise.all([
       User.findByIdAndDelete(req.userId),
       Like.deleteMany({

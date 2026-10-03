@@ -28,7 +28,7 @@ router.get("/", authMiddleware, async (req, res) => {
       _id: { $nin: [...excluded] },
       isActive: { $ne: false }
     })
-      .select("-password")
+      .select("-password -email -isAdmin -tokenVersion -preferences -chatBackgrounds")
       .sort({ lastSeen: -1, createdAt: -1 });
 
     res.json({

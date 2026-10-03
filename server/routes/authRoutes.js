@@ -35,8 +35,8 @@ async function generateUniqueUserId(name) {
   return `user${crypto.randomBytes(5).toString("hex")}`.slice(0, 24);
 }
 
-const tokenFor = (id) =>
-  jwt.sign({ userId: id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const tokenFor = (user) =>
+  jwt.sign({ userId: user._id, tokenVersion: user.tokenVersion || 0 }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
 async function mail(to, subject, text) {
   if (
@@ -160,7 +160,7 @@ router.post("/login", async (req, res) => {
     await user.save();
     res.json({
       message: "Login successful ❤️",
-      token: tokenFor(user._id),
+      token: tokenFor(user),
       user: safeUser(user),
     });
   } catch (e) {
@@ -234,6 +234,7 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired reset link" });
     await User.findByIdAndUpdate(record.user, {
       password: await bcrypt.hash(password, 12),
+      $inc: { tokenVersion: 1 }
     });
     await record.deleteOne();
     res.json({ message: "Password reset successfully. You can log in now." });

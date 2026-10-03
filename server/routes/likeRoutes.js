@@ -12,6 +12,31 @@ module.exports = (io) => {
 
     const router = express.Router();
 
+    // Relationship status for the profile viewer. This lets the UI show
+    // "Like Back" when the other user has already liked the current user.
+    router.get("/status/:userId", authMiddleware, async (req, res) => {
+        try {
+            const { userId } = req.params;
+            if (!mongoose.Types.ObjectId.isValid(userId) || userId === req.userId.toString()) {
+                return res.status(400).json({ message: "Invalid user ID" });
+            }
+
+            const [outgoing, incoming] = await Promise.all([
+                Like.findOne({ from: req.userId, to: userId }).select("type").lean(),
+                Like.findOne({ from: userId, to: req.userId }).select("type").lean()
+            ]);
+
+            return res.json({
+                outgoing: outgoing?.type || null,
+                incoming: incoming?.type || null,
+                canLikeBack: incoming?.type === "like" && outgoing?.type !== "like"
+            });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: "Server error" });
+        }
+    });
+
     router.post("/", authMiddleware, async (req, res) => {
 
         try {
@@ -83,13 +108,34 @@ module.exports = (io) => {
             // Only check match for LIKE
             if (type === "like") {
 
+                // Notify the target user that they were liked. Do not reveal
+                // an email or any private field, and do not create duplicates.
                 const mutualLike = await Like.findOne({
-
                     from: to,
                     to: req.userId,
                     type: "like"
-
                 });
+
+                if (!mutualLike) {
+                    const existingLikeNotification = await Notification.findOne({
+                        recipient: to,
+                        sender: req.userId,
+                        type: "like"
+                    });
+
+                    if (!existingLikeNotification) {
+                        const currentUser = await User.findById(req.userId).select("name").lean();
+                        const likeNotification = await Notification.create({
+                            recipient: to,
+                            sender: req.userId,
+                            type: "like",
+                            title: "Someone liked you ❤️",
+                            message: `${currentUser?.name || "Someone"} liked your profile. View their profile to like back.`
+                        });
+
+                        io.to(to.toString()).emit("newNotification", likeNotification);
+                    }
+                }
 
                 // MATCH FOUND ❤️
                 if (mutualLike) {

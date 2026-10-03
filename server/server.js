@@ -33,16 +33,43 @@ const app = express();
 app.use(
     helmet({
         crossOriginResourcePolicy: false,
-        contentSecurityPolicy: false
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "blob:"],
+                mediaSrc: ["'self'", "data:", "blob:"],
+                connectSrc: ["'self'", "ws:", "wss:"],
+                fontSrc: ["'self'", "data:"],
+                objectSrc: ["'none'"],
+                baseUri: ["'self'"],
+                frameAncestors: ["'self'"],
+                formAction: ["'self'"]
+            }
+        }
     })
 );
-app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.APP_URL || "")
+    .split(",").map(v => v.trim()).filter(Boolean);
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        if (process.env.NODE_ENV !== "production" && allowedOrigins.length === 0) return callback(null, true);
+        return callback(new Error("Origin not allowed"));
+    },
+    credentials: false
+}));
+app.use(express.json({ limit: "2mb" }));
 
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 50, standardHeaders: "draft-8", legacyHeaders: false });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: "draft-8", legacyHeaders: false });
+const apiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 180, standardHeaders: "draft-8", legacyHeaders: false });
+const socketEventLimiter = new Map();
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/signup", authLimiter);
 app.use("/api/auth/forgot-password", authLimiter);
+app.use("/api/", apiLimiter);
 
 // ===============================
 // SERVE FRONTEND
@@ -68,9 +95,9 @@ const server = http.createServer(app);
 // ===============================
 
 const io = new Server(server, {
-    maxHttpBufferSize: 8e6,
+    maxHttpBufferSize: 6e6,
     cors: {
-        origin: "*"
+        origin: allowedOrigins.length ? allowedOrigins : false
     }
 });
 
@@ -99,7 +126,7 @@ app.use("/api/chat", chatRoutes);
 // TURN credentials are stored in Render Environment Variables.
 // They are NOT stored in GitHub or exposed in your source code.
 
-app.get("/api/turn-config", (req, res) => {
+app.get("/api/turn-config", authMiddleware, (req, res) => {
     try {
         const urls = (process.env.TURN_URLS || "")
             .split(",")
@@ -328,9 +355,11 @@ io.use((socket, next) => {
             return next(new Error("Invalid or expired token"));
         }
 
-        User.exists({ _id: decoded.userId, isActive: true })
-            .then((userExists) => {
-                if (!userExists) return next(new Error("Account is unavailable"));
+        User.findOne({ _id: decoded.userId, isActive: true }).select("tokenVersion")
+            .then((user) => {
+                if (!user || (decoded.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+                    return next(new Error("Session expired"));
+                }
                 socket.userId = decoded.userId.toString();
                 next();
             })
@@ -353,6 +382,16 @@ io.use((socket, next) => {
 // ==================================================
 
 io.on("connection", (socket) => {
+
+    const eventWindows = new Map();
+    const allowEvent = (name, limit, windowMs = 60_000) => {
+        const now = Date.now();
+        const times = (eventWindows.get(name) || []).filter(t => now - t < windowMs);
+        if (times.length >= limit) return false;
+        times.push(now);
+        eventWindows.set(name, times);
+        return true;
+    };
 
     console.log(
         "User connected:",
@@ -384,7 +423,7 @@ io.on("connection", (socket) => {
 
     socket.on(
         "checkUserOnline",
-        (data, callback) => {
+        async (data, callback) => {
 
             try {
 
@@ -414,17 +453,15 @@ io.on("connection", (socket) => {
                 }
 
 
-                const online =
-                    isUserOnline(userId);
-
-
-                callback({
-
-                    success: true,
-
-                    online: online
-
-                });
+                if (userId === socket.userId || await usersBlocked(socket.userId, userId)) {
+                    return callback({ success: false, message: "Unavailable" });
+                }
+                const [a,b] = await Promise.all([
+                    Like.exists({from:socket.userId,to:userId,type:"like"}),
+                    Like.exists({from:userId,to:socket.userId,type:"like"})
+                ]);
+                if (!a || !b) return callback({ success: false, message: "You can only check your matches" });
+                callback({ success: true, online: isUserOnline(userId) });
 
             } catch (error) {
 
@@ -461,9 +498,15 @@ socket.on("typing", (data) => {
             return;
         }
 
-        io.to(receiver).emit("userTyping", {
-            userId: socket.userId
-        });
+        if (receiver === socket.userId) return;
+        usersBlocked(socket.userId, receiver).then(async blocked => {
+            if (blocked) return;
+            const [a,b] = await Promise.all([
+                Like.exists({from:socket.userId,to:receiver,type:"like"}),
+                Like.exists({from:receiver,to:socket.userId,type:"like"})
+            ]);
+            if (a && b) io.to(receiver).emit("userTyping", { userId: socket.userId });
+        }).catch(() => {});
 
     } catch (error) {
         console.error("Typing error:", error);
@@ -485,9 +528,15 @@ socket.on("stopTyping", (data) => {
             return;
         }
 
-        io.to(receiver).emit("userStoppedTyping", {
-            userId: socket.userId
-        });
+        if (receiver === socket.userId) return;
+        usersBlocked(socket.userId, receiver).then(async blocked => {
+            if (blocked) return;
+            const [a,b] = await Promise.all([
+                Like.exists({from:socket.userId,to:receiver,type:"like"}),
+                Like.exists({from:receiver,to:socket.userId,type:"like"})
+            ]);
+            if (a && b) io.to(receiver).emit("userStoppedTyping", { userId: socket.userId });
+        }).catch(() => {});
 
     } catch (error) {
         console.error("Stop typing error:", error);
@@ -500,6 +549,9 @@ socket.on("stopTyping", (data) => {
     socket.on(
         "sendMessage",
         async (data, callback) => {
+
+            const respondEarly = typeof callback === "function" ? callback : () => {};
+            if (!allowEvent("message", 30)) return respondEarly({ success:false, message:"Too many messages. Please slow down." });
 
             // Prevent error if callback
             // wasn't provided.
@@ -773,13 +825,24 @@ socket.on("stopTyping", (data) => {
                 Like.exists({from:receiver,to:socket.userId,type:"like"})
             ]);
             if (!myLike || !theirLike) return respond({success:false,message:"You can only message your matches"});
-            const payload = JSON.stringify({
-                kind: a.kind === "image" || a.kind === "video" ? a.kind : "file",
-                name: String(a.name).slice(0,180),
-                type: String(a.type || "application/octet-stream").slice(0,120),
-                data: String(a.data)
-            });
-            if (payload.length > 6500000) return respond({success:false,message:"Attachment is too large"});
+            const kind = a.kind === "image" || a.kind === "video" ? a.kind : "file";
+            const name = String(a.name || "attachment").replace(/[\\x00-\\x1f\\x7f]/g, "").slice(0, 120);
+            const type = String(a.type || "application/octet-stream").toLowerCase().slice(0, 120);
+            const data = String(a.data || "");
+            const allowedTypes = {
+                image: new Set(["image/jpeg","image/png","image/webp","image/gif"]),
+                video: new Set(["video/mp4","video/webm"]),
+                file: new Set(["application/pdf","text/plain"])
+            };
+            if (!allowedTypes[kind].has(type)) return respond({success:false,message:"Unsupported attachment type"});
+            const prefix = `data:${type};base64,`;
+            if (!data.startsWith(prefix)) return respond({success:false,message:"Invalid attachment data"});
+            const encoded = data.slice(prefix.length);
+            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) || encoded.length > 4 * 1024 * 1024 * 1.4) {
+                return respond({success:false,message:"Attachment is too large or invalid"});
+            }
+            const payload = JSON.stringify({ kind, name, type, data });
+            if (payload.length > 5000000) return respond({success:false,message:"Attachment is too large"});
             const message = await Message.create({sender:socket.userId,receiver,content:"__HM_ATTACHMENT__"+payload});
             const sender = await User.findById(socket.userId).select("name");
             const notification = await Notification.create({recipient:receiver,sender:socket.userId,type:"message",title:"New attachment 📎",message:`${sender?.name || "Someone"} sent you an attachment`});
