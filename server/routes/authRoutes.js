@@ -8,6 +8,19 @@ const PasswordReset = require("../models/PasswordReset");
 const EmailVerification = require("../models/EmailVerification");
 
 const router = express.Router();
+
+// Build links that work both locally and on Render.
+// APP_URL is preferred when explicitly configured; Render exposes
+// RENDER_EXTERNAL_URL automatically for web services. As a final fallback,
+// use the current request host/protocol so localhost is only used locally.
+function publicBaseUrl(req) {
+  const configured = String(
+    process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || ""
+  ).trim();
+
+  const base = configured || `${req.protocol}://${req.get("host")}`;
+  return base.replace(/\\/$/, "");
+}
 const safeUser = (u) => ({
   id: u._id,
   userId: u.userId,
@@ -110,8 +123,8 @@ router.post("/signup", async (req, res) => {
       tokenHash: crypto.createHash("sha256").update(raw).digest("hex"),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
-    const base = process.env.APP_URL || "http://localhost:5000";
-    const verificationUrl = `${base}/verify.html?token=${raw}`;
+    const base = publicBaseUrl(req);
+    const verificationUrl = `${base}/verify.html?token=${encodeURIComponent(raw)}`;
     const sent = await mail(
       user.email,
       "Verify your HeartMatch account",
@@ -205,7 +218,7 @@ router.post("/forgot-password", async (req, res) => {
       tokenHash: crypto.createHash("sha256").update(raw).digest("hex"),
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     });
-    const url = `${process.env.APP_URL || "http://localhost:5000"}/reset-password.html?token=${raw}`;
+    const url = `${publicBaseUrl(req)}/reset-password.html?token=${encodeURIComponent(raw)}`;
     const sent = await mail(
       email,
       "HeartMatch password reset",

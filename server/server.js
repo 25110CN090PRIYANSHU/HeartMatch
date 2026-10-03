@@ -30,6 +30,11 @@ const Block = require("./models/Block");
 
 const app = express();
 
+// Render and other reverse proxies terminate HTTPS before forwarding requests.
+// Trust the proxy so req.protocol/req.get("host") can be used to build
+// correct public URLs for password-reset and verification links.
+app.set("trust proxy", 1);
+
 app.use(
     helmet({
         crossOriginResourcePolicy: false,
@@ -50,6 +55,14 @@ app.use("/api/auth/forgot-password", authLimiter);
 
 app.use(express.static(path.join(__dirname, "../client")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "1d" }));
+
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        ok: true,
+        service: "HeartMatch",
+        database: mongoose.connection.readyState === 1 ? "connected" : "connecting"
+    });
+});
 
 app.get("/", (req, res) => {
     res.sendFile(
