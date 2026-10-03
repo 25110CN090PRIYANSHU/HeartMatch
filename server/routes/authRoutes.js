@@ -19,7 +19,7 @@ function publicBaseUrl(req) {
   ).trim();
 
   const base = configured || `${req.protocol}://${req.get("host")}`;
-  return base.replace(/\\/$/, "");
+  return base.replace(/\/$/, "");
 }
 const safeUser = (u) => ({
   id: u._id,
