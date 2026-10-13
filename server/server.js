@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
@@ -55,6 +56,10 @@ app.use("/api/auth/forgot-password", authLimiter);
 
 app.use(express.static(path.join(__dirname, "../client")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "1d" }));
+
+app.get("/favicon.ico", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/favicon.ico"));
+});
 
 app.get("/health", (req, res) => {
     res.status(200).json({
@@ -1165,8 +1170,12 @@ socket.on("callEnd", (d) => {
 // MONGODB CONNECTION
 // ==================================================
 
+if (!process.env.MONGO_URI) {
+    console.warn("⚠️ Warning: MONGO_URI is not set in environment variables! Trying localhost fallback or waiting for configuration.");
+}
+
 mongoose.connect(
-    process.env.MONGO_URI,
+    process.env.MONGO_URI || "mongodb://127.0.0.1:27017/HeartMatch",
     {
         dbName: "HeartMatch"
     }

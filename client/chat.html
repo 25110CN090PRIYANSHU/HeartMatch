@@ -7,7 +7,18 @@
 
     <title>HeartMatch - Chat</title>
 
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script src="js/socket.io.min.js"></script>
+    <script>
+      if (typeof io === "undefined") {
+        document.write('<script src="/socket.io/socket.io.js"><\/script>');
+      }
+    </script>
+    <script>
+      if (typeof io === "undefined") {
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.min.js"><\/script>');
+      }
+    </script>
 
     <style>
       * {
@@ -1595,11 +1606,21 @@
       // SOCKET CONNECTION
       // =========================
 
-      socket = io({
-        auth: {
-          token: token,
-        },
-      });
+      if (typeof io === "function") {
+        socket = io({
+          auth: {
+            token: token,
+          },
+        });
+      } else {
+        console.warn("Socket.IO client library not loaded. Running in offline/dummy mode.");
+        socket = {
+          connected: false,
+          on: () => {},
+          emit: () => {},
+          off: () => {}
+        };
+      }
 
       // =========================
       // SOCKET CONNECTED
