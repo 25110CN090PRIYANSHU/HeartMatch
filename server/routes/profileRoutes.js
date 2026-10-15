@@ -56,6 +56,7 @@ router.put("/", authMiddleware, async (req, res) => {
       "userId",
       "age",
       "gender",
+      "lookingFor",
       "bio",
       "interests",
       "location",

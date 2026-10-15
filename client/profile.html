@@ -81,9 +81,21 @@
               ><select id="gender">
                 <option value="male">Male</option>
                 <option value="female">Female</option>
+                <option value="non-binary">Non-binary</option>
+                <option value="genderfluid">Genderfluid</option>
                 <option value="other">Other</option>
               </select>
             </div>
+          </div>
+          <div class="field">
+            <label>Looking for (Relationship Intent)</label>
+            <select id="lookingFor">
+              <option value="any">Open to anything ✨</option>
+              <option value="long-term">Long-term relationship 💍</option>
+              <option value="casual">Casual dating ☕</option>
+              <option value="friends">New friends 🤝</option>
+              <option value="not-sure">Not sure yet 🤔</option>
+            </select>
           </div>
           <div class="field">
             <label>Location</label
@@ -150,6 +162,7 @@
         name: document.getElementById("name"),
         age: document.getElementById("age"),
         gender: document.getElementById("gender"),
+        lookingFor: document.getElementById("lookingFor"),
         location: document.getElementById("location"),
         bio: document.getElementById("bio"),
         interests: document.getElementById("interests"),
@@ -182,6 +195,7 @@
           els.name.value = user.name || "";
           els.age.value = user.age ?? "";
           els.gender.value = user.gender || "other";
+          els.lookingFor.value = user.lookingFor || "any";
           els.location.value = user.location || "";
           els.bio.value = user.bio || "";
           els.interests.value = Array.isArray(user.interests)
@@ -227,6 +241,7 @@
           name,
           age,
           gender: els.gender.value,
+          lookingFor: els.lookingFor.value,
           location: els.location.value.trim(),
           bio: els.bio.value.trim(),
           interests: els.interests.value

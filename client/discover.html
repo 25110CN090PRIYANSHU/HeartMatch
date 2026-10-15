@@ -39,22 +39,54 @@
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
           <h2 style="margin:0 0 4px">Classification &amp; Filters 🎯</h2>
-          <p class="muted" style="margin:0">Classify profiles by category, age, and location.</p>
+          <p class="muted" style="margin:0">Classify profiles by category, intent, interests, age, and location.</p>
         </div>
         <div id="filterCountBadge" class="filter-count-badge" style="display:none"></div>
       </div>
 
       <div class="filter-grid">
         <div class="field" style="margin:0">
-          <label for="filterCategory">Category</label>
+          <label for="filterCategory">Category / Gender</label>
           <select id="filterCategory" class="search-input filter-control">
-            <option value="all">All (Men, Women, Other)</option>
+            <option value="all">All Categories (Everyone)</option>
             <option value="men">Men</option>
             <option value="women">Women</option>
+            <option value="non-binary">Non-binary</option>
+            <option value="genderfluid">Genderfluid</option>
             <option value="other">Other</option>
           </select>
         </div>
 
+        <div class="field" style="margin:0">
+          <label for="filterLookingFor">Looking For</label>
+          <select id="filterLookingFor" class="search-input filter-control">
+            <option value="all">Any Intent ✨</option>
+            <option value="long-term">💍 Long-term relationship</option>
+            <option value="casual">☕ Casual dating</option>
+            <option value="friends">🤝 New friends</option>
+            <option value="not-sure">🤔 Open / Not sure yet</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin:0">
+          <label for="filterInterest">Interests &amp; Vibe</label>
+          <select id="filterInterest" class="search-input filter-control">
+            <option value="all">All Interests 🌟</option>
+            <option value="gaming">🎮 Gaming</option>
+            <option value="travel">✈️ Travel</option>
+            <option value="music">🎵 Music</option>
+            <option value="fitness">🏋️ Fitness &amp; Gym</option>
+            <option value="coding">💻 Tech &amp; Coding</option>
+            <option value="coffee">☕ Coffee &amp; Food</option>
+            <option value="art">🎨 Art &amp; Design</option>
+            <option value="movies">🎬 Movies &amp; Shows</option>
+            <option value="cricket">🏏 Sports &amp; Cricket</option>
+            <option value="reading">📚 Reading &amp; Books</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-grid" style="margin-top:12px">
         <div class="field" style="margin:0">
           <label>Age Range</label>
           <div style="display:flex;gap:8px;align-items:center">
@@ -66,8 +98,15 @@
 
         <div class="field" style="margin:0">
           <label for="filterLocation">Location</label>
-          <input id="filterLocation" class="search-input filter-control" type="text" placeholder="e.g. Delhi, London, etc." maxlength="80">
+          <input id="filterLocation" class="search-input filter-control" type="text" placeholder="e.g. Delhi, London, NYC..." maxlength="80">
         </div>
+      </div>
+
+      <div class="filter-chips">
+        <label class="filter-chip"><input id="filterVerified" type="checkbox"> ✓ Verified only</label>
+        <label class="filter-chip"><input id="filterOnline" type="checkbox"> 🟢 Active recently (24h)</label>
+        <label class="filter-chip"><input id="filterPhoto" type="checkbox"> 📸 Real photo only</label>
+        <label class="filter-chip"><input id="filterBio" type="checkbox"> 📝 Has bio only</label>
       </div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center">
@@ -102,9 +141,15 @@
     const searchResult = document.getElementById("searchResult");
 
     const filterCategory = document.getElementById("filterCategory");
+    const filterLookingFor = document.getElementById("filterLookingFor");
+    const filterInterest = document.getElementById("filterInterest");
     const filterMinAge = document.getElementById("filterMinAge");
     const filterMaxAge = document.getElementById("filterMaxAge");
     const filterLocation = document.getElementById("filterLocation");
+    const filterVerified = document.getElementById("filterVerified");
+    const filterOnline = document.getElementById("filterOnline");
+    const filterPhoto = document.getElementById("filterPhoto");
+    const filterBio = document.getElementById("filterBio");
     const applyFiltersBtn = document.getElementById("applyFiltersBtn");
     const resetFiltersBtn = document.getElementById("resetFiltersBtn");
     const filterCountBadge = document.getElementById("filterCountBadge");
@@ -130,8 +175,25 @@
       const g = String(gender || "").toLowerCase();
       if (g === "male" || g === "men") return "Men";
       if (g === "female" || g === "women") return "Women";
+      if (g === "non-binary" || g === "nonbinary") return "Non-binary";
+      if (g === "genderfluid") return "Genderfluid";
       if (g === "other") return "Other";
       return "";
+    }
+
+    function formatLookingFor(intent) {
+      const i = String(intent || "").toLowerCase();
+      if (i === "long-term") return "💍 Long-term";
+      if (i === "casual") return "☕ Casual";
+      if (i === "friends") return "🤝 Friends";
+      if (i === "not-sure") return "✨ Open";
+      return "";
+    }
+
+    function isRecentlyActive(lastSeen) {
+      if (!lastSeen) return false;
+      const diff = Date.now() - new Date(lastSeen).getTime();
+      return diff < 24 * 60 * 60 * 1000;
     }
 
     function updateBadge(count) {
@@ -140,18 +202,29 @@
       filterCountBadge.textContent = `${count} ${count === 1 ? "profile" : "profiles"}`;
     }
 
-    function updateFilterSummary(cat, min, max, loc) {
+    function updateFilterSummary(cat, intent, interest, min, max, loc, v, o, p, b) {
       if (!activeFiltersSummary) return;
       const parts = [];
       if (cat && cat !== "all") {
-        const catMap = { men: "Men", women: "Women", other: "Other" };
+        const catMap = { men: "Men", women: "Women", "non-binary": "Non-binary", genderfluid: "Genderfluid", other: "Other" };
         parts.push(catMap[cat] || cat);
+      }
+      if (intent && intent !== "all") {
+        const intentMap = { "long-term": "💍 Long-term", casual: "☕ Casual", friends: "🤝 Friends", "not-sure": "✨ Open" };
+        parts.push(intentMap[intent] || intent);
+      }
+      if (interest && interest !== "all") {
+        parts.push(interest.charAt(0).toUpperCase() + interest.slice(1));
       }
       if (min && max) parts.push(`Age ${min}–${max}`);
       else if (min) parts.push(`Age ${min}+`);
       else if (max) parts.push(`Age ≤ ${max}`);
 
       if (loc) parts.push(`Near "${loc}"`);
+      if (v) parts.push("Verified ✓");
+      if (o) parts.push("Active recently 🟢");
+      if (p) parts.push("Photo 📸");
+      if (b) parts.push("Bio 📝");
 
       if (parts.length > 0) {
         activeFiltersSummary.textContent = "Filters: " + parts.join(" • ");
@@ -163,9 +236,15 @@
     function hasActiveFilters() {
       return (
         (filterCategory && filterCategory.value !== "all") ||
+        (filterLookingFor && filterLookingFor.value !== "all") ||
+        (filterInterest && filterInterest.value !== "all") ||
         Boolean(filterMinAge && filterMinAge.value.trim()) ||
         Boolean(filterMaxAge && filterMaxAge.value.trim()) ||
-        Boolean(filterLocation && filterLocation.value.trim())
+        Boolean(filterLocation && filterLocation.value.trim()) ||
+        Boolean(filterVerified && filterVerified.checked) ||
+        Boolean(filterOnline && filterOnline.checked) ||
+        Boolean(filterPhoto && filterPhoto.checked) ||
+        Boolean(filterBio && filterBio.checked)
       );
     }
 
@@ -193,6 +272,9 @@
 
       grid.innerHTML = users.map(u => {
         const catLabel = formatCategory(u.gender);
+        const intentLabel = formatLookingFor(u.lookingFor);
+        const isOnline = isRecentlyActive(u.lastSeen);
+
         return `
         <article class="card">
           <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
@@ -202,7 +284,9 @@
           <p>${HM.esc(u.bio || "No bio yet.")}</p>
           <div class="tags">
             ${catLabel ? `<span class="tag tag-category">${HM.esc(catLabel)}</span>` : ""}
-            ${(u.interests || []).slice(0, 6).map(i => `<span class="tag">${HM.esc(i)}</span>`).join("")}
+            ${intentLabel ? `<span class="tag tag-intent">${HM.esc(intentLabel)}</span>` : ""}
+            ${isOnline ? `<span class="tag tag-online">🟢 Active recently</span>` : ""}
+            ${(u.interests || []).slice(0, 5).map(i => `<span class="tag">${HM.esc(i)}</span>`).join("")}
           </div>
           <div class="card-actions">
             <button class="btn ghost" type="button" onclick="act('${u._id}','pass',this)">Pass</button>
@@ -228,16 +312,28 @@
 
       const params = new URLSearchParams();
       const catVal = filterCategory ? filterCategory.value : "all";
+      const intentVal = filterLookingFor ? filterLookingFor.value : "all";
+      const interestVal = filterInterest ? filterInterest.value : "all";
       const minAgeVal = filterMinAge ? filterMinAge.value.trim() : "";
       const maxAgeVal = filterMaxAge ? filterMaxAge.value.trim() : "";
       const locVal = filterLocation ? filterLocation.value.trim() : "";
+      const vVal = filterVerified ? filterVerified.checked : false;
+      const oVal = filterOnline ? filterOnline.checked : false;
+      const pVal = filterPhoto ? filterPhoto.checked : false;
+      const bVal = filterBio ? filterBio.checked : false;
 
       if (catVal && catVal !== "all") params.append("category", catVal);
+      if (intentVal && intentVal !== "all") params.append("lookingFor", intentVal);
+      if (interestVal && interestVal !== "all") params.append("interest", interestVal);
       if (minAgeVal) params.append("minAge", minAgeVal);
       if (maxAgeVal) params.append("maxAge", maxAgeVal);
       if (locVal) params.append("location", locVal);
+      if (vVal) params.append("verifiedOnly", "true");
+      if (oVal) params.append("onlineOnly", "true");
+      if (pVal) params.append("hasPhotoOnly", "true");
+      if (bVal) params.append("hasBioOnly", "true");
 
-      updateFilterSummary(catVal, minAgeVal, maxAgeVal, locVal);
+      updateFilterSummary(catVal, intentVal, interestVal, minAgeVal, maxAgeVal, locVal, vVal, oVal, pVal, bVal);
 
       const qs = params.toString();
       const url = "/api/discover" + (qs ? "?" + qs : "");
@@ -270,9 +366,15 @@
 
     function resetFilters() {
       if (filterCategory) filterCategory.value = "all";
+      if (filterLookingFor) filterLookingFor.value = "all";
+      if (filterInterest) filterInterest.value = "all";
       if (filterMinAge) filterMinAge.value = "";
       if (filterMaxAge) filterMaxAge.value = "";
       if (filterLocation) filterLocation.value = "";
+      if (filterVerified) filterVerified.checked = false;
+      if (filterOnline) filterOnline.checked = false;
+      if (filterPhoto) filterPhoto.checked = false;
+      if (filterBio) filterBio.checked = false;
       load();
     }
 
@@ -374,7 +476,10 @@
     refreshBtn.addEventListener("click", load);
     if (applyFiltersBtn) applyFiltersBtn.addEventListener("click", load);
     if (resetFiltersBtn) resetFiltersBtn.addEventListener("click", resetFilters);
-    if (filterCategory) filterCategory.addEventListener("change", load);
+
+    [filterCategory, filterLookingFor, filterInterest, filterVerified, filterOnline, filterPhoto, filterBio].forEach(el => {
+      if (el) el.addEventListener("change", load);
+    });
 
     [filterMinAge, filterMaxAge, filterLocation].forEach(input => {
       if (!input) return;

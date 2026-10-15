@@ -83,7 +83,9 @@ router.post("/signup", async (req, res) => {
     const normalizedName = String(name || "").trim();
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const numericAge = Number(age);
-    const allowedGenders = ["male", "female", "other"];
+    const allowedGenders = ["male", "female", "other", "non-binary", "genderfluid"];
+    const allowedLookingFor = ["long-term", "casual", "friends", "not-sure", "any"];
+    const lookingFor = allowedLookingFor.includes(String(req.body.lookingFor || "").toLowerCase()) ? String(req.body.lookingFor).toLowerCase() : "any";
     if (
       !normalizedName ||
       normalizedName.length > 80 ||
@@ -115,6 +117,7 @@ router.post("/signup", async (req, res) => {
       password: await bcrypt.hash(password, 12),
       age: numericAge,
       gender,
+      lookingFor,
       isAdmin,
     });
     const raw = crypto.randomBytes(32).toString("hex");
