@@ -4,14 +4,14 @@
   if(!reduce){
     const layer=document.createElement('div');
     layer.className='hm-motion-layer'; layer.setAttribute('aria-hidden','true');
-    const glyphs=['♥','♡','✦','•'];
-    for(let i=0;i<24;i++){
-      const s=document.createElement('span'); s.className='hm-particle'; s.textContent=glyphs[i%glyphs.length];
-      s.style.left=(Math.random()*100)+'%'; s.style.setProperty('--s',(9+Math.random()*18)+'px');
-      s.style.setProperty('--d',(12+Math.random()*16)+'s'); s.style.setProperty('--delay',(-Math.random()*22)+'s');
-      s.style.setProperty('--x',(-90+Math.random()*180)+'px'); layer.appendChild(s);
-    }
-    document.body.appendChild(layer);
+    // const glyphs=['♥','♡','✦','•'];
+    // for(let i=0;i<24;i++){
+    //   const s=document.createElement('span'); s.className='hm-particle'; s.textContent=glyphs[i%glyphs.length];
+    //   s.style.left=(Math.random()*100)+'%'; s.style.setProperty('--s',(9+Math.random()*18)+'px');
+    //   s.style.setProperty('--d',(12+Math.random()*16)+'s'); s.style.setProperty('--delay',(-Math.random()*22)+'s');
+    //   s.style.setProperty('--x',(-90+Math.random()*180)+'px'); layer.appendChild(s);
+    // }
+    // document.body.appendChild(layer);
   }
   document.addEventListener('click',e=>{
     if(reduce) return;
