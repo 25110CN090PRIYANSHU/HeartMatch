@@ -15,12 +15,22 @@
 }
 html {
   min-width: 320px;
-  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) #090812;
 }
 body {
   margin: 0;
   min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
   font-family: Inter, Arial, sans-serif;
   color: var(--text);
   background:
@@ -31,6 +41,29 @@ body {
       transparent 30%
     ),
     var(--bg);
+}
+
+/* Custom Sleek Scrollbar for Chrome, Edge, Safari, Opera */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: #090812;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  border: 2px solid #090812;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--pink);
+}
+::-webkit-scrollbar-corner {
+  background: #090812;
 }
 a {
   color: inherit;

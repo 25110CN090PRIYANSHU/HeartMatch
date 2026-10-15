@@ -6,7 +6,7 @@
   --hm-line:rgba(255,255,255,.11);--hm-shadow:0 30px 90px rgba(0,0,0,.42);
 }
 html{scroll-behavior:smooth}
-body{position:relative;isolation:isolate;overflow-x:hidden;background-attachment:fixed!important;animation:hmEnter .8s cubic-bezier(.16,1,.3,1) both}
+body{position:relative;isolation:isolate;overflow-x:hidden;overflow-y:visible!important;background-attachment:fixed!important;animation:hmEnter .8s cubic-bezier(.16,1,.3,1) both}
 body:before,body:after{content:"";position:fixed;z-index:-3;pointer-events:none;border-radius:50%;filter:blur(70px);opacity:.27;mix-blend-mode:screen}
 body:before{width:55vw;height:55vw;left:-25vw;top:-18vw;background:radial-gradient(circle,#a855f7 0,rgba(168,85,247,.25) 38%,transparent 70%);animation:orbA 16s ease-in-out infinite alternate}
 body:after{width:50vw;height:50vw;right:-20vw;bottom:-18vw;background:radial-gradient(circle,#ff3d8d 0,rgba(255,61,141,.22) 40%,transparent 72%);animation:orbB 19s ease-in-out infinite alternate}
