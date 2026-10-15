@@ -176,10 +176,18 @@ img, video, canvas, iframe { max-width: 100%; }
 /* Chat custom page */
 @media (max-width: 600px) {
   .chat-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     width: 100% !important;
-    height: calc(100dvh - 112px) !important;
+    max-width: 100% !important;
+    height: var(--app-height, 100%) !important;
+    max-height: var(--app-height, 100%) !important;
     min-height: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
   }
 
   .chat-header {

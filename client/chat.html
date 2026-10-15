@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
 
     <title>HeartMatch - Chat</title>
     <link rel="manifest" href="/manifest.json">
@@ -549,31 +549,22 @@
 
       .chat-input {
         display: flex;
-
+        align-items: center;
         gap: 10px;
-
-        padding: 15px 20px;
-
+        padding: 12px 18px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
-
         background: rgba(255, 255, 255, 0.03);
       }
 
       .chat-input input {
-        flex: 1;
-
+        flex: 1 1 auto;
+        min-width: 0;
         border: none;
-
         outline: none;
-
         padding: 13px 17px;
-
         border-radius: 30px;
-
         background: #24212f;
-
         color: white;
-
         font-size: 14px;
       }
 
@@ -582,22 +573,19 @@
       }
 
       .send-btn {
+        flex-shrink: 0;
         width: 48px;
-
         height: 48px;
-
+        min-width: 48px;
         border: none;
-
         border-radius: 50%;
-
         cursor: pointer;
-
         background: linear-gradient(135deg, #ff3f8e, #a855f7);
-
         color: white;
-
         font-size: 18px;
-
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         transition: 0.2s;
       }
 
@@ -626,71 +614,171 @@
         ========================= */
 
       @media (max-width: 600px) {
+        html,
+        body {
+          height: 100% !important;
+          width: 100% !important;
+          overflow: hidden !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
         nav {
           display: none !important;
         }
 
         .chat-container {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
           width: 100% !important;
           max-width: 100% !important;
-          height: 100dvh !important;
-          max-height: 100dvh !important;
+          height: var(--app-height, 100%) !important;
+          max-height: var(--app-height, 100%) !important;
+          min-height: 0 !important;
           margin: 0 !important;
           border: none !important;
           border-radius: 0 !important;
           display: flex !important;
           flex-direction: column !important;
+          overflow: hidden !important;
+          background: #090812 !important;
+          z-index: 10 !important;
         }
 
         .chat-header {
-          padding: 10px 14px !important;
-          padding-top: max(10px, env(safe-area-inset-top)) !important;
-          gap: 10px !important;
-          background: rgba(14, 11, 22, 0.96) !important;
+          flex-shrink: 0 !important;
+          padding: 8px 12px !important;
+          padding-top: max(8px, env(safe-area-inset-top)) !important;
+          gap: 8px !important;
+          background: rgba(14, 11, 22, 0.98) !important;
           border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+          position: relative !important;
+          top: 0 !important;
+          z-index: 60 !important;
         }
 
         .user-info h2 {
-          max-width: 44vw;
+          max-width: 40vw;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-size: 16px !important;
+          font-size: 15px !important;
         }
 
         .messages {
-          padding: 12px 14px !important;
+          flex: 1 1 0% !important;
+          min-height: 0 !important;
+          padding: 12px 12px !important;
+          overflow-y: auto !important;
           overscroll-behavior: contain !important;
           -webkit-overflow-scrolling: touch !important;
         }
 
         .message {
-          max-width: 86% !important;
+          max-width: 84% !important;
           font-size: 15px !important;
         }
 
-        .chat-input {
-          padding: 8px 10px !important;
-          padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-          background: rgba(14, 11, 22, 0.98) !important;
-          border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-          position: sticky !important;
-          bottom: 0 !important;
-          z-index: 50 !important;
+        .message-time {
+          opacity: 0.75 !important;
+          font-size: 10px !important;
         }
 
-        .chat-input input {
-          font-size: 16px !important; /* Prevents auto zoom on iPhone/Android */
+        .chat-input {
+          flex-shrink: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          padding: 8px 10px !important;
+          padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+          background: rgba(14, 11, 22, 0.98) !important;
+          border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+          position: relative !important;
+          bottom: 0 !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          z-index: 60 !important;
+        }
+
+        .chat-input .attach-wrap,
+        .chat-input .call-btn,
+        .chat-input .view-once-toggle-btn,
+        .chat-input .voice-note-btn {
+          flex-shrink: 0 !important;
+          width: 36px !important;
+          height: 36px !important;
+          min-width: 36px !important;
+          font-size: 17px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        .chat-input input[type="text"] {
+          flex: 1 1 auto !important;
+          min-width: 0 !important; /* CRITICAL: ensures input shrinks and never pushes sendBtn off screen */
+          height: 40px !important;
+          padding: 8px 14px !important;
+          font-size: 16px !important; /* Prevents auto zoom */
+          border-radius: 20px !important;
+          background: #24212f !important;
+          color: white !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-sizing: border-box !important;
+        }
+
+        .chat-input .send-btn {
+          flex-shrink: 0 !important;
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          border-radius: 50% !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-size: 17px !important;
+          background: linear-gradient(135deg, #ff3f8e, #a855f7) !important;
+          color: white !important;
+          border: none !important;
+          cursor: pointer !important;
+          box-shadow: 0 4px 14px rgba(255, 63, 142, 0.35) !important;
+          transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s !important;
+        }
+
+        .chat-input .send-btn:not(.active):not(:hover) {
+          opacity: 0.75;
+        }
+        .chat-input .send-btn.active,
+        .chat-input.has-text .send-btn {
+          opacity: 1 !important;
+          transform: scale(1.05) !important;
+          box-shadow: 0 4px 18px rgba(255, 63, 142, 0.6) !important;
+        }
+
+        @media (max-width: 440px) {
+          .chat-input.has-text .voice-note-btn {
+            display: none !important;
+          }
         }
 
         .header-actions {
-          gap: 4px !important;
+          gap: 2px !important;
         }
 
         .call-btn {
-          width: 38px !important;
-          height: 38px !important;
-          font-size: 18px !important;
+          width: 36px !important;
+          height: 36px !important;
+          font-size: 17px !important;
         }
       }
 
@@ -1450,9 +1538,13 @@
         </button>
         <input type="file" id="viewOnceFileInput" accept="image/*" hidden />
 
-        <button type="button" class="call-btn" id="voiceNoteBtn" title="Record Voice Note" style="margin-right: 4px;">
-          🎙️
-        </button>
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Type a message..."
+          maxlength="2000"
+          autocomplete="off"
+        />
 
         <div id="recordingBar" class="recording-bar" style="display: none;">
           <span class="rec-dot"></span>
@@ -1463,15 +1555,11 @@
           </div>
         </div>
 
-        <input
-          type="text"
-          id="messageInput"
-          placeholder="Type a message..."
-          maxlength="2000"
-          autocomplete="off"
-        />
+        <button type="button" class="call-btn voice-note-btn" id="voiceNoteBtn" title="Record Voice Note">
+          🎙️
+        </button>
 
-        <button class="send-btn" id="sendBtn" type="submit">➤</button>
+        <button class="send-btn" id="sendBtn" type="submit" title="Send message">➤</button>
       </form>
     </div>
 
@@ -2220,9 +2308,10 @@
         }
 
         if (recordingBar) recordingBar.style.display = "none";
-        messageInput.style.display = "block";
-        sendBtn.style.display = "block";
-        if (voiceNoteBtn) voiceNoteBtn.style.display = "inline-flex";
+        messageInput.style.display = "";
+        sendBtn.style.display = "";
+        if (voiceNoteBtn) voiceNoteBtn.style.display = "";
+        if (typeof updateInputBarState === "function") updateInputBarState();
       }
 
       if (voiceNoteBtn) {
@@ -2434,10 +2523,72 @@
       });
 
       // =========================
+      // INPUT BAR STATE (Has Text vs Empty)
+      // =========================
+      function updateInputBarState() {
+        const hasText = Boolean(messageInput && messageInput.value.trim().length > 0);
+        chatForm?.classList.toggle("has-text", hasText);
+        sendBtn?.classList.toggle("active", hasText);
+      }
+
+      // =========================
+      // MOBILE KEYBOARD & VIEWPORT GLUE
+      // =========================
+      function setupMobileViewport() {
+        if (!window.visualViewport) return;
+
+        function updateAppViewport() {
+          if (window.innerWidth > 600) {
+            document.documentElement.style.removeProperty("--app-height");
+            return;
+          }
+
+          const h = window.visualViewport.height;
+          document.documentElement.style.setProperty("--app-height", `${h}px`);
+
+          // Strictly keep document scroll at (0, 0) to avoid any header or page shift
+          if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+          }
+        }
+
+        window.visualViewport.addEventListener("resize", () => {
+          updateAppViewport();
+          setTimeout(scrollToBottom, 60);
+        });
+
+        window.visualViewport.addEventListener("scroll", () => {
+          if (window.innerWidth <= 600 && (window.scrollY !== 0 || window.scrollX !== 0)) {
+            window.scrollTo(0, 0);
+          }
+        });
+
+        messageInput?.addEventListener("focus", () => {
+          setTimeout(() => {
+            updateAppViewport();
+            scrollToBottom();
+          }, 120);
+        });
+
+        messageInput?.addEventListener("blur", () => {
+          setTimeout(updateAppViewport, 80);
+        });
+
+        window.addEventListener("resize", updateAppViewport);
+        window.addEventListener("orientationchange", () => setTimeout(updateAppViewport, 150));
+        updateAppViewport();
+      }
+
+      setupMobileViewport();
+      updateInputBarState();
+
+      // =========================
       // TYPING DETECTION
       // =========================
 
       messageInput?.addEventListener("input", function () {
+        updateInputBarState();
+
         if (!socket || !socket.connected || !otherUserId) {
           return;
         }
@@ -2508,6 +2659,7 @@
             }
 
             messageInput.value = "";
+            updateInputBarState();
 
             messageInput.focus();
           },
