@@ -28,6 +28,7 @@ const Like = require("./models/Like");
 const Notification = require("./models/Notification");
 const User = require("./models/User");
 const Block = require("./models/Block");
+const { sendPushNotification } = require("./utils/pushNotifier");
 
 const app = express();
 
@@ -678,7 +679,11 @@ socket.on("stopTyping", (data) => {
                             content.trim(),
 
                         type:
-                            ["text", "image", "audio"].includes(data?.type) ? data.type : "text"
+                            ["text", "image", "audio", "view_once"].includes(data?.type) ? data.type : "text",
+
+                        viewOnce: Boolean(data?.viewOnce || data?.type === "view_once"),
+
+                        isViewed: false
 
                     });
 
@@ -753,6 +758,14 @@ socket.on("stopTyping", (data) => {
                     notification
                 );
 
+                // Lock screen Web Push notification
+                sendPushNotification(receiver, {
+                    title: `${sender.name} 💬`,
+                    body: data?.type === "view_once" ? "Sent a View Once photo 👁️" : (data?.type === "audio" ? "Sent a voice message 🎙️" : (data?.type === "image" ? "Sent a photo 📸" : content.trim())),
+                    icon: sender.profileImage || "/images/icons/icon-192.png",
+                    url: `/chat.html?user=${socket.userId}`
+                }).catch(() => {});
+
 
                 // ===============================
                 // SEND MESSAGE BACK TO SENDER
@@ -820,23 +833,94 @@ socket.on("stopTyping", (data) => {
                 Like.exists({from:receiver,to:socket.userId,type:"like"})
             ]);
             if (!myLike || !theirLike) return respond({success:false,message:"You can only message your matches"});
+            const isViewOnce = Boolean(a.viewOnce);
             const payload = JSON.stringify({
                 kind: a.kind === "image" || a.kind === "video" ? a.kind : "file",
                 name: String(a.name).slice(0,180),
                 type: String(a.type || "application/octet-stream").slice(0,120),
-                data: String(a.data)
+                data: String(a.data),
+                viewOnce: isViewOnce,
+                isViewed: false
             });
             if (payload.length > 6500000) return respond({success:false,message:"Attachment is too large"});
-            const message = await Message.create({sender:socket.userId,receiver,content:"__HM_ATTACHMENT__"+payload});
-            const sender = await User.findById(socket.userId).select("name");
-            const notification = await Notification.create({recipient:receiver,sender:socket.userId,type:"message",title:"New attachment 📎",message:`${sender?.name || "Someone"} sent you an attachment`});
-            io.to(receiver).emit("newMessage",message);
-            io.to(receiver).emit("newNotification",notification);
-            io.to(socket.userId).emit("messageSent",message);
+            const message = await Message.create({
+                sender: socket.userId,
+                receiver,
+                content: (isViewOnce ? "__HM_VIEW_ONCE__" : "__HM_ATTACHMENT__") + payload,
+                type: isViewOnce ? "view_once" : (a.kind === "image" ? "image" : "text"),
+                viewOnce: isViewOnce,
+                isViewed: false
+            });
+            const sender = await User.findById(socket.userId).select("name profileImage");
+            const notifTitle = isViewOnce ? "View Once photo 👁️" : "New attachment 📎";
+            const notifBody = isViewOnce ? `${sender?.name || "Someone"} sent you a View Once photo` : `${sender?.name || "Someone"} sent you an attachment`;
+            const notification = await Notification.create({
+                recipient: receiver,
+                sender: socket.userId,
+                type: "message",
+                title: notifTitle,
+                message: notifBody
+            });
+            io.to(receiver).emit("newMessage", message);
+            io.to(receiver).emit("newNotification", notification);
+
+            // Push notification to phone lock screen
+            sendPushNotification(receiver, {
+                title: `${sender?.name || "HeartMatch"} 💬`,
+                body: notifBody,
+                icon: sender?.profileImage || "/images/icons/icon-192.png",
+                url: `/chat.html?user=${socket.userId}`
+            }).catch(() => {});
+
+            io.to(socket.userId).emit("messageSent", message);
             respond({success:true,message});
         } catch (error) {
             console.error("Attachment error:",error);
             respond({success:false,message:"Failed to send attachment"});
+        }
+    });
+
+    // ==================================================
+    // VIEW ONCE PHOTO OPENED / BURNED
+    // ==================================================
+    socket.on("viewOnceOpened", async (data, callback) => {
+        const respond = typeof callback === "function" ? callback : () => {};
+        try {
+            const messageId = data?.messageId;
+            if (!messageId || !mongoose.Types.ObjectId.isValid(messageId)) {
+                return respond({ success: false, message: "Invalid message ID" });
+            }
+            const msg = await Message.findById(messageId);
+            if (!msg) return respond({ success: false, message: "Message not found" });
+
+            // Only the receiver can open a view-once photo
+            if (msg.receiver.toString() !== socket.userId.toString()) {
+                return respond({ success: false, message: "Unauthorized" });
+            }
+
+            if (msg.isViewed) {
+                return respond({ success: false, message: "Already viewed" });
+            }
+
+            msg.isViewed = true;
+            msg.viewedAt = new Date();
+            // Erase the photo payload so it cannot be viewed again
+            msg.content = "__HM_VIEW_ONCE_VIEWED__";
+            await msg.save();
+
+            const viewedPayload = {
+                messageId: msg._id.toString(),
+                isViewed: true,
+                viewedAt: msg.viewedAt
+            };
+
+            io.to(msg.sender.toString()).emit("messageViewed", viewedPayload);
+            io.to(msg.receiver.toString()).emit("messageViewed", viewedPayload);
+
+            respond({ success: true, message: "Marked as viewed" });
+        } catch (err) {
+            console.error("viewOnceOpened error:", err);
+            respond({ success: false, message: "Error opening view once photo" });
         }
     });
 

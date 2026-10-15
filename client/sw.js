@@ -116,3 +116,56 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// ==========================================
+// 4. WEB PUSH NOTIFICATIONS (LOCK SCREEN)
+// ==========================================
+self.addEventListener('push', (event) => {
+  let data = {
+    title: 'HeartMatch ❤️',
+    body: 'You have a new notification!',
+    icon: '/images/icons/icon-192.png',
+    badge: '/images/icons/icon-192.png',
+    url: '/discover.html'
+  };
+
+  if (event.data) {
+    try {
+      data = Object.assign(data, event.data.json());
+    } catch (_) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/images/icons/icon-192.png',
+    badge: data.badge || '/images/icons/icon-192.png',
+    vibrate: [120, 60, 120, 60, 200],
+    data: {
+      url: data.url || '/matches.html'
+    },
+    tag: data.tag || 'heartmatch-notification',
+    renotify: true
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/discover.html';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

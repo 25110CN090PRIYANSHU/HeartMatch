@@ -421,14 +421,41 @@
           }).join("")}
         </div>
         <div class="swipe-actions-bar">
+          <button id="swipeRewindBtn" class="swipe-circle-btn rewind" title="Rewind / Undo Last Swipe (Z or Backspace)" type="button" ${swipeHistory.length === 0 ? "disabled" : ""}>⏪</button>
           <button id="swipePassBtn" class="swipe-circle-btn pass" title="Pass (Left arrow)" type="button">✖️</button>
           <button id="swipeInfoBtn" class="swipe-circle-btn star" title="View Profile" type="button">ℹ️</button>
           <button id="swipeLikeBtn" class="swipe-circle-btn like" title="Like (Right arrow)" type="button">❤️</button>
         </div>
-        <p class="muted" style="text-align:center;font-size:12px;margin-top:10px">Tip: Drag card or use ← / → arrow keys</p>
+        <p class="muted" style="text-align:center;font-size:12px;margin-top:10px">Tip: Drag card or use ← / → / ⏪ Rewind</p>
       `;
 
       initSwipeGestures();
+    }
+
+    let swipeHistory = [];
+
+    async function rewindLastSwipe() {
+      if (swipeHistory.length === 0) {
+        setMessage("No swipe to undo ℹ️", "info");
+        return;
+      }
+      const last = swipeHistory.pop();
+      try {
+        const { r, d } = await HM.api("/api/like/undo", {
+          method: "POST",
+          body: { to: last.id }
+        });
+        if (!r.ok) {
+          setMessage(d.message || "Could not undo swipe", "err");
+          return;
+        }
+        currentSwipeIndex = Math.max(0, last.index);
+        renderSwipeDeck();
+        setMessage("Undid last swipe ⏪", "ok");
+        setTimeout(() => setMessage(""), 2200);
+      } catch (err) {
+        console.error("Rewind failed:", err);
+      }
     }
 
     function initSwipeGestures() {
@@ -438,6 +465,9 @@
       const likeBtn = document.getElementById("swipeLikeBtn");
       const passBtn = document.getElementById("swipePassBtn");
       const infoBtn = document.getElementById("swipeInfoBtn");
+      const rewindBtn = document.getElementById("swipeRewindBtn");
+
+      if (rewindBtn) rewindBtn.onclick = rewindLastSwipe;
 
       if (infoBtn) {
         infoBtn.onclick = () => {
@@ -526,6 +556,8 @@
       topCard.style.transform = `translate(${flyX}px, 0px) rotate(${direction === "like" ? 30 : -30}deg)`;
       topCard.style.opacity = 0;
 
+      swipeHistory.push({ index: currentSwipeIndex, id, direction });
+
       await act(id, direction);
 
       currentSwipeIndex++;
@@ -540,6 +572,7 @@
       if (document.activeElement && ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
       if (e.key === "ArrowRight") triggerCardSwipe("like");
       if (e.key === "ArrowLeft") triggerCardSwipe("pass");
+      if (e.key === "z" || e.key === "Z" || e.key === "Backspace") rewindLastSwipe();
     });
 
     async function load() {

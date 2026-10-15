@@ -155,4 +155,64 @@
     const banner = document.getElementById('hmPwaBanner');
     if (banner) banner.remove();
   });
+
+  // ==========================================
+  // 4. WEB PUSH NOTIFICATIONS (LOCK SCREEN)
+  // ==========================================
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  window.HM_Push = {
+    async subscribe() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const keyRes = await fetch('/api/notifications/vapid-key');
+        const { publicKey } = await keyRes.json();
+        if (!publicKey) return false;
+
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return false;
+
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+
+        await fetch('/api/notifications/push-subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ subscription: sub })
+        });
+        console.log('✅ Lock screen Web Push notifications enabled!');
+        return true;
+      } catch (e) {
+        console.warn('Push subscription failed:', e);
+        return false;
+      }
+    }
+  };
+
+  // Auto-subscribe if notification permission is already granted
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && localStorage.getItem('token')) {
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        window.HM_Push.subscribe().catch(() => {});
+      }, 3000);
+    });
+  }
 })();

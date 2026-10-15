@@ -30,7 +30,16 @@ const userSchema = new mongoose.Schema({
   }],
   lastSeen: { type: Date, default: Date.now },
   // Per-conversation chat wallpaper, keyed by the other user's id. Only visible to this user.
-  chatBackgrounds: { type: Map, of: String, default: {} }
+  chatBackgrounds: { type: Map, of: String, default: {} },
+  // Web Push notification subscriptions (for lock screen PWA alerts)
+  pushSubscriptions: [{
+    endpoint: { type: String, required: true },
+    keys: {
+      p256dh: { type: String, required: true },
+      auth: { type: String, required: true }
+    },
+    createdAt: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

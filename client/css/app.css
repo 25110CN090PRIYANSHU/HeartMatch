@@ -370,6 +370,9 @@ video {
 .swipe-circle-btn.pass{border-color:rgba(255,107,129,.4);color:#ff6b81}
 .swipe-circle-btn.like{border-color:rgba(255,77,141,.5);color:#ff4d8d;background:linear-gradient(135deg,rgba(255,77,141,.2),rgba(255,49,94,.3));box-shadow:0 8px 24px rgba(255,77,141,.25)}
 .swipe-circle-btn.star{width:50px;height:50px;font-size:18px;color:#8b5cf6;border-color:rgba(139,92,246,.4)}
+.swipe-circle-btn.rewind{width:50px;height:50px;font-size:18px;color:#ffb703;border-color:rgba(255,183,3,.45);background:rgba(255,183,3,.08)}
+.swipe-circle-btn.rewind:hover:not(:disabled){background:rgba(255,183,3,.22);box-shadow:0 0 16px rgba(255,183,3,.35)}
+.swipe-circle-btn.rewind:disabled{opacity:0.3;cursor:not-allowed}
 .swipe-badge{position:absolute;top:28px;padding:8px 16px;border-radius:10px;font-size:22px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;border:3px solid;opacity:0;pointer-events:none;transform:rotate(-15deg);transition:opacity .15s ease}
 .swipe-badge.like{right:25px;color:#52e5a5;border-color:#52e5a5;transform:rotate(15deg)}
 .swipe-badge.pass{left:25px;color:#ff6b81;border-color:#ff6b81}

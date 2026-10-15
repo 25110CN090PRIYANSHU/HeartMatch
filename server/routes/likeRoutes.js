@@ -7,6 +7,7 @@ const Notification = require("../models/Notification");
 const Block = require("../models/Block");
 
 const authMiddleware = require("../middleware/authMiddleware");
+const { sendPushNotification } = require("../utils/pushNotifier");
 
 module.exports = (io) => {
 
@@ -158,6 +159,12 @@ module.exports = (io) => {
                         message: `${liker?.name || "Someone"} liked your profile. View their profile to like back.`
                     });
                     io.to(to.toString()).emit("newNotification", likeNotification);
+
+                    sendPushNotification(to, {
+                        title: "Someone liked you ❤️",
+                        body: `${liker?.name || "Someone"} liked your profile on HeartMatch!`,
+                        url: "/matches.html"
+                    }).catch(() => {});
                 }
             }
 
@@ -261,6 +268,19 @@ module.exports = (io) => {
 
                     }
 
+                    // Push notifications to lock screens for both users
+                    sendPushNotification(to, {
+                        title: "It's a Match! 💕",
+                        body: `You and ${currentUser.name} liked each other! Start chatting now.`,
+                        url: `/chat.html?user=${req.userId}`
+                    }).catch(() => {});
+
+                    sendPushNotification(req.userId, {
+                        title: "It's a Match! 💕",
+                        body: `You and ${targetUser.name} liked each other! Start chatting now.`,
+                        url: `/chat.html?user=${to}`
+                    }).catch(() => {});
+
                     return res.json({
 
                         message: "It's a match! ❤️💕",
@@ -277,30 +297,60 @@ module.exports = (io) => {
 
             // Normal like/pass response
             res.json({
-
                 message:
                     type === "like"
                         ? "User liked ❤️"
                         : "User passed",
-
                 matched: false,
-
                 result
-
             });
 
         } catch (error) {
-
             console.error(error);
-
             res.status(500).json({
-
                 message: "Server error"
+            });
+        }
+    });
 
+    // =====================================
+    // REWIND / UNDO LAST SWIPE
+    // =====================================
+    router.post("/undo", authMiddleware, async (req, res) => {
+        try {
+            const { to } = req.body;
+            if (!to || !mongoose.Types.ObjectId.isValid(to)) {
+                return res.status(400).json({ message: "Invalid user ID" });
+            }
+
+            // Remove the like or pass document
+            const deleted = await Like.findOneAndDelete({
+                from: req.userId,
+                to: to
             });
 
-        }
+            if (!deleted) {
+                return res.status(404).json({ message: "No swipe found to undo" });
+            }
 
+            // Also clean up any pending notifications if it was an unreciprocated like
+            if (deleted.type === "like") {
+                await Notification.deleteOne({
+                    sender: req.userId,
+                    recipient: to,
+                    type: "like"
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Swipe undone successfully ⏪",
+                targetId: to
+            });
+        } catch (error) {
+            console.error("Undo swipe error:", error);
+            res.status(500).json({ message: "Could not undo swipe" });
+        }
     });
 
     return router;

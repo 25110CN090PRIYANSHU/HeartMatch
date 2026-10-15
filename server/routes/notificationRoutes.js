@@ -140,4 +140,70 @@ router.put("/read-all", authMiddleware, async (req, res) => {
 });
 
 
+// Web Push: Get VAPID Public Key for client PWA subscription
+const User = require("../models/User");
+const { getVapidPublicKey } = require("../utils/pushNotifier");
+
+router.get("/vapid-key", (req, res) => {
+    res.json({
+        publicKey: getVapidPublicKey()
+    });
+});
+
+// Web Push: Save user push subscription
+router.post("/push-subscribe", authMiddleware, async (req, res) => {
+    try {
+        const { subscription } = req.body;
+        if (!subscription || !subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
+            return res.status(400).json({ message: "Invalid push subscription object" });
+        }
+
+        // Upsert subscription (avoid duplicates by endpoint)
+        await User.updateOne(
+            { _id: req.userId },
+            {
+                $pull: { pushSubscriptions: { endpoint: subscription.endpoint } }
+            }
+        );
+
+        await User.updateOne(
+            { _id: req.userId },
+            {
+                $push: {
+                    pushSubscriptions: {
+                        endpoint: subscription.endpoint,
+                        keys: {
+                            p256dh: subscription.keys.p256dh,
+                            auth: subscription.keys.auth
+                        },
+                        createdAt: new Date()
+                    }
+                }
+            }
+        );
+
+        res.json({ success: true, message: "Push notifications subscribed successfully 🔔" });
+    } catch (error) {
+        console.error("push-subscribe error:", error);
+        res.status(500).json({ message: "Could not save push subscription" });
+    }
+});
+
+// Web Push: Unsubscribe
+router.post("/push-unsubscribe", authMiddleware, async (req, res) => {
+    try {
+        const { endpoint } = req.body;
+        if (endpoint) {
+            await User.updateOne(
+                { _id: req.userId },
+                { $pull: { pushSubscriptions: { endpoint } } }
+            );
+        }
+        res.json({ success: true, message: "Unsubscribed from push notifications" });
+    } catch (error) {
+        console.error("push-unsubscribe error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;

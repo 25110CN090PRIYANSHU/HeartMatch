@@ -28,8 +28,23 @@ const messageSchema = new mongoose.Schema(
 
         type: {
             type: String,
-            enum: ["text", "image", "audio"],
+            enum: ["text", "image", "audio", "view_once"],
             default: "text"
+        },
+
+        viewOnce: {
+            type: Boolean,
+            default: false
+        },
+
+        isViewed: {
+            type: Boolean,
+            default: false
+        },
+
+        viewedAt: {
+            type: Date,
+            default: null
         },
 
         reactions: {
