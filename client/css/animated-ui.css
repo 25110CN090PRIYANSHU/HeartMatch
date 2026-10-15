@@ -1,0 +1,104 @@
+/* HEARTMATCH // HIGH-PERFORMANCE UI (60-120 FPS)
+   GPU-Accelerated, Zero-Lag Visual Layer */
+
+:root {
+  --hm-pink: #ff3d8d;
+  --hm-purple: #8b5cf6;
+  --hm-blue: #38bdf8;
+  --hm-dark: #090812;
+  --hm-card-bg: rgba(22, 17, 34, 0.75);
+  --hm-border: rgba(255, 255, 255, 0.1);
+  --hm-border-hover: rgba(255, 61, 141, 0.45);
+}
+
+/* 1. HARDWARE-ACCELERATED STATIC NEON BACKGROUND (ZERO BLUR LOAD) */
+body {
+  background: 
+    radial-gradient(circle at 12% 10%, rgba(139, 92, 246, 0.18), transparent 38%),
+    radial-gradient(circle at 88% 85%, rgba(255, 61, 141, 0.15), transparent 40%),
+    var(--hm-dark) !important;
+  background-attachment: fixed !important;
+  color: #fff;
+}
+
+/* 2. TOP NAV FROSTED GLASS (ONLY 1 ELEMENT = ZERO STUTTER) */
+nav, .nav, .navbar {
+  position: sticky !important;
+  top: 0;
+  z-index: 1000;
+  background: rgba(9, 7, 18, 0.82) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid var(--hm-border) !important;
+}
+
+/* 3. HARDWARE-ACCELERATED CARDS (TRANSLUCENT GLASS WITHOUT MULTI-BLUR) */
+.card, .profile-card, .match-card, .person-card, .user-card {
+  background: var(--hm-card-bg) !important;
+  border: 1px solid var(--hm-border) !important;
+  border-radius: 20px !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease !important;
+  will-change: transform;
+}
+
+.card:hover, .profile-card:hover, .match-card:hover, .person-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: var(--hm-border-hover) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(255, 61, 141, 0.15) !important;
+}
+
+/* 4. PHOTO MICRO-ZOOM */
+.profile-img, .avatar, .photo {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.card:hover .profile-img, .card:hover .avatar, .match-card:hover .photo {
+  transform: scale(1.03) !important;
+}
+
+/* 5. TACTILE NATIVE-FEEL BUTTONS */
+.btn, .chat-btn, .profile-action-btn, .send-btn {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+  will-change: transform;
+}
+.btn:not(.ghost):not(.alt), .profile-action-btn.like, .send-btn {
+  background: linear-gradient(135deg, #ff3d8d, #a855f7) !important;
+  border: none !important;
+  box-shadow: 0 4px 18px rgba(255, 61, 141, 0.3) !important;
+}
+.btn:hover, .chat-btn:hover, .profile-action-btn:hover, .send-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(255, 61, 141, 0.45) !important;
+}
+.btn:active, .chat-btn:active, .profile-action-btn:active, .send-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* 6. GPU-PULSING ONLINE STATUS DOT */
+.status-dot, .online-status .status-dot {
+  animation: smoothPulse 2.4s ease-in-out infinite !important;
+  will-change: transform, opacity;
+}
+@keyframes smoothPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: 0.75; }
+}
+
+/* 7. INTERACTIVE CHIP & TAG HIGHLIGHTS */
+.tag, .chip {
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease !important;
+}
+.tag:hover, .chip:hover {
+  transform: translateY(-2px) !important;
+  background: rgba(255, 61, 141, 0.15) !important;
+  border-color: rgba(255, 61, 141, 0.4) !important;
+}
+
+/* 8. SNAPPY INPUT FOCUS RINGS */
+input, textarea, select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #ff3d8d !important;
+  box-shadow: 0 0 0 3px rgba(255, 61, 141, 0.2) !important;
+  outline: none !important;
+}
