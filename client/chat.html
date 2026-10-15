@@ -12,8 +12,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HeartMatch">
     <link rel="apple-touch-icon" href="/images/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/icons/icon-512.png">
     <link rel="icon" type="image/svg+xml" href="/images/icons/icon.svg">
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <script src="js/socket.io.min.js"></script>
     <script>
       if (typeof io === "undefined") {
@@ -249,6 +251,7 @@
         flex: 1;
 
         overflow-y: auto;
+        overflow-x: hidden !important;
 
         padding: 25px;
 
@@ -257,14 +260,28 @@
         flex-direction: column;
 
         gap: 10px;
+
+        scrollbar-width: thin;
       }
 
+      /* Clean scrollbar: only vertical, never horizontal */
       .messages::-webkit-scrollbar {
-        width: 6px;
+        width: 5px;
+        height: 0px !important;
+      }
+
+      .messages::-webkit-scrollbar:horizontal,
+      .messages::-webkit-scrollbar-thumb:horizontal,
+      .messages::-webkit-scrollbar-track:horizontal {
+        display: none !important;
+        height: 0px !important;
+        width: 0px !important;
+        background: transparent !important;
+        visibility: hidden !important;
       }
 
       .messages::-webkit-scrollbar-thumb {
-        background: #444;
+        background: rgba(255, 255, 255, 0.18);
 
         border-radius: 10px;
       }
@@ -678,8 +695,16 @@
           min-height: 0 !important;
           padding: 12px 12px !important;
           overflow-y: auto !important;
+          overflow-x: hidden !important;
           overscroll-behavior: contain !important;
           -webkit-overflow-scrolling: touch !important;
+          scrollbar-width: none !important;
+        }
+
+        .messages::-webkit-scrollbar {
+          display: none !important;
+          width: 0px !important;
+          height: 0px !important;
         }
 
         .message {

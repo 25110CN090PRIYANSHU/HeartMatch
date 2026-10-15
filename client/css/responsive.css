@@ -218,6 +218,12 @@ img, video, canvas, iframe { max-width: 100%; }
 
   .messages {
     padding: 12px 9px !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none !important;
+  }
+  .messages::-webkit-scrollbar:horizontal {
+    display: none !important;
+    height: 0px !important;
   }
 
   .message {
