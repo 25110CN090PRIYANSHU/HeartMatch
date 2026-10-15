@@ -427,6 +427,188 @@
             }
         }
 
+        /* TABS & SEARCH */
+        .tab-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 11px 24px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: #ddd;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--pink), var(--purple));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(255, 77, 141, 0.35);
+        }
+
+        .tab-badge {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .search-bar-wrap {
+            max-width: 480px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 18px 12px 42px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--pink);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 18px rgba(255, 77, 141, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+            font-size: 15px;
+        }
+
+        .liker-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-like-back {
+            height: 44px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--pink), #ff315e);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+        }
+
+        .btn-like-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 49, 94, 0.4);
+        }
+
+        .btn-pass {
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ddd;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+        }
+
+        .btn-pass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .view-profile-btn {
+            width: 100%;
+            margin-top: 6px;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .view-profile-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Match celebration modal */
+        .match-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: grid;
+            place-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .match-modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .match-modal-box {
+            background: #171322;
+            border: 1px solid rgba(255, 77, 141, 0.4);
+            border-radius: 24px;
+            padding: 36px 28px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 25px 70px rgba(255, 77, 141, 0.35);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .match-modal-overlay.open .match-modal-box {
+            transform: scale(1);
+        }
+
+        .match-modal-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ff9abb, #ff4d8d, #a855f7);
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+        }
     </style>
 
   <link rel="stylesheet" href="css/animated-ui.css">
@@ -483,354 +665,326 @@
 
 
     <!-- PAGE -->
-
     <main class="page">
-
-
         <section class="heading">
-
-            <h1>
-                Your Matches 💕
-            </h1>
-
-            <p>
-                People who liked you back.
-            </p>
-
+            <h1 id="pageTitle">Your Matches 💕</h1>
+            <p id="pageSubtitle">People who liked you back and secret admirers.</p>
         </section>
 
-
-        <div id="matches">
-
-            <div class="empty">
-
-                <div class="empty-icon">
-                    💕
-                </div>
-
-                <h2>
-                    Loading your matches...
-                </h2>
-
-                <p>
-                    Looking for your connections.
-                </p>
-
-            </div>
-
+        <!-- TABS -->
+        <div class="tab-group">
+            <button class="tab-btn active" id="tabMatches" onclick="switchTab('matches')">
+                💕 Matches <span class="tab-badge" id="matchesCount">0</span>
+            </button>
+            <button class="tab-btn" id="tabLikes" onclick="switchTab('likes')">
+                💌 Likes You <span class="tab-badge" id="likesCount">0</span>
+            </button>
         </div>
 
+        <!-- SEARCH BAR -->
+        <div class="search-bar-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" id="matchesSearch" type="text" placeholder="Search by name, age, or location..." oninput="onSearchInput()" />
+        </div>
 
+        <!-- MATCHES / LIKERS GRID -->
+        <div id="matches">
+            <div class="empty">
+                <div class="empty-icon">💕</div>
+                <h2>Loading connections...</h2>
+                <p>Finding your matches and admirers.</p>
+            </div>
+        </div>
     </main>
 
+    <!-- MATCH CELEBRATION MODAL -->
+    <div class="match-modal-overlay" id="matchModal">
+        <div class="match-modal-box">
+            <div style="font-size: 54px; margin-bottom: 12px;">🎉💕</div>
+            <div class="match-modal-title">It's a Match!</div>
+            <p id="matchModalText" style="color: #ddd; margin-bottom: 24px; font-size: 15px; line-height: 1.5;"></p>
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button class="chat-btn" id="matchModalChatBtn" style="flex:1;">💬 Chat Now</button>
+                <button class="btn-pass" onclick="closeMatchModal()" style="padding: 0 20px;">Keep Browsing</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-
-
-        const token =
-            localStorage.getItem("token");
-
-
+        const token = localStorage.getItem("token");
         if (!token) {
-
-            window.location.href =
-                "login.html";
-
+            window.location.href = "login.html";
         }
 
+        let currentTab = "matches"; // 'matches' | 'likes'
+        let matchesList = [];
+        let likersList = [];
+        let searchQuery = "";
 
-        async function loadMatches() {
+        const matchesContainer = document.getElementById("matches");
+        const matchesCountEl = document.getElementById("matchesCount");
+        const likesCountEl = document.getElementById("likesCount");
+        const searchInputEl = document.getElementById("matchesSearch");
 
-            const container =
-                document.getElementById("matches");
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById("tabMatches").classList.toggle("active", tab === "matches");
+            document.getElementById("tabLikes").classList.toggle("active", tab === "likes");
+            
+            const title = document.getElementById("pageTitle");
+            const subtitle = document.getElementById("pageSubtitle");
+            if (tab === "matches") {
+                title.textContent = "Your Matches 💕";
+                subtitle.textContent = "People who liked you back. Start chatting!";
+            } else {
+                title.textContent = "Who Liked You 💌";
+                subtitle.textContent = "Secret admirers who right-swiped on your profile. Like them back to match!";
+            }
+            render();
+        }
 
+        function onSearchInput() {
+            searchQuery = (searchInputEl.value || "").trim().toLowerCase();
+            render();
+        }
 
+        async function loadData() {
             try {
+                const [matchesRes, likersRes] = await Promise.all([
+                    fetch("/api/matches", { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch("/api/likes/received", { headers: { Authorization: `Bearer ${token}` } })
+                ]);
 
-                const response =
-                    await fetch(
-                        "/api/matches",
-                        {
-                            method: "GET",
-
-                            headers: {
-                                "Authorization":
-                                    `Bearer ${token}`
-                            }
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!response.ok) {
-
-                    container.innerHTML = `
-
-                        <div class="empty">
-
-                            <div class="empty-icon">
-                                ⚠️
-                            </div>
-
-                            <h2>
-                                ${data.message}
-                            </h2>
-
-                        </div>
-
-                    `;
-
-                    return;
-
+                if (matchesRes.ok) {
+                    const d = await matchesRes.json();
+                    matchesList = d.matches || [];
+                    matchesCountEl.textContent = matchesList.length;
                 }
 
-
-                container.innerHTML = "";
-
-
-                if (
-                    !data.matches ||
-                    data.matches.length === 0
-                ) {
-
-                    container.innerHTML = `
-
-                        <div class="empty">
-
-                            <div class="empty-icon">
-                                💔
-                            </div>
-
-                            <h2>
-                                No matches yet
-                            </h2>
-
-                            <p>
-                                Keep discovering people.
-                                Your match could be next. ❤️
-                            </p>
-
-                        </div>
-
-                    `;
-
-                    return;
-
+                if (likersRes.ok) {
+                    const d = await likersRes.json();
+                    likersList = d.likers || [];
+                    likesCountEl.textContent = likersList.length;
                 }
 
-
-                data.matches.forEach(user => {
-
-
-                    const card =
-                        document.createElement("div");
-
-
-                    card.className =
-                        "match-card";
-
-
-                    let photo;
-
-
-                    if (user.profileImage) {
-
-                        photo = `
-
-                            <img
-                                src="${escapeAttribute(
-                                    user.profileImage
-                                )}"
-                                alt="Profile photo"
-                                onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className:'default-photo', textContent:'❤️'}));"
-                            >
-
-                        `;
-
-                    } else {
-
-                        photo = `
-
-                            <div class="default-photo">
-                                ❤️
-                            </div>
-
-                        `;
-
-                    }
-
-
-                    card.innerHTML = `
-
-                        <div class="photo">
-
-                            ${photo}
-
-                            <div class="match-badge">
-                                ❤️ Matched
-                            </div>
-
-                        </div>
-
-
-                        <div class="card-body">
-
-                            <div class="name">
-
-                                ${escapeHTML(user.name)},
-                                ${user.age}
-
-                            </div>
-
-
-                            <div class="location">
-
-                                📍
-                                ${escapeHTML(
-                                    user.location ||
-                                    "Location not specified"
-                                )}
-
-                            </div>
-
-
-                            <div class="bio">
-
-                                ${escapeHTML(
-                                    user.bio ||
-                                    "Say hello and start getting to know each other. 💕"
-                                )}
-
-                            </div>
-
-
-                            <button
-                                class="chat-btn"
-                                onclick="openChat(
-                                    '${user._id}'
-                                )"
-                            >
-                                💬 Start Chat
-                            </button>
-
-                        </div>
-
-                    `;
-
-
-                    container.appendChild(card);
-
-                });
-
-
-            } catch (error) {
-
-                console.error(error);
-
-                container.innerHTML = `
-
+                render();
+            } catch (err) {
+                console.error("Error loading matches/likes:", err);
+                matchesContainer.innerHTML = `
                     <div class="empty">
-
-                        <div class="empty-icon">
-                            ⚠️
-                        </div>
-
-                        <h2>
-                            Connection problem
-                        </h2>
-
-                        <p>
-                            Make sure the HeartMatch server is running.
-                        </p>
-
+                        <div class="empty-icon">⚠️</div>
+                        <h2>Connection issue</h2>
+                        <p>Could not load your connections. Please check your network and refresh.</p>
                     </div>
-
                 `;
+            }
+        }
 
+        function render() {
+            const list = currentTab === "matches" ? matchesList : likersList;
+            const filtered = list.filter(user => {
+                if (!searchQuery) return true;
+                const name = (user.name || "").toLowerCase();
+                const loc = (user.location || "").toLowerCase();
+                const age = String(user.age || "");
+                return name.includes(searchQuery) || loc.includes(searchQuery) || age.includes(searchQuery);
+            });
+
+            matchesContainer.innerHTML = "";
+
+            if (filtered.length === 0) {
+                if (searchQuery) {
+                    matchesContainer.innerHTML = `
+                        <div class="empty">
+                            <div class="empty-icon">🔍</div>
+                            <h2>No results found</h2>
+                            <p>No profiles matching "${escapeHTML(searchQuery)}". Try another search.</p>
+                        </div>
+                    `;
+                } else if (currentTab === "matches") {
+                    matchesContainer.innerHTML = `
+                        <div class="empty">
+                            <div class="empty-icon">💔</div>
+                            <h2>No matches yet</h2>
+                            <p>Keep swiping and discovering people. Your next connection could be one swipe away! ❤️</p>
+                        </div>
+                    `;
+                } else {
+                    matchesContainer.innerHTML = `
+                        <div class="empty">
+                            <div class="empty-icon">💌</div>
+                            <h2>No secret admirers yet</h2>
+                            <p>When someone likes your profile, they will show up here so you can match instantly!</p>
+                        </div>
+                    `;
+                }
+                return;
             }
 
+            filtered.forEach(user => {
+                const card = document.createElement("div");
+                card.className = "match-card";
+                card.id = `card-${user._id}`;
+
+                const photoSrc = user.profileImage || (user.photos && user.photos[0]) || "";
+                const photoHTML = photoSrc
+                    ? `<img src="${escapeAttribute(photoSrc)}" alt="${escapeAttribute(user.name)}" onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className:'default-photo', textContent:'❤️'}));" />`
+                    : `<div class="default-photo">❤️</div>`;
+
+                const badgeText = currentTab === "matches" ? "❤️ Matched" : "💌 Liked You";
+
+                let actionHTML = "";
+                if (currentTab === "matches") {
+                    actionHTML = `
+                        <button class="chat-btn" onclick="openChat('${user._id}')">
+                            💬 Start Chat
+                        </button>
+                    `;
+                } else {
+                    actionHTML = `
+                        <div class="liker-actions">
+                            <button class="btn-like-back" onclick="likeBack('${user._id}', '${escapeAttribute(user.name)}')">
+                                ❤️ Like Back
+                            </button>
+                            <button class="btn-pass" onclick="passLiker('${user._id}')">
+                                👋 Pass
+                            </button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="photo" onclick="viewPerson('${user._id}')" style="cursor: pointer;" title="View full profile">
+                        ${photoHTML}
+                        <div class="match-badge">${badgeText}</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="name" onclick="viewPerson('${user._id}')" style="cursor: pointer;">
+                            ${escapeHTML(user.name)}${user.age ? `, ${user.age}` : ""}
+                        </div>
+                        <div class="location">
+                            📍 ${escapeHTML(user.location || "Location not specified")}
+                        </div>
+                        <div class="bio">
+                            ${escapeHTML(user.bio || (currentTab === "matches" ? "Say hello and start getting to know each other. 💕" : "Liked your profile! Match with them now."))}
+                        </div>
+                        ${actionHTML}
+                        <button class="view-profile-btn" onclick="viewPerson('${user._id}')">
+                            View Full Profile ↗
+                        </button>
+                    </div>
+                `;
+
+                matchesContainer.appendChild(card);
+            });
         }
 
+        async function likeBack(userId, userName) {
+            try {
+                const res = await fetch("/api/likes", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ to: userId, type: "like" })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    // Remove from likersList
+                    likersList = likersList.filter(u => String(u._id) !== String(userId));
+                    likesCountEl.textContent = likersList.length;
+
+                    if (d.matched) {
+                        // Show Match modal
+                        document.getElementById("matchModalText").textContent = `You and ${userName} liked each other! Start a conversation and see where the spark leads.`;
+                        document.getElementById("matchModalChatBtn").onclick = () => {
+                            window.location.href = `chat.html?user=${userId}`;
+                        };
+                        document.getElementById("matchModal").classList.add("open");
+                    }
+                    // Refresh data in background
+                    loadData();
+                }
+            } catch (err) {
+                console.error("Error liking back:", err);
+            }
+        }
+
+        async function passLiker(userId) {
+            try {
+                // Animate card removal
+                const card = document.getElementById(`card-${userId}`);
+                if (card) {
+                    card.style.transition = "opacity 0.25s, transform 0.25s";
+                    card.style.opacity = "0";
+                    card.style.transform = "scale(0.85)";
+                }
+                const res = await fetch("/api/likes", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ to: userId, type: "pass" })
+                });
+                if (res.ok) {
+                    likersList = likersList.filter(u => String(u._id) !== String(userId));
+                    likesCountEl.textContent = likersList.length;
+                    setTimeout(render, 250);
+                }
+            } catch (err) {
+                console.error("Error passing:", err);
+            }
+        }
+
+        function closeMatchModal() {
+            document.getElementById("matchModal").classList.remove("open");
+            render();
+        }
+
+        function viewPerson(userId) {
+            window.location.href = `person.html?user=${userId}`;
+        }
 
         function openChat(userId) {
-
-            /*
-                We'll connect this to the real
-                Socket.IO chat system next.
-            */
-
-            window.location.href =
-                `chat.html?user=${userId}`;
-
+            window.location.href = `chat.html?user=${userId}`;
         }
-
 
         function goDiscover() {
-
-            window.location.href =
-                "discover.html";
-
+            window.location.href = "discover.html";
         }
-
 
         function goProfile() {
-
-            window.location.href =
-                "profile.html";
-
+            window.location.href = "profile.html";
         }
-
 
         function logout() {
-
             localStorage.removeItem("token");
-
             localStorage.removeItem("user");
-
-            window.location.href =
-                "login.html";
-
+            window.location.href = "login.html";
         }
-
 
         function escapeHTML(value) {
-
-            return String(value)
-
+            return String(value ?? "")
                 .replace(/&/g, "&amp;")
-
                 .replace(/</g, "&lt;")
-
                 .replace(/>/g, "&gt;")
-
                 .replace(/"/g, "&quot;")
-
                 .replace(/'/g, "&#039;");
-
         }
-
 
         function escapeAttribute(value) {
-
-            return String(value)
-
+            return String(value ?? "")
                 .replace(/"/g, "&quot;")
-
                 .replace(/</g, "&lt;")
-
                 .replace(/>/g, "&gt;");
-
         }
 
-
-        loadMatches();
-
+        loadData();
     </script>
 
   <script src="js/animated-ui.js"></script>
+  <script src="js/notification-badge.js"></script>
 </body>
-
 </html>

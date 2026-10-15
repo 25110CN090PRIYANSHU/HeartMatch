@@ -61,6 +61,9 @@ router.put("/", authMiddleware, async (req, res) => {
       "interests",
       "location",
       "preferences",
+      "photos",
+      "prompts",
+      "isIncognito",
     ];
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -196,6 +199,114 @@ router.get("/photo/:userId", async (req, res) => {
   } catch (e) {
     console.error("Profile photo fetch error:", e);
     if (!res.headersSent) res.status(404).end();
+  }
+});
+
+// Multi-Photo Gallery Upload (up to 6 photos)
+router.post("/gallery", authMiddleware, upload.single("photo"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Please upload an image file (under 5MB)" });
+    }
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.photos && user.photos.length >= 6) {
+      return res.status(400).json({ message: "Maximum of 6 gallery photos reached. Remove one first." });
+    }
+
+    if (!mongoose.connection.db) {
+      return res.status(503).json({ message: "Image storage is not ready." });
+    }
+
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: "galleryImages",
+    });
+
+    const filename = `gallery-${req.userId}-${Date.now()}${path.extname(req.file.originalname).toLowerCase()}`;
+    const uploadStream = bucket.openUploadStream(filename, {
+      contentType: req.file.mimetype,
+      metadata: { userId: String(req.userId) },
+    });
+
+    await new Promise((resolve, reject) => {
+      uploadStream.on("finish", resolve);
+      uploadStream.on("error", reject);
+      uploadStream.end(req.file.buffer);
+    });
+
+    const photoUrl = `/api/profile/gallery/${uploadStream.id}`;
+    if (!Array.isArray(user.photos)) user.photos = [];
+    user.photos.push(photoUrl);
+    // If no main profileImage, set this as well
+    if (!user.profileImage) {
+      user.profileImage = photoUrl;
+    }
+    await user.save();
+
+    res.json({
+      message: "Gallery photo added 📸",
+      photoUrl,
+      photos: user.photos,
+    });
+  } catch (e) {
+    console.error("Gallery upload error:", e);
+    res.status(500).json({ message: "Gallery upload failed" });
+  }
+});
+
+router.get("/gallery/:fileId", async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(404).end();
+    }
+    if (!mongoose.connection.db) return res.status(503).end();
+
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: "galleryImages",
+    });
+    const id = new mongoose.Types.ObjectId(fileId);
+    const files = await bucket.find({ _id: id }).toArray();
+    if (!files.length) return res.status(404).end();
+
+    const file = files[0];
+    res.set("Content-Type", file.contentType || "image/jpeg");
+    res.set("Cache-Control", "public, max-age=86400");
+    bucket.openDownloadStream(id).on("error", () => {
+      if (!res.headersSent) res.status(404).end();
+    }).pipe(res);
+  } catch (e) {
+    console.error("Gallery fetch error:", e);
+    if (!res.headersSent) res.status(404).end();
+  }
+});
+
+router.delete("/gallery/:fileId", authMiddleware, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const photoPath = `/api/profile/gallery/${fileId}`;
+    user.photos = (user.photos || []).filter(p => p !== photoPath && !p.includes(fileId));
+    await user.save();
+
+    if (mongoose.Types.ObjectId.isValid(fileId) && mongoose.connection.db) {
+      try {
+        const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+          bucketName: "galleryImages",
+        });
+        await bucket.delete(new mongoose.Types.ObjectId(fileId));
+      } catch (err) {
+        console.warn("Could not delete gallery gridfs file:", err.message);
+      }
+    }
+
+    res.json({ message: "Photo removed 🗑️", photos: user.photos });
+  } catch (e) {
+    console.error("Gallery delete error:", e);
+    res.status(500).json({ message: "Could not remove photo" });
   }
 });
 

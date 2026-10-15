@@ -37,6 +37,42 @@ module.exports = (io) => {
         }
     });
 
+    // Return users who liked me (Who Liked You / Secret Admirers)
+    router.get("/received", authMiddleware, async (req, res) => {
+        try {
+            const incomingLikes = await Like.find({ to: req.userId, type: "like" }).select("from createdAt");
+            const senderIds = incomingLikes.map(l => l.from);
+
+            const myActions = await Like.find({ from: req.userId, to: { $in: senderIds } }).select("to");
+            const alreadyActedSet = new Set(myActions.map(a => String(a.to)));
+
+            const blocks = await Block.find({
+                $or: [{ blocker: req.userId }, { blocked: req.userId }]
+            }).select("blocker blocked");
+            const blockedSet = new Set();
+            blocks.forEach(b => {
+                blockedSet.add(String(b.blocker));
+                blockedSet.add(String(b.blocked));
+            });
+
+            const pendingSenderIds = senderIds.filter(id => !alreadyActedSet.has(String(id)) && !blockedSet.has(String(id)));
+
+            const likers = await User.find({
+                _id: { $in: pendingSenderIds },
+                isActive: { $ne: false }
+            }).select("-password");
+
+            res.json({
+                message: "Received likes fetched successfully ❤️",
+                likers,
+                count: likers.length
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+
     router.post("/", authMiddleware, async (req, res) => {
 
         try {

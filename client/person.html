@@ -189,6 +189,100 @@
             font-size: 14px;
         }
 
+        /* Carousel & Feature Styles */
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(18, 14, 28, 0.75);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 5;
+            transition: 0.2s;
+        }
+        .carousel-btn:hover {
+            background: rgba(255, 63, 142, 0.8);
+            border-color: #ff3f8e;
+            transform: translateY(-50%) scale(1.08);
+        }
+        .carousel-btn.prev { left: 12px; }
+        .carousel-btn.next { right: 12px; }
+        .carousel-dots {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+        }
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .carousel-dot.active {
+            width: 22px;
+            border-radius: 10px;
+            background: #ff3f8e;
+        }
+        .person-compat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(255, 63, 142, 0.2), rgba(168, 85, 247, 0.25));
+            border: 1px solid rgba(255, 63, 142, 0.45);
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffd6e7;
+        }
+        .person-intent-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            color: #e0dced;
+        }
+        .prompt-quote-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 3px solid #ff3f8e;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-top: 10px;
+        }
+        .prompt-quote-q {
+            font-size: 11px;
+            font-weight: 800;
+            color: #ff91ba;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+        .prompt-quote-a {
+            font-size: 15px;
+            color: #fff;
+            line-height: 1.55;
+            font-style: italic;
+        }
+
         .profile-actions {
             width: 100%;
             margin-top: 28px;
@@ -368,42 +462,86 @@
                     )
                     .join("");
 
-                let profileImage = "";
+                const photos = Array.isArray(user.photos) && user.photos.length > 0
+                    ? user.photos
+                    : (user.profileImage ? [user.profileImage] : []);
 
-                if (user.profileImage) {
-                    profileImage = `
-                        <img
-                            id="profileImage"
-                            src="${escapeHTML(user.profileImage)}"
-                            alt="${name}'s profile photo"
-                            title="Click to open full-size photo"
-                        >
+                let heroHTML = "";
+                if (photos.length > 1) {
+                    heroHTML = `
+                        <button class="carousel-btn prev" id="carouselPrev" type="button" aria-label="Previous photo">‹</button>
+                        <img id="profileImage" src="${escapeHTML(photos[0])}" alt="${name}'s photo" title="Click to open full-size photo" />
+                        <button class="carousel-btn next" id="carouselNext" type="button" aria-label="Next photo">›</button>
+                        <div class="carousel-dots" id="carouselDots">
+                            ${photos.map((_, i) => `<span class="carousel-dot ${i === 0 ? "active" : ""}" data-idx="${i}"></span>`).join("")}
+                        </div>
+                    `;
+                } else if (photos.length === 1) {
+                    heroHTML = `
+                        <img id="profileImage" src="${escapeHTML(photos[0])}" alt="${name}'s profile photo" title="Click to open full-size photo" />
                     `;
                 } else {
-                    profileImage = `
+                    heroHTML = `
                         <div class="avatar">
-                            ${escapeHTML(
-                                (user.name || "?")
-                                    .charAt(0)
-                                    .toUpperCase()
-                            )}
+                            ${escapeHTML((user.name || "?").charAt(0).toUpperCase())}
                         </div>
                     `;
                 }
 
+                const intentLabels = {
+                    "long-term": "💍 Long-term relationship",
+                    "casual": "☕ Casual dating",
+                    "friends": "🤝 New friends",
+                    "not-sure": "🤔 Not sure yet",
+                    "any": "✨ Open to anything"
+                };
+                const intentHTML = user.lookingFor && intentLabels[user.lookingFor]
+                    ? `<span class="person-intent-pill">${escapeHTML(intentLabels[user.lookingFor])}</span>`
+                    : "";
+
+                const compatHTML = user.compatibility
+                    ? `<span class="person-compat-badge">⚡ ${user.compatibility}% Match</span>`
+                    : "";
+
+                const promptsHTML = Array.isArray(user.prompts) && user.prompts.length > 0
+                    ? `
+                        <section class="profile-section">
+                            <div class="section-label">Icebreakers & Prompts 💬</div>
+                            <div class="prompts-list">
+                                ${user.prompts.filter(p => p.question && p.answer).map(p => `
+                                    <div class="prompt-quote-card">
+                                        <div class="prompt-quote-q">${escapeHTML(p.question)}</div>
+                                        <div class="prompt-quote-a">"${escapeHTML(p.answer)}"</div>
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </section>
+                    `
+                    : "";
+
                 card.innerHTML = `
                     <div class="hero">
-                        ${profileImage}
+                        ${heroHTML}
                     </div>
 
                     <div class="body">
-                        <h1 class="name">
-                            ${name}${age}
-                        </h1>
-
-                        <div class="location">
-                            📍 ${location}
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                            <div>
+                                <h1 class="name">
+                                    ${name}${age}
+                                </h1>
+                                <div class="location">
+                                    📍 ${location}
+                                </div>
+                            </div>
                         </div>
+
+                        ${(compatHTML || intentHTML) ? `
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:14px;">
+                                ${compatHTML}
+                                ${intentHTML}
+                            </div>
+                        ` : ""}
 
                         <section class="profile-section">
                             <div class="section-label">
@@ -414,6 +552,8 @@
                                 ${bio}
                             </p>
                         </section>
+
+                        ${promptsHTML}
 
                         <section class="profile-section">
                             <div class="section-label">
@@ -438,8 +578,35 @@
                     </div>
                 `;
 
-                const profileImageElement =
-                    document.getElementById("profileImage");
+                // Handle carousel interaction
+                let curIdx = 0;
+                const profileImageElement = document.getElementById("profileImage");
+                const prevBtn = document.getElementById("carouselPrev");
+                const nextBtn = document.getElementById("carouselNext");
+                const dotsContainer = document.getElementById("carouselDots");
+
+                function setCarousel(idx) {
+                    if (photos.length <= 1) return;
+                    curIdx = (idx + photos.length) % photos.length;
+                    if (profileImageElement) {
+                        profileImageElement.src = photos[curIdx];
+                    }
+                    if (dotsContainer) {
+                        const dots = dotsContainer.querySelectorAll(".carousel-dot");
+                        dots.forEach((d, i) => d.classList.toggle("active", i === curIdx));
+                    }
+                }
+
+                if (prevBtn) prevBtn.onclick = (e) => { e.stopPropagation(); setCarousel(curIdx - 1); };
+                if (nextBtn) nextBtn.onclick = (e) => { e.stopPropagation(); setCarousel(curIdx + 1); };
+                if (dotsContainer) {
+                    dotsContainer.onclick = (e) => {
+                        const d = e.target.closest(".carousel-dot");
+                        if (d && d.dataset.idx != null) {
+                            setCarousel(parseInt(d.dataset.idx, 10));
+                        }
+                    };
+                }
 
                 if (profileImageElement) {
                     profileImageElement.addEventListener("error", () => {
@@ -449,16 +616,10 @@
                         profileImageElement.replaceWith(fallback);
                     }, { once: true });
 
-                    profileImageElement.addEventListener(
-                        "click",
-                        () => {
-                            window.open(
-                                user.profileImage,
-                                "_blank",
-                                "noopener,noreferrer"
-                            );
-                        }
-                    );
+                    profileImageElement.addEventListener("click", () => {
+                        const activeSrc = photos[curIdx] || user.profileImage;
+                        if (activeSrc) window.open(activeSrc, "_blank", "noopener,noreferrer");
+                    });
                 }
 
                 const likeButton = document.getElementById("likeButton");

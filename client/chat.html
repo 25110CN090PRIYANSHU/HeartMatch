@@ -307,6 +307,146 @@
         text-align: right;
       }
 
+      /* Audio message player */
+      .msg-audio-player {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 220px;
+        padding: 4px 0;
+      }
+      .msg-audio-player audio {
+        width: 100%;
+        height: 38px;
+        border-radius: 18px;
+      }
+
+      /* Emoji Reactions */
+      .msg-reactions-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 5px;
+      }
+      .msg-reaction-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 2px 7px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.15s;
+        user-select: none;
+      }
+      .msg-reaction-pill:hover,
+      .msg-reaction-pill.reacted {
+        border-color: #ff3f8e;
+        background: rgba(255, 63, 142, 0.22);
+      }
+      .reaction-trigger-btn {
+        opacity: 0;
+        transition: opacity 0.2s;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        padding: 4px 6px;
+        color: #999;
+        align-self: center;
+      }
+      .message-row:hover .reaction-trigger-btn {
+        opacity: 0.85;
+      }
+      .reaction-picker-bar {
+        position: absolute;
+        bottom: 100%;
+        margin-bottom: 6px;
+        background: #1f1b2c;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 20px;
+        padding: 5px 10px;
+        display: flex;
+        gap: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+        z-index: 20;
+      }
+      .message-row.mine .reaction-picker-bar {
+        right: 0;
+      }
+      .message-row:not(.mine) .reaction-picker-bar {
+        left: 0;
+      }
+      .reaction-emoji-btn {
+        background: none;
+        border: none;
+        font-size: 19px;
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      .reaction-emoji-btn:hover {
+        transform: scale(1.3);
+      }
+
+      /* Voice Recording Bar */
+      .recording-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        padding: 0 10px;
+      }
+      .rec-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ff334b;
+        box-shadow: 0 0 12px #ff334b;
+        animation: pulseRec 1s infinite alternate;
+      }
+      @keyframes pulseRec {
+        from { opacity: 0.4; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1.15); }
+      }
+      .rec-timer {
+        font-size: 14px;
+        font-weight: 700;
+        color: #ff8595;
+        font-variant-numeric: tabular-nums;
+      }
+      .rec-action-btn {
+        padding: 8px 16px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        transition: 0.2s;
+      }
+      .rec-action-btn.send {
+        background: linear-gradient(135deg, #ff3f8e, #a855f7);
+        color: #fff;
+      }
+      .rec-action-btn.cancel {
+        background: rgba(255, 255, 255, 0.08);
+        color: #bbb;
+      }
+      .rec-action-btn.cancel:hover {
+        background: rgba(255, 60, 60, 0.2);
+        color: #ff5566;
+      }
+
+      .msg-status {
+        margin-left: 4px;
+        font-size: 11px;
+      }
+      .msg-status.read {
+        color: #7ef1ff;
+        font-weight: bold;
+      }
+
       /* =========================
            EMPTY CHAT
         ========================= */
@@ -1099,6 +1239,19 @@
           <input class="file-input" id="fileInput" type="file" />
         </div>
 
+        <button type="button" class="call-btn" id="voiceNoteBtn" title="Record Voice Note" style="margin-right: 4px;">
+          🎙️
+        </button>
+
+        <div id="recordingBar" class="recording-bar" style="display: none;">
+          <span class="rec-dot"></span>
+          <span id="recTimer" class="rec-timer">0:00</span>
+          <div style="margin-left: auto; display: flex; gap: 8px;">
+            <button type="button" class="rec-action-btn send" id="recSendBtn">Send ▶️</button>
+            <button type="button" class="rec-action-btn cancel" id="recCancelBtn">Cancel ✕</button>
+          </div>
+        </div>
+
         <input
           type="text"
           id="messageInput"
@@ -1498,6 +1651,10 @@
           });
 
           scrollToBottom();
+
+          if (socket && socket.connected) {
+            socket.emit("markMessagesRead", { userId: otherUserId });
+          }
         } catch (error) {
           console.error(error);
 
@@ -1537,6 +1694,7 @@
         row.dataset.mine = isMine ? "1" : "0";
         const bubble = document.createElement("div");
         bubble.className = "message";
+
         let attachment = null;
         try {
           if (
@@ -1546,7 +1704,29 @@
             attachment = JSON.parse(message.content.slice(17));
           }
         } catch (e) {}
-        if (attachment) {
+
+        const isAudio = message.type === "audio" || (typeof message.content === "string" && message.content.startsWith("data:audio/"));
+        const isImage = message.type === "image" || (typeof message.content === "string" && message.content.startsWith("data:image/"));
+
+        if (isAudio) {
+          const audioWrap = document.createElement("div");
+          audioWrap.className = "msg-audio-player";
+          const audioEl = document.createElement("audio");
+          audioEl.controls = true;
+          audioEl.src = message.content;
+          audioWrap.appendChild(audioEl);
+          bubble.appendChild(audioWrap);
+          row.dataset.type = "audio";
+        } else if (isImage) {
+          const img = document.createElement("img");
+          img.className = "attach-preview";
+          img.src = message.content;
+          img.alt = "Shared photo";
+          img.style.cursor = "zoom-in";
+          img.onclick = () => window.open(message.content, "_blank");
+          bubble.appendChild(img);
+          row.dataset.type = "image";
+        } else if (attachment) {
           if (attachment.kind === "image") {
             const img = document.createElement("img");
             img.className = "attach-preview";
@@ -1572,13 +1752,226 @@
           bubble.appendChild(content);
           row.dataset.text = message.content;
         }
+
+        // Reactions row
+        const reactionsRow = document.createElement("div");
+        reactionsRow.className = "msg-reactions-wrap";
+        reactionsRow.id = `reactions-${message._id}`;
+        renderReactions(reactionsRow, message.reactions);
+        bubble.appendChild(reactionsRow);
+
         const time = document.createElement("div");
         time.className = "message-time";
         time.textContent = formatTime(message.createdAt);
+        if (isMine) {
+          const status = document.createElement("span");
+          status.className = "msg-status" + (message.read ? " read" : "");
+          status.textContent = message.read ? " ✓✓" : " ✓";
+          time.appendChild(status);
+        }
         bubble.appendChild(time);
-        row.appendChild(bubble);
+
+        // Reaction trigger button
+        const reactBtn = document.createElement("button");
+        reactBtn.type = "button";
+        reactBtn.className = "reaction-trigger-btn";
+        reactBtn.title = "React";
+        reactBtn.textContent = "😊";
+        reactBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleReactionPicker(row, message._id);
+        };
+
+        if (isMine) {
+          row.appendChild(reactBtn);
+          row.appendChild(bubble);
+        } else {
+          row.appendChild(bubble);
+          row.appendChild(reactBtn);
+        }
         messagesContainer.appendChild(row);
       }
+
+      // =========================
+      // MESSAGE REACTIONS
+      // =========================
+      const EMOJIS = ["❤️", "😂", "🔥", "👍", "😮"];
+
+      function toggleReactionPicker(row, messageId) {
+        const existing = document.querySelector(".reaction-picker-bar");
+        if (existing) {
+          const pId = existing.dataset.msgId;
+          existing.remove();
+          if (pId === messageId) return;
+        }
+        if (!messageId) return;
+
+        const picker = document.createElement("div");
+        picker.className = "reaction-picker-bar";
+        picker.dataset.msgId = messageId;
+        EMOJIS.forEach((emoji) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "reaction-emoji-btn";
+          btn.textContent = emoji;
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            socket.emit("reactMessage", {
+              messageId,
+              emoji,
+              receiver: otherUserId,
+            });
+            picker.remove();
+          };
+          picker.appendChild(btn);
+        });
+
+        row.style.position = "relative";
+        row.appendChild(picker);
+      }
+
+      document.addEventListener("click", (e) => {
+        if (
+          !e.target.closest(".reaction-picker-bar") &&
+          !e.target.closest(".reaction-trigger-btn")
+        ) {
+          document.querySelector(".reaction-picker-bar")?.remove();
+        }
+      });
+
+      function renderReactions(container, reactions) {
+        if (!container) return;
+        container.innerHTML = "";
+        if (!reactions) return;
+
+        const rx = reactions instanceof Map ? Object.fromEntries(reactions) : reactions;
+        const counts = {};
+        const myReaction = rx[currentUserId];
+
+        Object.values(rx).forEach((emoji) => {
+          if (!emoji) return;
+          counts[emoji] = (counts[emoji] || 0) + 1;
+        });
+
+        Object.entries(counts).forEach(([emoji, count]) => {
+          const pill = document.createElement("span");
+          pill.className = "msg-reaction-pill" + (myReaction === emoji ? " reacted" : "");
+          pill.textContent = `${emoji} ${count}`;
+          pill.title = myReaction === emoji ? "Click to remove reaction" : "React";
+          pill.onclick = (e) => {
+            e.stopPropagation();
+            const messageId = container.closest(".message-row")?.dataset.messageId;
+            if (!messageId) return;
+            const newEmoji = myReaction === emoji ? "" : emoji;
+            socket.emit("reactMessage", {
+              messageId,
+              emoji: newEmoji,
+              receiver: otherUserId,
+            });
+          };
+          container.appendChild(pill);
+        });
+      }
+
+      // =========================
+      // VOICE NOTES RECORDING
+      // =========================
+      let mediaRecorder = null;
+      let audioChunks = [];
+      let recTimerInterval = null;
+      let recSeconds = 0;
+
+      const voiceNoteBtn = document.getElementById("voiceNoteBtn");
+      const recordingBar = document.getElementById("recordingBar");
+      const recTimer = document.getElementById("recTimer");
+      const recSendBtn = document.getElementById("recSendBtn");
+      const recCancelBtn = document.getElementById("recCancelBtn");
+
+      async function startVoiceRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert("Audio recording is not supported on this browser.");
+          return;
+        }
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) audioChunks.push(e.data);
+          };
+          mediaRecorder.start();
+          recSeconds = 0;
+          if (recTimer) recTimer.textContent = "0:00";
+          recTimerInterval = setInterval(() => {
+            recSeconds++;
+            const m = Math.floor(recSeconds / 60);
+            const s = recSeconds % 60;
+            if (recTimer) recTimer.textContent = `${m}:${s < 10 ? "0" : ""}${s}`;
+          }, 1000);
+
+          messageInput.style.display = "none";
+          sendBtn.style.display = "none";
+          if (voiceNoteBtn) voiceNoteBtn.style.display = "none";
+          if (recordingBar) recordingBar.style.display = "flex";
+        } catch (err) {
+          console.error("Audio recording error:", err);
+          alert("Microphone permission is required to record voice notes.");
+        }
+      }
+
+      function stopVoiceRecording(send = true) {
+        if (!mediaRecorder) return;
+        clearInterval(recTimerInterval);
+
+        if (send) {
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunks, {
+              type: mediaRecorder.mimeType || "audio/webm",
+            });
+            const reader = new FileReader();
+            reader.onload = () => {
+              const base64Audio = reader.result;
+              socket.emit(
+                "sendMessage",
+                {
+                  receiver: otherUserId,
+                  content: base64Audio,
+                  type: "audio",
+                },
+                (response) => {
+                  if (!response || !response.success) {
+                    alert(response?.message || "Failed to send voice note");
+                  }
+                },
+              );
+            };
+            reader.readAsDataURL(blob);
+
+            mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+            mediaRecorder = null;
+          };
+          mediaRecorder.stop();
+        } else {
+          mediaRecorder.stop();
+          mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+          mediaRecorder = null;
+        }
+
+        if (recordingBar) recordingBar.style.display = "none";
+        messageInput.style.display = "block";
+        sendBtn.style.display = "block";
+        if (voiceNoteBtn) voiceNoteBtn.style.display = "inline-flex";
+      }
+
+      if (voiceNoteBtn) {
+        voiceNoteBtn.addEventListener("click", () => {
+          if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            startVoiceRecording();
+          }
+        });
+      }
+      if (recSendBtn) recSendBtn.addEventListener("click", () => stopVoiceRecording(true));
+      if (recCancelBtn) recCancelBtn.addEventListener("click", () => stopVoiceRecording(false));
 
       // =========================
       // FORMAT TIME
@@ -1737,7 +2130,29 @@
           displayMessage(message);
 
           scrollToBottom();
+
+          socket.emit("markMessagesRead", { userId: otherUserId });
         }
+      });
+
+      // =========================
+      // MESSAGE REACTION
+      // =========================
+      socket.on("messageReaction", ({ messageId, reactions }) => {
+        const container = document.getElementById(`reactions-${messageId}`);
+        if (container) {
+          renderReactions(container, reactions);
+        }
+      });
+
+      // =========================
+      // MESSAGES READ
+      // =========================
+      socket.on("messagesRead", (data) => {
+        document.querySelectorAll(".message-row.mine .msg-status").forEach((s) => {
+          s.textContent = " ✓✓";
+          s.classList.add("read");
+        });
       });
 
       // =========================

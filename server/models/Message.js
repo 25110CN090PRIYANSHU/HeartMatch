@@ -24,6 +24,18 @@ const messageSchema = new mongoose.Schema(
         read: {
             type: Boolean,
             default: false
+        },
+
+        type: {
+            type: String,
+            enum: ["text", "image", "audio"],
+            default: "text"
+        },
+
+        reactions: {
+            type: Map,
+            of: String,
+            default: {}
         }
     },
     {

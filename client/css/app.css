@@ -353,3 +353,53 @@ video {
 .filter-chip input[type="checkbox"]{accent-color:var(--pink);margin:0;cursor:pointer;width:15px;height:15px}
 .filter-chip:hover{border-color:rgba(255,77,141,.4);color:#fff}
 .filter-chip.active{background:rgba(255,77,141,.15);border-color:rgba(255,77,141,.45);color:#fff}
+
+/* Compatibility & Match Score */
+.compatibility-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:linear-gradient(135deg,rgba(255,77,141,.25),rgba(139,92,246,.3));border:1px solid rgba(255,77,141,.4);color:#fff;font-size:12px;font-weight:800}
+
+/* Swipe Mode */
+.swipe-mode-wrap{position:relative;max-width:440px;margin:20px auto 40px;min-height:560px}
+.swipe-deck{position:relative;width:100%;height:520px}
+.swipe-card-item{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:24px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(26,20,38,.96),rgba(18,14,26,.98));box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column;user-select:none;touch-action:none;transition:transform .25s cubic-bezier(.2,.8,.3,1),opacity .25s ease}
+.swipe-card-item.swiping{transition:none}
+.swipe-card-img{width:100%;height:310px;object-fit:cover;background:#21162b}
+.swipe-card-body{padding:18px 20px;flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.swipe-actions-bar{display:flex;justify-content:center;gap:18px;margin-top:20px;align-items:center}
+.swipe-circle-btn{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.swipe-circle-btn:hover{transform:scale(1.1)}
+.swipe-circle-btn.pass{border-color:rgba(255,107,129,.4);color:#ff6b81}
+.swipe-circle-btn.like{border-color:rgba(255,77,141,.5);color:#ff4d8d;background:linear-gradient(135deg,rgba(255,77,141,.2),rgba(255,49,94,.3));box-shadow:0 8px 24px rgba(255,77,141,.25)}
+.swipe-circle-btn.star{width:50px;height:50px;font-size:18px;color:#8b5cf6;border-color:rgba(139,92,246,.4)}
+.swipe-badge{position:absolute;top:28px;padding:8px 16px;border-radius:10px;font-size:22px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;border:3px solid;opacity:0;pointer-events:none;transform:rotate(-15deg);transition:opacity .15s ease}
+.swipe-badge.like{right:25px;color:#52e5a5;border-color:#52e5a5;transform:rotate(15deg)}
+.swipe-badge.pass{left:25px;color:#ff6b81;border-color:#ff6b81}
+
+/* Matches & Likes You Tabs */
+.matches-tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.matches-tab{padding:10px 18px;border-radius:12px;background:transparent;border:1px solid transparent;color:var(--muted);font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s ease}
+.matches-tab.active{background:rgba(255,77,141,.12);border-color:rgba(255,77,141,.3);color:#fff}
+.tab-badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--pink);color:#fff}
+
+/* Gallery & Prompts */
+.gallery-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
+.gallery-strip::-webkit-scrollbar{display:none}
+.gallery-thumb-item{position:relative;width:90px;height:90px;flex:0 0 90px;border-radius:14px;overflow:hidden;border:2px solid var(--line)}
+.gallery-thumb-item img{width:100%;height:100%;object-fit:cover}
+.gallery-thumb-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);color:#ff6b81;border:0;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+.prompt-card{padding:14px 18px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--line);margin-bottom:12px}
+.prompt-question{font-size:13px;font-weight:700;color:var(--pink);margin-bottom:4px}
+.prompt-answer{font-size:15px;color:#fff}
+
+/* Voice & Reactions in Chat */
+.voice-record-btn{width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+.voice-record-btn.recording{background:#ff4d8d;color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,77,141,.7)}70%{box-shadow:0 0 0 10px rgba(255,77,141,0)}100%{box-shadow:0 0 0 0 rgba(255,77,141,0)}}
+.msg-reactions-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.msg-reaction-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px;cursor:pointer}
+.typing-bubble{display:flex;align-items:center;gap:4px;padding:8px 14px;border-radius:18px;background:rgba(255,255,255,.06);width:fit-content;color:var(--muted);font-size:13px;font-style:italic}
+.typing-dots{display:inline-flex;gap:3px}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--pink);animation:typingBounce 1.2s infinite ease-in-out}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+

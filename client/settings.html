@@ -1,4 +1,283 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Settings — HeartMatch</title><link rel="stylesheet" href="/css/app.css">  <link rel="stylesheet" href="css/animated-ui.css">
-  <link rel="stylesheet" href="css/responsive.css">
-</head><body><nav class="nav"><div class="brand">❤️ <span>HeartMatch</span></div><div class="navlinks"><a href="discover.html">Discover</a><a href="profile.html">Profile</a><a href="matches.html">Matches</a><button onclick="HM.logout()">Logout</button></div></nav><main class="wrap"><h1>Settings</h1><div class="grid"><section class="card"><h2>Change password</h2><div class="field"><label>Current password</label><input id="current" type="password"></div><div class="field"><label>New password</label><input id="newp" type="password"></div><button class="btn" onclick="changePass()">Change password</button><div id="passMsg" class="msg"></div></section><section class="card"><h2>Blocked users</h2><div id="blocked" class="muted">Loading...</div></section><section class="card"><h2>Account</h2><p class="muted">Deleting your account permanently removes your profile and login.</p><button class="btn danger" onclick="deleteAccount()">Delete account</button><div id="delMsg" class="msg"></div></section></div></main><script src="/js/app.js"></script><script>HM.requireAuth();async function changePass(){const {r,d}=await HM.api('/api/profile/password',{method:'PUT',body:{currentPassword:current.value,newPassword:newp.value}});passMsg.textContent=d.message||'Done';if(r.ok){current.value='';newp.value=''}}async function loadBlocked(){const {d}=await HM.api('/api/blocks');blocked.innerHTML=d.blocked?.length?d.blocked.map(b=>`<div class="notice"><b>${HM.esc(b.blocked.name)}</b><button class="btn ghost" style="float:right" onclick="unblock('${b.blocked._id}')">Unblock</button></div>`).join(''):'No blocked users.'}async function unblock(id){await HM.api('/api/blocks/'+id,{method:'DELETE'});loadBlocked()}async function deleteAccount(){if(!confirm('Delete your HeartMatch account permanently?'))return;const {r,d}=await HM.api('/api/profile/account',{method:'DELETE'});delMsg.textContent=d.message||'Done';if(r.ok)HM.logout()}loadBlocked();</script>  <script src="js/animated-ui.js"></script>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Settings — HeartMatch</title>
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="css/notification-badge.css" />
+  <link rel="stylesheet" href="css/animated-ui.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+  <style>
+    .switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: .3s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+    .incognito-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .incognito-status-badge.active {
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #dfc8ff;
+    }
+    .incognito-status-badge.inactive {
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      color: #7ee787;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="brand">❤️ <span>HeartMatch</span></div>
+    <div class="navlinks">
+      <a href="discover.html">Discover</a>
+      <a href="profile.html">Profile</a>
+      <a href="matches.html">Matches</a>
+      <a href="notifications.html" class="hm-notification-link">Notifications</a>
+      <button onclick="HM.logout()">Logout</button>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <h1>Settings ⚙️</h1>
+    <p class="muted" style="margin-bottom: 24px;">Manage your privacy, safety, and account preferences.</p>
+
+    <div class="grid">
+      <!-- PRIVACY & GHOST MODE -->
+      <section class="card">
+        <h2>Privacy & Safety 🛡️</h2>
+        
+        <div class="switch-container">
+          <div>
+            <strong style="font-size: 16px; display: block; margin-bottom: 4px;">Ghost Mode / Incognito 👻</strong>
+            <p class="muted" style="font-size: 13px; margin: 0; line-height: 1.4;">
+              Hide your profile from Discover and swipe decks. Only existing matches can see you and send messages.
+            </p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="incognitoToggle" onchange="toggleIncognito(event)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div id="incognitoStatusBadge" class="incognito-status-badge inactive">
+          🌐 Status: Visible to Everyone
+        </div>
+        <div id="incognitoMsg" class="msg" style="margin-top: 8px;"></div>
+
+        <hr style="border-color: var(--line); margin: 20px 0;" />
+
+        <h3>Location & Proximity 📍</h3>
+        <p class="muted" style="font-size: 13px; margin-bottom: 12px;">
+          Your current profile location is set to: <strong id="currentLocationText" style="color: #fff;">Loading...</strong>
+        </p>
+        <a href="profile.html" class="btn alt" style="display: inline-block; font-size: 13px; text-decoration: none; padding: 8px 16px;">
+          Update Discovery Location ↗
+        </a>
+      </section>
+
+      <!-- CHANGE PASSWORD -->
+      <section class="card">
+        <h2>Change Password 🔐</h2>
+        <div class="field">
+          <label>Current password</label>
+          <input id="current" type="password" autocomplete="current-password" />
+        </div>
+        <div class="field">
+          <label>New password (minimum 8 characters)</label>
+          <input id="newp" type="password" autocomplete="new-password" />
+        </div>
+        <button class="btn" onclick="changePass()" type="button">Change password</button>
+        <div id="passMsg" class="msg" style="margin-top: 10px;"></div>
+      </section>
+
+      <!-- BLOCKED USERS -->
+      <section class="card">
+        <h2>Blocked Users 🚫</h2>
+        <p class="muted" style="font-size: 13px; margin-bottom: 12px;">Users you block cannot see your profile or send you messages.</p>
+        <div id="blocked" class="muted">Loading...</div>
+      </section>
+
+      <!-- ACCOUNT DANGER ZONE -->
+      <section class="card">
+        <h2>Account Zone ⚠️</h2>
+        <p class="muted" style="font-size: 13px; line-height: 1.5; margin-bottom: 16px;">
+          Deleting your account permanently removes your profile, photos, matches, and messages. This action cannot be undone.
+        </p>
+        <button class="btn danger" onclick="deleteAccount()" type="button">Delete account permanently</button>
+        <div id="delMsg" class="msg" style="margin-top: 10px;"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    HM.requireAuth();
+
+    const incognitoToggle = document.getElementById("incognitoToggle");
+    const incognitoStatusBadge = document.getElementById("incognitoStatusBadge");
+    const incognitoMsg = document.getElementById("incognitoMsg");
+    const currentLocationText = document.getElementById("currentLocationText");
+
+    function updateIncognitoUI(isIncognito) {
+      incognitoToggle.checked = !!isIncognito;
+      if (isIncognito) {
+        incognitoStatusBadge.className = "incognito-status-badge active";
+        incognitoStatusBadge.textContent = "👻 Status: Hidden (Incognito Mode)";
+      } else {
+        incognitoStatusBadge.className = "incognito-status-badge inactive";
+        incognitoStatusBadge.textContent = "🌐 Status: Visible to Everyone";
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        const { r, d } = await HM.api('/api/profile');
+        if (r.ok && d.user) {
+          updateIncognitoUI(d.user.isIncognito);
+          currentLocationText.textContent = d.user.location || "Not specified";
+        }
+      } catch (e) {
+        console.error("Failed to load user settings:", e);
+      }
+    }
+
+    async function toggleIncognito(e) {
+      const isIncognito = e.target.checked;
+      incognitoMsg.textContent = "Saving...";
+      try {
+        const { r, d } = await HM.api('/api/profile', {
+          method: 'PUT',
+          body: { isIncognito }
+        });
+        if (r.ok) {
+          updateIncognitoUI(isIncognito);
+          incognitoMsg.textContent = isIncognito 
+            ? "Ghost mode active! 👻 Your profile is hidden from Discover." 
+            : "Ghost mode disabled! ✨ You are visible to other singles.";
+          incognitoMsg.className = "msg save-status ok";
+          const currentUser = HM.user() || {};
+          localStorage.setItem("user", JSON.stringify({ ...currentUser, isIncognito }));
+        } else {
+          incognitoMsg.textContent = d.message || "Failed to update.";
+          incognitoMsg.className = "msg save-status err";
+          e.target.checked = !isIncognito;
+        }
+      } catch (err) {
+        console.error(err);
+        incognitoMsg.textContent = "Update failed. Check your connection.";
+        incognitoMsg.className = "msg save-status err";
+        e.target.checked = !isIncognito;
+      }
+    }
+
+    async function changePass() {
+      const current = document.getElementById("current");
+      const newp = document.getElementById("newp");
+      const passMsg = document.getElementById("passMsg");
+      if (!current.value || !newp.value) {
+        passMsg.textContent = "Please fill out both fields.";
+        passMsg.className = "msg save-status err";
+        return;
+      }
+      passMsg.textContent = "Updating password...";
+      const { r, d } = await HM.api('/api/profile/password', {
+        method: 'PUT',
+        body: { currentPassword: current.value, newPassword: newp.value }
+      });
+      passMsg.textContent = d.message || 'Done';
+      passMsg.className = "msg save-status " + (r.ok ? "ok" : "err");
+      if (r.ok) {
+        current.value = '';
+        newp.value = '';
+      }
+    }
+
+    async function loadBlocked() {
+      const blockedEl = document.getElementById("blocked");
+      try {
+        const { d } = await HM.api('/api/blocks');
+        blockedEl.innerHTML = d.blocked?.length
+          ? d.blocked.map(b => `
+              <div class="notice" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <b>${HM.esc(b.blocked.name || "User")}</b>
+                <button class="btn ghost" style="padding:4px 10px; font-size:12px;" onclick="unblock('${b.blocked._id}')">Unblock</button>
+              </div>
+            `).join('')
+          : 'No blocked users.';
+      } catch (e) {
+        blockedEl.textContent = "Could not load blocked list.";
+      }
+    }
+
+    async function unblock(id) {
+      await HM.api('/api/blocks/' + id, { method: 'DELETE' });
+      loadBlocked();
+    }
+
+    async function deleteAccount() {
+      if (!confirm('Are you sure you want to delete your HeartMatch account permanently? All your matches and messages will be removed.')) return;
+      const delMsg = document.getElementById("delMsg");
+      delMsg.textContent = "Deleting account...";
+      const { r, d } = await HM.api('/api/profile/account', { method: 'DELETE' });
+      delMsg.textContent = d.message || 'Done';
+      if (r.ok) HM.logout();
+    }
+
+    loadSettings();
+    loadBlocked();
+  </script>
+  <script src="js/notification-badge.js"></script>
+  <script src="js/animated-ui.js"></script>
+</body>
+</html>

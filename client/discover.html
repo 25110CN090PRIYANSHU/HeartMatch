@@ -27,12 +27,16 @@
         <h1>Discover</h1>
         <p class="muted">Discover all HeartMatch users.</p>
       </div>
-      <button id="refreshBtn" class="btn ghost" type="button">Refresh</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;background:rgba(255,255,255,0.06);border-radius:12px;padding:3px;border:1px solid var(--line)">
+          <button id="viewGridBtn" class="btn ghost" type="button" style="padding:7px 12px;border:0;background:rgba(255,77,141,0.2);color:#fff">⊞ Grid</button>
+          <button id="viewSwipeBtn" class="btn ghost" type="button" style="padding:7px 12px;border:0;color:var(--muted)">🃏 Swipe</button>
+        </div>
+        <button id="refreshBtn" class="btn ghost" type="button">Refresh</button>
+      </div>
     </div>
 
     <div id="msg" class="msg"></div>
-
-
 
     <!-- Classification & Filters -->
     <section class="card" style="margin-bottom:18px">
@@ -100,6 +104,16 @@
           <label for="filterLocation">Location</label>
           <input id="filterLocation" class="search-input filter-control" type="text" placeholder="e.g. Delhi, London, NYC..." maxlength="80">
         </div>
+
+        <div class="field" style="margin:0">
+          <label for="filterSortBy">Sort By</label>
+          <select id="filterSortBy" class="search-input filter-control">
+            <option value="compatibility">⚡ Highest Compatibility</option>
+            <option value="recent">🟢 Recently Active</option>
+            <option value="newest">✨ Newest Members</option>
+            <option value="age">🎂 Closest Age</option>
+          </select>
+        </div>
       </div>
 
       <div class="filter-chips">
@@ -127,6 +141,7 @@
     </section>
 
     <div id="grid" class="grid"></div>
+    <div id="swipeView" class="swipe-mode-wrap" style="display:none"></div>
   </main>
 
   <script src="/js/app.js"></script>
@@ -134,6 +149,9 @@
     HM.requireAuth();
 
     const grid = document.getElementById("grid");
+    const swipeView = document.getElementById("swipeView");
+    const viewGridBtn = document.getElementById("viewGridBtn");
+    const viewSwipeBtn = document.getElementById("viewSwipeBtn");
     const msg = document.getElementById("msg");
     const refreshBtn = document.getElementById("refreshBtn");
     const userSearch = document.getElementById("userSearch");
@@ -146,6 +164,7 @@
     const filterMinAge = document.getElementById("filterMinAge");
     const filterMaxAge = document.getElementById("filterMaxAge");
     const filterLocation = document.getElementById("filterLocation");
+    const filterSortBy = document.getElementById("filterSortBy");
     const filterVerified = document.getElementById("filterVerified");
     const filterOnline = document.getElementById("filterOnline");
     const filterPhoto = document.getElementById("filterPhoto");
@@ -156,6 +175,33 @@
     const activeFiltersSummary = document.getElementById("activeFiltersSummary");
 
     let loading = false;
+    let currentMode = "grid";
+    let loadedUsers = [];
+    let currentSwipeIndex = 0;
+
+    function setViewMode(mode) {
+      currentMode = mode;
+      if (mode === "grid") {
+        grid.style.display = "grid";
+        swipeView.style.display = "none";
+        viewGridBtn.style.background = "rgba(255,77,141,0.2)";
+        viewGridBtn.style.color = "#fff";
+        viewSwipeBtn.style.background = "transparent";
+        viewSwipeBtn.style.color = "var(--muted)";
+        renderUsers(loadedUsers);
+      } else {
+        grid.style.display = "none";
+        swipeView.style.display = "block";
+        viewSwipeBtn.style.background = "rgba(255,77,141,0.2)";
+        viewSwipeBtn.style.color = "#fff";
+        viewGridBtn.style.background = "transparent";
+        viewGridBtn.style.color = "var(--muted)";
+        renderSwipeDeck();
+      }
+    }
+
+    viewGridBtn.addEventListener("click", () => setViewMode("grid"));
+    viewSwipeBtn.addEventListener("click", () => setViewMode("swipe"));
 
     function setMessage(text, type = "") {
       msg.textContent = text || "";
@@ -168,6 +214,7 @@
 
     function profileImage(u) {
       if (u.profileImage) return HM.esc(u.profileImage);
+      if (Array.isArray(u.photos) && u.photos.length > 0) return HM.esc(u.photos[0]);
       return HM_FALLBACK_IMAGE;
     }
 
@@ -202,7 +249,7 @@
       filterCountBadge.textContent = `${count} ${count === 1 ? "profile" : "profiles"}`;
     }
 
-    function updateFilterSummary(cat, intent, interest, min, max, loc, v, o, p, b) {
+    function updateFilterSummary(cat, intent, interest, min, max, loc, v, o, p, b, sort) {
       if (!activeFiltersSummary) return;
       const parts = [];
       if (cat && cat !== "all") {
@@ -250,7 +297,7 @@
 
     function renderNoUsersFound() {
       if (hasActiveFilters()) {
-        grid.innerHTML = `
+        const emptyHtml = `
           <div class="card" style="text-align:center;padding:34px 20px">
             <h2>No matching profiles found 🔍</h2>
             <p class="muted">No users matched your classification filters.</p>
@@ -259,14 +306,24 @@
             </div>
           </div>
         `;
+        grid.innerHTML = emptyHtml;
+        swipeView.innerHTML = emptyHtml;
       } else {
-        grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+        const emptyHtml = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+        grid.innerHTML = emptyHtml;
+        swipeView.innerHTML = emptyHtml;
       }
     }
 
     function renderUsers(users) {
+      loadedUsers = users || [];
       if (!Array.isArray(users) || users.length === 0) {
         renderNoUsersFound();
+        return;
+      }
+
+      if (currentMode === "swipe") {
+        renderSwipeDeck();
         return;
       }
 
@@ -274,11 +331,15 @@
         const catLabel = formatCategory(u.gender);
         const intentLabel = formatLookingFor(u.lookingFor);
         const isOnline = isRecentlyActive(u.lastSeen);
+        const compScore = u.compatibility || 75;
 
         return `
         <article class="card">
           <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
-          <h3>${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
+            <h3 style="margin:0">${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
+            <span class="compatibility-pill">⚡ ${compScore}% Match</span>
+          </div>
           <p class="muted">@${HM.esc(u.userId || "user")}</p>
           <p class="muted">📍 ${HM.esc(u.location || "Location not set")}</p>
           <p>${HM.esc(u.bio || "No bio yet.")}</p>
@@ -293,6 +354,7 @@
             <button class="btn" type="button" onclick="act('${u._id}','like',this)">Like ❤️</button>
           </div>
           <div style="display:flex;gap:8px;margin-top:9px">
+            <button class="btn ghost" style="flex:1" type="button" onclick="window.location.href='person.html?user=${encodeURIComponent(u.userId || u._id)}'">View</button>
             <button class="btn ghost" style="flex:1" type="button" onclick="blockUser('${u._id}')">Block</button>
             <button class="btn ghost" style="flex:1" type="button" onclick="reportUser('${u._id}')">Report</button>
           </div>
@@ -300,6 +362,178 @@
       `;
       }).join("");
     }
+
+    /* Swipe Mode implementation */
+    function renderSwipeDeck() {
+      if (!Array.isArray(loadedUsers) || loadedUsers.length === 0 || currentSwipeIndex >= loadedUsers.length) {
+        swipeView.innerHTML = `
+          <div class="card" style="text-align:center;padding:40px 20px">
+            <h2>You've viewed all profiles! 🎉</h2>
+            <p class="muted">Check back later or adjust your filters.</p>
+            <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+              <button class="btn" type="button" onclick="resetFilters()">Reset Filters</button>
+              <button class="btn ghost" type="button" onclick="currentSwipeIndex=0;load();">Start Over</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const visibleUsers = loadedUsers.slice(currentSwipeIndex, currentSwipeIndex + 3);
+
+      swipeView.innerHTML = `
+        <div class="swipe-deck" id="swipeDeck">
+          ${visibleUsers.map((u, i) => {
+            const zIndex = 10 - i;
+            const scale = 1 - (i * 0.04);
+            const translateY = i * 10;
+            const catLabel = formatCategory(u.gender);
+            const intentLabel = formatLookingFor(u.lookingFor);
+            const compScore = u.compatibility || 75;
+
+            return `
+              <div class="swipe-card-item" id="swipeCard_${i}" data-id="${u._id}" data-userid="${u.userId || u._id}" style="z-index:${zIndex};transform:translateY(${translateY}px) scale(${scale})">
+                <span class="swipe-badge like">LIKE ❤️</span>
+                <span class="swipe-badge pass">PASS ✖️</span>
+                <img class="swipe-card-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
+                <div class="swipe-card-body">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <h3 style="margin:0;font-size:20px">${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
+                    <span class="compatibility-pill">⚡ ${compScore}% Match</span>
+                  </div>
+                  <p class="muted" style="margin:3px 0 6px">📍 ${HM.esc(u.location || "Location not set")}</p>
+                  <p style="font-size:13px;line-height:1.4;margin-bottom:8px">${HM.esc(u.bio || "No bio yet.")}</p>
+                  <div class="tags" style="margin:auto 0 0">
+                    ${catLabel ? `<span class="tag tag-category">${HM.esc(catLabel)}</span>` : ""}
+                    ${intentLabel ? `<span class="tag tag-intent">${HM.esc(intentLabel)}</span>` : ""}
+                    ${(u.interests || []).slice(0, 4).map(int => `<span class="tag">${HM.esc(int)}</span>`).join("")}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="swipe-actions-bar">
+          <button id="swipePassBtn" class="swipe-circle-btn pass" title="Pass (Left arrow)" type="button">✖️</button>
+          <button id="swipeInfoBtn" class="swipe-circle-btn star" title="View Profile" type="button">ℹ️</button>
+          <button id="swipeLikeBtn" class="swipe-circle-btn like" title="Like (Right arrow)" type="button">❤️</button>
+        </div>
+        <p class="muted" style="text-align:center;font-size:12px;margin-top:10px">Tip: Drag card or use ← / → arrow keys</p>
+      `;
+
+      initSwipeGestures();
+    }
+
+    function initSwipeGestures() {
+      const topCard = document.getElementById("swipeCard_0");
+      if (!topCard) return;
+
+      const likeBtn = document.getElementById("swipeLikeBtn");
+      const passBtn = document.getElementById("swipePassBtn");
+      const infoBtn = document.getElementById("swipeInfoBtn");
+
+      if (infoBtn) {
+        infoBtn.onclick = () => {
+          const uId = topCard.getAttribute("data-userid");
+          if (uId) window.location.href = "person.html?user=" + encodeURIComponent(uId);
+        };
+      }
+
+      if (likeBtn) likeBtn.onclick = () => triggerCardSwipe("like");
+      if (passBtn) passBtn.onclick = () => triggerCardSwipe("pass");
+
+      let startX = 0;
+      let startY = 0;
+      let currentX = 0;
+      let currentY = 0;
+      let isDragging = false;
+
+      const likeBadge = topCard.querySelector(".swipe-badge.like");
+      const passBadge = topCard.querySelector(".swipe-badge.pass");
+
+      function onPointerDown(e) {
+        isDragging = true;
+        startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+        startY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+        topCard.classList.add("swiping");
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        const x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+        const y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+        currentX = x - startX;
+        currentY = y - startY;
+
+        const rotate = currentX * 0.08;
+        topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+
+        if (currentX > 20) {
+          likeBadge.style.opacity = Math.min(1, (currentX - 20) / 80);
+          passBadge.style.opacity = 0;
+        } else if (currentX < -20) {
+          passBadge.style.opacity = Math.min(1, (-currentX - 20) / 80);
+          likeBadge.style.opacity = 0;
+        } else {
+          likeBadge.style.opacity = 0;
+          passBadge.style.opacity = 0;
+        }
+      }
+
+      function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        topCard.classList.remove("swiping");
+
+        if (currentX > 90) {
+          triggerCardSwipe("like");
+        } else if (currentX < -90) {
+          triggerCardSwipe("pass");
+        } else {
+          topCard.style.transform = "";
+          likeBadge.style.opacity = 0;
+          passBadge.style.opacity = 0;
+        }
+        currentX = 0;
+        currentY = 0;
+      }
+
+      topCard.addEventListener("mousedown", onPointerDown);
+      window.addEventListener("mousemove", onPointerMove);
+      window.addEventListener("mouseup", onPointerUp);
+
+      topCard.addEventListener("touchstart", onPointerDown, { passive: true });
+      window.addEventListener("touchmove", onPointerMove, { passive: true });
+      window.addEventListener("touchend", onPointerUp);
+    }
+
+    async function triggerCardSwipe(direction) {
+      const topCard = document.getElementById("swipeCard_0");
+      if (!topCard) return;
+      const id = topCard.getAttribute("data-id");
+
+      const badge = topCard.querySelector(direction === "like" ? ".swipe-badge.like" : ".swipe-badge.pass");
+      if (badge) badge.style.opacity = 1;
+
+      const flyX = direction === "like" ? window.innerWidth : -window.innerWidth;
+      topCard.style.transform = `translate(${flyX}px, 0px) rotate(${direction === "like" ? 30 : -30}deg)`;
+      topCard.style.opacity = 0;
+
+      await act(id, direction);
+
+      currentSwipeIndex++;
+      setTimeout(() => {
+        renderSwipeDeck();
+      }, 250);
+    }
+
+    // Keyboard navigation in swipe mode
+    window.addEventListener("keydown", (e) => {
+      if (currentMode !== "swipe") return;
+      if (document.activeElement && ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
+      if (e.key === "ArrowRight") triggerCardSwipe("like");
+      if (e.key === "ArrowLeft") triggerCardSwipe("pass");
+    });
 
     async function load() {
       if (loading) return;
@@ -317,6 +551,7 @@
       const minAgeVal = filterMinAge ? filterMinAge.value.trim() : "";
       const maxAgeVal = filterMaxAge ? filterMaxAge.value.trim() : "";
       const locVal = filterLocation ? filterLocation.value.trim() : "";
+      const sortVal = filterSortBy ? filterSortBy.value : "compatibility";
       const vVal = filterVerified ? filterVerified.checked : false;
       const oVal = filterOnline ? filterOnline.checked : false;
       const pVal = filterPhoto ? filterPhoto.checked : false;
@@ -328,12 +563,13 @@
       if (minAgeVal) params.append("minAge", minAgeVal);
       if (maxAgeVal) params.append("maxAge", maxAgeVal);
       if (locVal) params.append("location", locVal);
+      if (sortVal) params.append("sortBy", sortVal);
       if (vVal) params.append("verifiedOnly", "true");
       if (oVal) params.append("onlineOnly", "true");
       if (pVal) params.append("hasPhotoOnly", "true");
       if (bVal) params.append("hasBioOnly", "true");
 
-      updateFilterSummary(catVal, intentVal, interestVal, minAgeVal, maxAgeVal, locVal, vVal, oVal, pVal, bVal);
+      updateFilterSummary(catVal, intentVal, interestVal, minAgeVal, maxAgeVal, locVal, vVal, oVal, pVal, bVal, sortVal);
 
       const qs = params.toString();
       const url = "/api/discover" + (qs ? "?" + qs : "");
@@ -350,6 +586,7 @@
 
         const users = d?.users || [];
         updateBadge(users.length);
+        currentSwipeIndex = 0;
         renderUsers(users);
       } catch (error) {
         console.error("Discover load error:", error);
@@ -371,10 +608,12 @@
       if (filterMinAge) filterMinAge.value = "";
       if (filterMaxAge) filterMaxAge.value = "";
       if (filterLocation) filterLocation.value = "";
+      if (filterSortBy) filterSortBy.value = "compatibility";
       if (filterVerified) filterVerified.checked = false;
       if (filterOnline) filterOnline.checked = false;
       if (filterPhoto) filterPhoto.checked = false;
       if (filterBio) filterBio.checked = false;
+      currentSwipeIndex = 0;
       load();
     }
 
@@ -418,31 +657,31 @@
     }
 
     async function act(id, type, button) {
-      const card = button?.closest("article.card");
-      button.disabled = true;
+      if (button) button.disabled = true;
       try {
         const { r, d } = await HM.api("/api/likes", {
           method: "POST",
           body: { to: id, type }
         });
         if (!r.ok) {
-          alert(d?.message || "Action failed");
-          button.disabled = false;
+          if (button) button.disabled = false;
           return;
         }
 
-        // Remove the acted-on profile immediately. The server also excludes
-        // acted-on users on the next Discover refresh.
-        card?.remove();
-        const remaining = grid.querySelectorAll("article.card").length;
-        updateBadge(remaining);
-        if (remaining === 0) {
-          renderNoUsersFound();
+        // Remove from loaded users
+        loadedUsers = loadedUsers.filter(u => String(u._id) !== String(id));
+        updateBadge(loadedUsers.length);
+
+        if (button) {
+          const card = button.closest("article.card");
+          card?.remove();
+          if (!grid.querySelector("article.card")) {
+            renderNoUsersFound();
+          }
         }
       } catch (error) {
         console.error(error);
-        alert("Action failed. Please try again.");
-        button.disabled = false;
+        if (button) button.disabled = false;
       }
     }
 
@@ -477,7 +716,7 @@
     if (applyFiltersBtn) applyFiltersBtn.addEventListener("click", load);
     if (resetFiltersBtn) resetFiltersBtn.addEventListener("click", resetFilters);
 
-    [filterCategory, filterLookingFor, filterInterest, filterVerified, filterOnline, filterPhoto, filterBio].forEach(el => {
+    [filterCategory, filterLookingFor, filterInterest, filterSortBy, filterVerified, filterOnline, filterPhoto, filterBio].forEach(el => {
       if (el) el.addEventListener("change", load);
     });
 

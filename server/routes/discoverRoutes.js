@@ -28,7 +28,8 @@ router.get("/", authMiddleware, async (req, res) => {
 
     const filter = {
       _id: { $nin: [...excluded] },
-      isActive: { $ne: false }
+      isActive: { $ne: false },
+      isIncognito: { $ne: true }
     };
 
     const {
@@ -42,7 +43,8 @@ router.get("/", authMiddleware, async (req, res) => {
       verifiedOnly,
       onlineOnly,
       hasPhotoOnly,
-      hasBioOnly
+      hasBioOnly,
+      sortBy
     } = req.query;
 
     // 1. Gender / Category (Men, Women, Non-binary, Genderfluid, Other)
@@ -118,14 +120,64 @@ router.get("/", authMiddleware, async (req, res) => {
       filter.bio = { $exists: true, $ne: "" };
     }
 
-    const users = await User.find(filter)
-      .select("-password")
-      .sort({ lastSeen: -1, createdAt: -1 });
+    const [me, rawUsers] = await Promise.all([
+      User.findById(req.userId).select("age interests lookingFor location preferences isIncognito"),
+      User.find(filter).select("-password").sort({ lastSeen: -1, createdAt: -1 })
+    ]);
+
+    function computeCompatibility(userA, userB) {
+      if (!userA) return 75;
+      let score = 52;
+      const myInterests = (userA.interests || []).map(i => String(i).toLowerCase().trim());
+      const theirInterests = (userB.interests || []).map(i => String(i).toLowerCase().trim());
+      const shared = myInterests.filter(i => theirInterests.includes(i));
+      score += Math.min(36, shared.length * 12);
+
+      if (userA.lookingFor && userB.lookingFor && userA.lookingFor === userB.lookingFor && userA.lookingFor !== "any") {
+        score += 14;
+      }
+      if (userA.location && userB.location && String(userA.location).toLowerCase().trim() === String(userB.location).toLowerCase().trim()) {
+        score += 8;
+      }
+      const p = userA.preferences || {};
+      if (userB.age >= (p.minAge || 18) && userB.age <= (p.maxAge || 100)) {
+        score += 6;
+      }
+      return Math.min(99, Math.max(55, score));
+    }
+
+    let users = rawUsers.map(u => {
+      const uObj = u.toObject();
+      uObj.compatibility = computeCompatibility(me, u);
+      // Ensure photos array includes profileImage if photos is empty
+      if ((!uObj.photos || uObj.photos.length === 0) && uObj.profileImage) {
+        uObj.photos = [uObj.profileImage];
+      }
+      return uObj;
+    });
+
+    // Sorting
+    const sort = String(sortBy || "compatibility").toLowerCase();
+    if (sort === "compatibility") {
+      users.sort((a, b) => b.compatibility - a.compatibility);
+    } else if (sort === "recent") {
+      users.sort((a, b) => new Date(b.lastSeen || 0) - new Date(a.lastSeen || 0));
+    } else if (sort === "newest") {
+      users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    } else if (sort === "age" && me?.age) {
+      users.sort((a, b) => Math.abs(a.age - me.age) - Math.abs(b.age - me.age));
+    }
 
     res.json({
       message: "Users fetched successfully ❤️",
       users,
-      count: users.length
+      count: users.length,
+      currentUser: {
+        interests: me?.interests || [],
+        lookingFor: me?.lookingFor || "any",
+        location: me?.location || "",
+        isIncognito: me?.isIncognito || false
+      }
     });
   } catch (e) {
     console.error("Discover error:", e);

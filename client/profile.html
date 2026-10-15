@@ -21,6 +21,118 @@
         opacity: 0.65;
         cursor: not-allowed;
       }
+      /* Gallery Grid Styles */
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .gallery-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+      }
+      .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .gallery-del-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: rgba(0, 0, 0, 0.75);
+        color: #ff6b81;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        line-height: 1;
+        transition: 0.15s;
+      }
+      .gallery-del-btn:hover {
+        background: #ff4757;
+        color: #fff;
+      }
+      .gallery-set-main {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        right: 4px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 10px;
+        padding: 3px 4px;
+        cursor: pointer;
+        text-align: center;
+        transition: 0.15s;
+      }
+      .gallery-set-main:hover {
+        background: var(--pink, #ff3f8e);
+      }
+      .gallery-add-slot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1;
+        border: 2px dashed rgba(255, 255, 255, 0.22);
+        border-radius: 12px;
+        cursor: pointer;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+        transition: 0.2s;
+        font-size: 12px;
+        text-align: center;
+        padding: 6px;
+      }
+      .gallery-add-slot:hover {
+        border-color: var(--pink, #ff3f8e);
+        color: #fff;
+        background: rgba(255, 63, 142, 0.08);
+      }
+      .gallery-add-slot span {
+        font-size: 24px;
+        margin-bottom: 2px;
+      }
+      /* Prompt Box Styles */
+      .prompt-box {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+      .prompt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        gap: 8px;
+      }
+      .prompt-del-btn {
+        background: none;
+        border: none;
+        color: #ff6b81;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+      .prompt-del-btn:hover {
+        background: rgba(255, 107, 129, 0.15);
+      }
     </style>
     <link rel="stylesheet" href="css/animated-ui.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -61,6 +173,17 @@
             Upload photo 📸
           </button>
           <div id="photoMsg" class="msg"></div>
+          <hr style="border-color: var(--line); margin: 20px 0" />
+          <div style="text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="margin:0; font-size: 16px;">Photo Gallery 📸</h3>
+              <small class="muted" id="galleryCount">0/6</small>
+            </div>
+            <p class="muted" style="font-size:12px; margin:4px 0 10px;">Show up to 6 photos on your card & profile</p>
+            <div id="galleryGrid" class="gallery-grid"></div>
+            <input id="galleryFileInput" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" />
+            <div id="galleryMsg" class="msg" style="margin-top:8px; font-size:12px;"></div>
+          </div>
         </section>
         <section class="card">
           <h2>Edit profile</h2>
@@ -108,6 +231,16 @@
             <label>Interests (comma separated)</label
             ><input id="interests" placeholder="Gaming, Coding, Cricket" />
           </div>
+          <hr style="border-color: var(--line); margin: 20px 0" />
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <div>
+              <h3 style="margin:0; font-size: 16px;">Profile Prompts & Icebreakers 💬</h3>
+              <p class="muted" style="font-size: 12px; margin: 4px 0 0;">Pick up to 3 prompts to show off your personality</p>
+            </div>
+            <button id="addPromptBtn" class="btn alt" type="button" style="padding: 6px 14px; font-size: 12px;">+ Add Prompt</button>
+          </div>
+          <div id="promptsContainer"></div>
+          <hr style="border-color: var(--line); margin: 20px 0" />
           <h3>Discovery preferences</h3>
           <div class="two">
             <div class="field">
@@ -172,8 +305,28 @@
         prefLocation: document.getElementById("prefLocation"),
         saveBtn: document.getElementById("saveProfileBtn"),
         msg: document.getElementById("msg"),
+        galleryGrid: document.getElementById("galleryGrid"),
+        galleryCount: document.getElementById("galleryCount"),
+        galleryFileInput: document.getElementById("galleryFileInput"),
+        galleryMsg: document.getElementById("galleryMsg"),
+        promptsContainer: document.getElementById("promptsContainer"),
+        addPromptBtn: document.getElementById("addPromptBtn"),
       };
       let user = null;
+      let userPhotos = [];
+      let userPrompts = [];
+      const PROMPT_PRESETS = [
+        "I'm convinced that...",
+        "Dating me is like...",
+        "My simple pleasures in life...",
+        "The best way to ask me out is...",
+        "Together, we could...",
+        "Two truths and a lie...",
+        "Green flags I look for...",
+        "A quick rant about...",
+        "My most controversial opinion is...",
+        "We'll get along if..."
+      ];
       const fallback =
         "data:image/svg+xml;charset=UTF-8," +
         encodeURIComponent(
@@ -183,6 +336,134 @@
         els.msg.textContent = text;
         els.msg.className = "msg save-status " + (ok ? "ok" : "err");
       }
+
+      function renderGallery() {
+        if (!els.galleryGrid) return;
+        els.galleryCount.textContent = `${userPhotos.length}/6`;
+        els.galleryGrid.innerHTML = "";
+
+        userPhotos.forEach((photoUrl, idx) => {
+          const item = document.createElement("div");
+          item.className = "gallery-item";
+          const isMain = user && user.profileImage === photoUrl;
+          item.innerHTML = `
+            <img src="${photoUrl}" alt="Gallery photo ${idx + 1}" />
+            <button class="gallery-del-btn" title="Remove photo" type="button">✕</button>
+            <button class="gallery-set-main" type="button">${isMain ? "★ Main photo" : "Set as main"}</button>
+          `;
+          item.querySelector(".gallery-del-btn").onclick = () => removeGalleryPhoto(idx, photoUrl);
+          item.querySelector(".gallery-set-main").onclick = () => setMainPhoto(photoUrl);
+          els.galleryGrid.appendChild(item);
+        });
+
+        if (userPhotos.length < 6) {
+          const addSlot = document.createElement("div");
+          addSlot.className = "gallery-add-slot";
+          addSlot.innerHTML = `<span>+</span><div>Add photo</div>`;
+          addSlot.onclick = () => els.galleryFileInput.click();
+          els.galleryGrid.appendChild(addSlot);
+        }
+      }
+
+      async function removeGalleryPhoto(idx, photoUrl) {
+        const match = photoUrl.match(/\/gallery\/([a-f0-9]{24})/i);
+        if (match) {
+          try {
+            await HM.api(`/api/profile/gallery/${match[1]}`, { method: "DELETE" });
+          } catch(e) { console.error(e); }
+        }
+        userPhotos.splice(idx, 1);
+        await HM.api("/api/profile", {
+          method: "PUT",
+          body: { photos: userPhotos }
+        });
+        renderGallery();
+      }
+
+      async function setMainPhoto(photoUrl) {
+        try {
+          els.avatar.src = photoUrl;
+          if (user) user.profileImage = photoUrl;
+          await HM.api("/api/profile", {
+            method: "PUT",
+            body: { profileImage: photoUrl }
+          });
+          localStorage.setItem("user", JSON.stringify({ ...HM.user(), profileImage: photoUrl }));
+          renderGallery();
+        } catch(e) { console.error(e); }
+      }
+
+      async function onGalleryFileChange() {
+        const f = els.galleryFileInput.files?.[0];
+        if (!f) return;
+        els.galleryMsg.textContent = "Uploading gallery photo...";
+        try {
+          const fd = new FormData();
+          fd.append("photo", f);
+          const { r, d } = await HM.api("/api/profile/gallery", {
+            method: "POST",
+            body: fd
+          });
+          if (r.ok && d.photos) {
+            userPhotos = d.photos;
+            els.galleryMsg.textContent = d.message || "Photo added!";
+            setTimeout(() => { if (els.galleryMsg) els.galleryMsg.textContent = ""; }, 2500);
+            renderGallery();
+          } else {
+            els.galleryMsg.textContent = d.message || "Upload failed.";
+          }
+        } catch(e) {
+          console.error(e);
+          els.galleryMsg.textContent = "Gallery upload failed.";
+        } finally {
+          els.galleryFileInput.value = "";
+        }
+      }
+
+      function renderPrompts() {
+        if (!els.promptsContainer) return;
+        els.promptsContainer.innerHTML = "";
+        if (userPrompts.length === 0) {
+          els.promptsContainer.innerHTML = `<p class="muted" style="font-size:13px; text-align:center; padding:12px; background:rgba(255,255,255,0.02); border-radius:10px;">No prompts added yet. Click "+ Add Prompt" above to answer fun icebreakers!</p>`;
+        }
+        userPrompts.forEach((p, idx) => {
+          const box = document.createElement("div");
+          box.className = "prompt-box";
+          
+          const selectOptions = PROMPT_PRESETS.map(preset => 
+            `<option value="${preset}" ${preset === p.question ? "selected" : ""}>${preset}</option>`
+          ).join("");
+
+          box.innerHTML = `
+            <div class="prompt-header">
+              <select class="prompt-question" style="flex:1; font-weight:600; padding:8px 10px; border-radius:8px; background:#1b1525; color:#fff; border:1px solid var(--line);">
+                ${selectOptions}
+                ${!PROMPT_PRESETS.includes(p.question) && p.question ? `<option value="${p.question}" selected>${p.question}</option>` : ""}
+              </select>
+              <button class="prompt-del-btn" type="button" title="Delete prompt">✕</button>
+            </div>
+            <textarea class="prompt-answer" maxlength="300" placeholder="Write your witty or honest answer here..." style="width:100%; min-height:60px; margin-top:6px;">${p.answer || ""}</textarea>
+          `;
+
+          box.querySelector(".prompt-question").onchange = (e) => {
+            userPrompts[idx].question = e.target.value;
+          };
+          box.querySelector(".prompt-answer").oninput = (e) => {
+            userPrompts[idx].answer = e.target.value;
+          };
+          box.querySelector(".prompt-del-btn").onclick = () => {
+            userPrompts.splice(idx, 1);
+            renderPrompts();
+          };
+
+          els.promptsContainer.appendChild(box);
+        });
+
+        if (els.addPromptBtn) {
+          els.addPromptBtn.style.display = userPrompts.length >= 3 ? "none" : "inline-block";
+        }
+      }
+
       async function load() {
         try {
           const { r, d } = await HM.api("/api/profile");
@@ -212,6 +493,14 @@
           els.email.textContent = user.email || "";
           els.verified.textContent = user.isVerified ? "✓ Email verified" : "";
           els.avatar.src = user.profileImage || fallback;
+
+          userPhotos = Array.isArray(user.photos) ? [...user.photos] : [];
+          if (userPhotos.length === 0 && user.profileImage) {
+            userPhotos = [user.profileImage];
+          }
+          userPrompts = Array.isArray(user.prompts) ? [...user.prompts] : [];
+          renderGallery();
+          renderPrompts();
         } catch (e) {
           console.error(e);
           setMsg("Could not load profile. Please refresh.");
@@ -236,6 +525,11 @@
           maxAge < minAge
         )
           return setMsg("Please enter valid age preferences.");
+
+        const cleanPrompts = userPrompts
+          .map(p => ({ question: String(p.question || "").trim(), answer: String(p.answer || "").trim() }))
+          .filter(p => p.question && p.answer);
+
         const body = {
           userId,
           name,
@@ -248,6 +542,8 @@
             .split(",")
             .map((x) => x.trim())
             .filter(Boolean),
+          photos: userPhotos,
+          prompts: cleanPrompts,
           preferences: {
             minAge,
             maxAge,
@@ -303,6 +599,10 @@
           if (r.ok) {
             els.avatar.src = d.profileImage;
             user = { ...user, profileImage: d.profileImage };
+            if (!userPhotos.includes(d.profileImage)) {
+              userPhotos.unshift(d.profileImage);
+              renderGallery();
+            }
             localStorage.setItem(
               "user",
               JSON.stringify({ ...HM.user(), profileImage: d.profileImage }),
@@ -317,6 +617,19 @@
       }
       els.saveBtn.addEventListener("click", save);
       els.uploadPhotoBtn.addEventListener("click", uploadPhoto);
+      if (els.galleryFileInput) {
+        els.galleryFileInput.addEventListener("change", onGalleryFileChange);
+      }
+      if (els.addPromptBtn) {
+        els.addPromptBtn.addEventListener("click", () => {
+          if (userPrompts.length >= 3) return;
+          // find first preset not used
+          const used = userPrompts.map(p => p.question);
+          const next = PROMPT_PRESETS.find(p => !used.includes(p)) || PROMPT_PRESETS[0];
+          userPrompts.push({ question: next, answer: "" });
+          renderPrompts();
+        });
+      }
       load();
     </script>
     <script src="js/notification-badge.js"></script>

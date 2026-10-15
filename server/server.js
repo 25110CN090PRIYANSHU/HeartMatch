@@ -171,8 +171,8 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
     try {
         const lookup = String(req.params.id || "").trim().toLowerCase();
         const user = mongoose.Types.ObjectId.isValid(lookup)
-            ? await User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified")
-            : await User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified");
+            ? await User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt")
+            : await User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt");
         if (!user) return res.status(404).json({ message: "User not found" });
         if (await Block.exists({
             $or: [
@@ -182,7 +182,33 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
         })) {
             return res.status(403).json({ message: "This user is unavailable" });
         }
-        res.json({ success: true, user });
+
+        const viewer = await User.findById(req.userId).select("age interests lookingFor location preferences");
+        const uObj = user.toObject();
+        // Compute compatibility score
+        let score = 52;
+        if (viewer) {
+            const myInterests = (viewer.interests || []).map(i => String(i).toLowerCase().trim());
+            const theirInterests = (uObj.interests || []).map(i => String(i).toLowerCase().trim());
+            const shared = myInterests.filter(i => theirInterests.includes(i));
+            score += Math.min(36, shared.length * 12);
+            if (viewer.lookingFor && uObj.lookingFor && viewer.lookingFor === uObj.lookingFor && viewer.lookingFor !== "any") {
+                score += 14;
+            }
+            if (viewer.location && uObj.location && String(viewer.location).toLowerCase().trim() === String(uObj.location).toLowerCase().trim()) {
+                score += 8;
+            }
+            const p = viewer.preferences || {};
+            if (uObj.age >= (p.minAge || 18) && uObj.age <= (p.maxAge || 100)) {
+                score += 6;
+            }
+        }
+        uObj.compatibility = Math.min(99, Math.max(55, score));
+        if ((!uObj.photos || uObj.photos.length === 0) && uObj.profileImage) {
+            uObj.photos = [uObj.profileImage];
+        }
+
+        res.json({ success: true, user: uObj });
     } catch (error) {
         console.error("Person profile error:", error);
         res.status(500).json({ message: "Server error" });
@@ -649,7 +675,10 @@ socket.on("stopTyping", (data) => {
                             receiver,
 
                         content:
-                            content.trim()
+                            content.trim(),
+
+                        type:
+                            ["text", "image", "audio"].includes(data?.type) ? data.type : "text"
 
                     });
 
@@ -1036,6 +1065,40 @@ socket.on("callEnd", (d) => {
         } catch (error) {
             console.error("Unsend message error:", error);
             respond({ success: false, message: "Failed to unsend message" });
+        }
+    });
+
+    // ==================================================
+    // MESSAGE REACTIONS
+    // ==================================================
+    socket.on("reactMessage", async (data, callback) => {
+        const respond = typeof callback === "function" ? callback : () => {};
+        try {
+            const { messageId, emoji, receiver } = data || {};
+            if (!messageId || !mongoose.Types.ObjectId.isValid(messageId)) {
+                return respond({ success: false, message: "Invalid message ID" });
+            }
+            const msg = await Message.findById(messageId);
+            if (!msg) return respond({ success: false, message: "Message not found" });
+
+            if (!msg.reactions) msg.reactions = new Map();
+            if (!emoji) {
+                msg.reactions.delete(String(socket.userId));
+            } else {
+                msg.reactions.set(String(socket.userId), String(emoji).slice(0, 10));
+            }
+            await msg.save();
+
+            const reactionsObj = Object.fromEntries(msg.reactions);
+            const payload = { messageId: String(messageId), reactions: reactionsObj };
+            io.to(String(socket.userId)).emit("messageReaction", payload);
+            if (receiver) {
+                io.to(String(receiver)).emit("messageReaction", payload);
+            }
+            respond({ success: true, reactions: reactionsObj });
+        } catch (e) {
+            console.error("reactMessage error:", e);
+            respond({ success: false, message: "Server error" });
         }
     });
 
