@@ -252,43 +252,14 @@ img, video, canvas, iframe { max-width: 100%; }
 }
 
 
-/* Final stability fixes: one single document scroll, no nested scrollbars */
-html {
+/* Final stability fixes */
+html, body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden !important;
-  overflow-y: auto !important;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) #090812;
 }
 body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
-}
-/* Sleek custom scrollbars across all pages */
-::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
-}
-::-webkit-scrollbar-track {
-  background: #090812;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  border: 2px solid #090812;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #ff4d8d, #8b5cf6);
-}
-::-webkit-scrollbar-thumb:active {
-  background: #ff4d8d;
-}
-::-webkit-scrollbar-corner {
-  background: #090812;
+  overflow-y: auto;
 }
 body.call-open {
   overflow: hidden !important;
@@ -327,17 +298,9 @@ main, .wrap, #grid {
   }
 }
 
-/* Single document scroll: ensure body never spawns a secondary scrollbar */
-html {
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  scroll-behavior: smooth;
-}
-body {
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
-}
+/* Final Discover page stability: one document scroll, no nested scrollbar/jump. */
+html { overflow-x: hidden !important; }
+body { overflow-x: hidden !important; overflow-y: auto !important; }
 #grid { overflow: visible !important; align-items: start; }
 #grid .card { overflow: hidden; }
 #grid .profile-img { display: block; width: 100%; aspect-ratio: 1 / 1; height: auto; object-fit: cover; }
-
