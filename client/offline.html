@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline — HeartMatch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at center, #241433, #090812 70%);
+      color: #fff;
+      padding: 24px;
+      text-align: center;
+    }
+    .offline-card {
+      max-width: 420px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 40px 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(16px);
+    }
+    .icon {
+      font-size: 58px;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #ff4d8d, #a855f7);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    p {
+      color: #aaa5b8;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #ff3f8e, #a855f7);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(255, 63, 142, 0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(255, 63, 142, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div class="icon">💔📡</div>
+    <h1>You're Offline</h1>
+    <p>HeartMatch needs an internet connection to load new profiles and messages. Check your Wi-Fi or mobile data.</p>
+    <button class="retry-btn" onclick="window.location.reload()">
+      Try Reconnecting 🔄
+    </button>
+  </div>
+</body>
+</html>
