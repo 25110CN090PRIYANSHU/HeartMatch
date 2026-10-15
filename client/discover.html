@@ -34,6 +34,49 @@
 
 
 
+    <!-- Classification & Filters -->
+    <section class="card" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div>
+          <h2 style="margin:0 0 4px">Classification &amp; Filters 🎯</h2>
+          <p class="muted" style="margin:0">Classify profiles by category, age, and location.</p>
+        </div>
+        <div id="filterCountBadge" class="filter-count-badge" style="display:none"></div>
+      </div>
+
+      <div class="filter-grid">
+        <div class="field" style="margin:0">
+          <label for="filterCategory">Category</label>
+          <select id="filterCategory" class="search-input filter-control">
+            <option value="all">All (Men, Women, Other)</option>
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin:0">
+          <label>Age Range</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="filterMinAge" class="search-input filter-control" type="number" min="18" max="100" placeholder="Min (18)" style="flex:1;min-width:0">
+            <span class="muted" style="font-weight:bold">–</span>
+            <input id="filterMaxAge" class="search-input filter-control" type="number" min="18" max="100" placeholder="Max (100)" style="flex:1;min-width:0">
+          </div>
+        </div>
+
+        <div class="field" style="margin:0">
+          <label for="filterLocation">Location</label>
+          <input id="filterLocation" class="search-input filter-control" type="text" placeholder="e.g. Delhi, London, etc." maxlength="80">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center">
+        <button id="applyFiltersBtn" class="btn" type="button">Apply Filters 🔍</button>
+        <button id="resetFiltersBtn" class="btn ghost" type="button">Reset Filters</button>
+        <span id="activeFiltersSummary" class="muted" style="font-size:13px;margin-left:auto"></span>
+      </div>
+    </section>
+
     <section class="card" style="margin-bottom:18px">
       <h2>Find someone by User ID 🔎</h2>
       <p class="muted">Enter their unique User ID to open their profile.</p>
@@ -58,6 +101,15 @@
     const findUserBtn = document.getElementById("findUserBtn");
     const searchResult = document.getElementById("searchResult");
 
+    const filterCategory = document.getElementById("filterCategory");
+    const filterMinAge = document.getElementById("filterMinAge");
+    const filterMaxAge = document.getElementById("filterMaxAge");
+    const filterLocation = document.getElementById("filterLocation");
+    const applyFiltersBtn = document.getElementById("applyFiltersBtn");
+    const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+    const filterCountBadge = document.getElementById("filterCountBadge");
+    const activeFiltersSummary = document.getElementById("activeFiltersSummary");
+
     let loading = false;
 
     function setMessage(text, type = "") {
@@ -74,20 +126,82 @@
       return HM_FALLBACK_IMAGE;
     }
 
+    function formatCategory(gender) {
+      const g = String(gender || "").toLowerCase();
+      if (g === "male" || g === "men") return "Men";
+      if (g === "female" || g === "women") return "Women";
+      if (g === "other") return "Other";
+      return "";
+    }
+
+    function updateBadge(count) {
+      if (!filterCountBadge) return;
+      filterCountBadge.style.display = "inline-block";
+      filterCountBadge.textContent = `${count} ${count === 1 ? "profile" : "profiles"}`;
+    }
+
+    function updateFilterSummary(cat, min, max, loc) {
+      if (!activeFiltersSummary) return;
+      const parts = [];
+      if (cat && cat !== "all") {
+        const catMap = { men: "Men", women: "Women", other: "Other" };
+        parts.push(catMap[cat] || cat);
+      }
+      if (min && max) parts.push(`Age ${min}–${max}`);
+      else if (min) parts.push(`Age ${min}+`);
+      else if (max) parts.push(`Age ≤ ${max}`);
+
+      if (loc) parts.push(`Near "${loc}"`);
+
+      if (parts.length > 0) {
+        activeFiltersSummary.textContent = "Filters: " + parts.join(" • ");
+      } else {
+        activeFiltersSummary.textContent = "Showing all categories, ages & locations";
+      }
+    }
+
+    function hasActiveFilters() {
+      return (
+        (filterCategory && filterCategory.value !== "all") ||
+        Boolean(filterMinAge && filterMinAge.value.trim()) ||
+        Boolean(filterMaxAge && filterMaxAge.value.trim()) ||
+        Boolean(filterLocation && filterLocation.value.trim())
+      );
+    }
+
+    function renderNoUsersFound() {
+      if (hasActiveFilters()) {
+        grid.innerHTML = `
+          <div class="card" style="text-align:center;padding:34px 20px">
+            <h2>No matching profiles found 🔍</h2>
+            <p class="muted">No users matched your classification filters.</p>
+            <div style="margin-top:14px">
+              <button class="btn ghost" type="button" onclick="resetFilters()">Clear filters &amp; view all</button>
+            </div>
+          </div>
+        `;
+      } else {
+        grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+      }
+    }
+
     function renderUsers(users) {
       if (!Array.isArray(users) || users.length === 0) {
-        grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+        renderNoUsersFound();
         return;
       }
 
-      grid.innerHTML = users.map(u => `
+      grid.innerHTML = users.map(u => {
+        const catLabel = formatCategory(u.gender);
+        return `
         <article class="card">
           <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
           <h3>${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
           <p class="muted">@${HM.esc(u.userId || "user")}</p>
-          <p class="muted">${HM.esc(u.location || "Location not set")}</p>
+          <p class="muted">📍 ${HM.esc(u.location || "Location not set")}</p>
           <p>${HM.esc(u.bio || "No bio yet.")}</p>
           <div class="tags">
+            ${catLabel ? `<span class="tag tag-category">${HM.esc(catLabel)}</span>` : ""}
             ${(u.interests || []).slice(0, 6).map(i => `<span class="tag">${HM.esc(i)}</span>`).join("")}
           </div>
           <div class="card-actions">
@@ -99,7 +213,8 @@
             <button class="btn ghost" style="flex:1" type="button" onclick="reportUser('${u._id}')">Report</button>
           </div>
         </article>
-      `).join("");
+      `;
+      }).join("");
     }
 
     async function load() {
@@ -107,28 +222,58 @@
       loading = true;
       refreshBtn.disabled = true;
       refreshBtn.textContent = "Refreshing...";
+      if (applyFiltersBtn) applyFiltersBtn.disabled = true;
       setMessage("");
       grid.innerHTML = '<div class="card">Finding people... 💕</div>';
 
+      const params = new URLSearchParams();
+      const catVal = filterCategory ? filterCategory.value : "all";
+      const minAgeVal = filterMinAge ? filterMinAge.value.trim() : "";
+      const maxAgeVal = filterMaxAge ? filterMaxAge.value.trim() : "";
+      const locVal = filterLocation ? filterLocation.value.trim() : "";
+
+      if (catVal && catVal !== "all") params.append("category", catVal);
+      if (minAgeVal) params.append("minAge", minAgeVal);
+      if (maxAgeVal) params.append("maxAge", maxAgeVal);
+      if (locVal) params.append("location", locVal);
+
+      updateFilterSummary(catVal, minAgeVal, maxAgeVal, locVal);
+
+      const qs = params.toString();
+      const url = "/api/discover" + (qs ? "?" + qs : "");
+
       try {
-        const { r, d } = await HM.api("/api/discover");
+        const { r, d } = await HM.api(url);
 
         if (!r.ok) {
           grid.innerHTML = "";
           setMessage(d?.message || "Could not load Discover. Please try again.", "err");
+          updateBadge(0);
           return;
         }
 
-        renderUsers(d?.users || []);
+        const users = d?.users || [];
+        updateBadge(users.length);
+        renderUsers(users);
       } catch (error) {
         console.error("Discover load error:", error);
         grid.innerHTML = '<div class="card"><h2>Could not load Discover.</h2><p class="muted">Check your connection and try again.</p></div>';
         setMessage("Could not load Discover. Please try again.", "err");
+        updateBadge(0);
       } finally {
         loading = false;
         refreshBtn.disabled = false;
         refreshBtn.textContent = "Refresh";
+        if (applyFiltersBtn) applyFiltersBtn.disabled = false;
       }
+    }
+
+    function resetFilters() {
+      if (filterCategory) filterCategory.value = "all";
+      if (filterMinAge) filterMinAge.value = "";
+      if (filterMaxAge) filterMaxAge.value = "";
+      if (filterLocation) filterLocation.value = "";
+      load();
     }
 
     async function searchUser() {
@@ -187,8 +332,10 @@
         // Remove the acted-on profile immediately. The server also excludes
         // acted-on users on the next Discover refresh.
         card?.remove();
-        if (!grid.querySelector("article.card")) {
-          grid.innerHTML = '<div class="card"><h2>No users found.</h2><p class="muted">There are no other users to display right now.</p></div>';
+        const remaining = grid.querySelectorAll("article.card").length;
+        updateBadge(remaining);
+        if (remaining === 0) {
+          renderNoUsersFound();
         }
       } catch (error) {
         console.error(error);
@@ -225,6 +372,20 @@
     }
 
     refreshBtn.addEventListener("click", load);
+    if (applyFiltersBtn) applyFiltersBtn.addEventListener("click", load);
+    if (resetFiltersBtn) resetFiltersBtn.addEventListener("click", resetFilters);
+    if (filterCategory) filterCategory.addEventListener("change", load);
+
+    [filterMinAge, filterMaxAge, filterLocation].forEach(input => {
+      if (!input) return;
+      input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          load();
+        }
+      });
+    });
+
     findUserBtn.addEventListener("click", searchUser);
     userSearch.addEventListener("keydown", event => {
       if (event.key === "Enter") searchUser();

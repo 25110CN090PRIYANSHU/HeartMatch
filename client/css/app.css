@@ -341,3 +341,8 @@ video {
 }
 
 .search-input{padding:13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;outline:none}.search-input:focus{border-color:rgba(255,77,141,.7);box-shadow:0 0 0 3px rgba(255,77,141,.08)}
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.filter-control{width:100%}
+.filter-control option{background:#171722;color:#fff}
+.filter-count-badge{display:inline-block;font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;background:rgba(255,77,141,.15);border:1px solid rgba(255,77,141,.35);color:#ff9abb}
+.tag-category{background:rgba(255,77,141,.15);border-color:rgba(255,77,141,.3);color:#ff9abb;font-weight:600}
