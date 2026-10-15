@@ -7,7 +7,12 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const compression = require("compression");
+let compression;
+try {
+    compression = require("compression");
+} catch (e) {
+    console.warn("[Server] Compression module not installed, skipping payload compression.");
+}
 
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 require("dotenv").config();
@@ -39,7 +44,9 @@ const app = express();
 app.set("trust proxy", 1);
 
 // High-speed HTTP compression (gzip/brotli) for all responses
-app.use(compression());
+if (typeof compression === "function") {
+    app.use(compression());
+}
 
 app.use(
     helmet({
