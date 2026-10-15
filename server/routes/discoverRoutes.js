@@ -121,8 +121,12 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 
     const [me, rawUsers] = await Promise.all([
-      User.findById(req.userId).select("age interests lookingFor location preferences isIncognito"),
-      User.find(filter).select("-password").sort({ lastSeen: -1, createdAt: -1 })
+      User.findById(req.userId).select("age interests lookingFor location preferences isIncognito").lean(),
+      User.find(filter)
+        .select("name age gender lookingFor bio profileImage interests location isVerified lastSeen createdAt")
+        .sort({ lastSeen: -1, createdAt: -1 })
+        .limit(80)
+        .lean()
     ]);
 
     function computeCompatibility(userA, userB) {
@@ -147,7 +151,7 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 
     let users = rawUsers.map(u => {
-      const uObj = u.toObject();
+      const uObj = { ...u };
       uObj.compatibility = computeCompatibility(me, u);
       // Ensure photos array includes profileImage if photos is empty
       if ((!uObj.photos || uObj.photos.length === 0) && uObj.profileImage) {

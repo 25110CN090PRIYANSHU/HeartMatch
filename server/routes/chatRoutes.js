@@ -20,10 +20,11 @@ router.get("/:userId", authMiddleware, async (req, res) => {
 
         // Chat links may contain either the MongoDB _id or the user's public
         // HeartMatch User ID. Resolve the public ID to the real _id first.
+        const userFields = "name age gender bio profileImage isVerified lastSeen isActive";
         if (mongoose.Types.ObjectId.isValid(requestedUserId)) {
-            otherUser = await User.findById(requestedUserId).select("-password");
+            otherUser = await User.findById(requestedUserId).select(userFields).lean();
         } else {
-            otherUser = await User.findOne({ userId: requestedUserId.toLowerCase(), isActive: true }).select("-password");
+            otherUser = await User.findOne({ userId: requestedUserId.toLowerCase(), isActive: true }).select(userFields).lean();
         }
 
         if (!otherUser) {
@@ -54,19 +55,16 @@ router.get("/:userId", authMiddleware, async (req, res) => {
 
         // Check mutual match
         const [myLike, theirLike] = await Promise.all([
-
             Like.exists({
                 from: req.userId,
                 to: otherUserId,
                 type: "like"
             }),
-
             Like.exists({
                 from: otherUserId,
                 to: req.userId,
                 type: "like"
             })
-
         ]);
 
         if (!myLike || !theirLike) {
@@ -75,23 +73,24 @@ router.get("/:userId", authMiddleware, async (req, res) => {
             });
         }
 
-        // Get conversation
-        const messages = await Message.find({
-            $or: [
-                {
-                    sender: req.userId,
-                    receiver: otherUserId
-                },
-                {
-                    sender: otherUserId,
-                    receiver: req.userId
-                }
-            ]
-        })
-        .sort({ createdAt: 1 });
+        // Get conversation and user settings concurrently
+        const [messages, me] = await Promise.all([
+            Message.find({
+                $or: [
+                    { sender: req.userId, receiver: otherUserId },
+                    { sender: otherUserId, receiver: req.userId }
+                ]
+            })
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .lean()
+            .then(msgs => msgs.reverse()),
 
-        // Mark received messages as read
-        await Message.updateMany(
+            User.findById(req.userId).select("chatBackgrounds").lean()
+        ]);
+
+        // Mark received messages as read asynchronously in background
+        Message.updateMany(
             {
                 sender: otherUserId,
                 receiver: req.userId,
@@ -102,10 +101,9 @@ router.get("/:userId", authMiddleware, async (req, res) => {
                     read: true
                 }
             }
-        );
+        ).catch(() => {});
 
-        const me = await User.findById(req.userId).select("chatBackgrounds");
-        const background = me?.chatBackgrounds?.get(otherUserId) || "";
+        const background = me?.chatBackgrounds?.[otherUserId] || me?.chatBackgrounds?.get?.(otherUserId) || "";
 
         res.json({
             message: "Chat fetched successfully ❤️",

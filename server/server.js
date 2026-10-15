@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const compression = require("compression");
 
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 require("dotenv").config();
@@ -37,6 +38,9 @@ const app = express();
 // correct public URLs for password-reset and verification links.
 app.set("trust proxy", 1);
 
+// High-speed HTTP compression (gzip/brotli) for all responses
+app.use(compression());
+
 app.use(
     helmet({
         crossOriginResourcePolicy: false,
@@ -52,11 +56,14 @@ app.use("/api/auth/signup", authLimiter);
 app.use("/api/auth/forgot-password", authLimiter);
 
 // ===============================
-// SERVE FRONTEND
+// SERVE FRONTEND (With HTTP Caching)
 // ===============================
 
-app.use(express.static(path.join(__dirname, "../client")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "1d" }));
+app.use(express.static(path.join(__dirname, "../client"), {
+    maxAge: "2h",
+    etag: true
+}));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "7d", etag: true }));
 
 app.get("/favicon.ico", (req, res) => {
     res.sendFile(path.join(__dirname, "../client/favicon.ico"));
@@ -171,9 +178,12 @@ app.get("/api/turn-config", (req, res) => {
 app.get("/api/person/:id", authMiddleware, async (req, res) => {
     try {
         const lookup = String(req.params.id || "").trim().toLowerCase();
-        const user = mongoose.Types.ObjectId.isValid(lookup)
-            ? await User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt")
-            : await User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt");
+        const userPromise = mongoose.Types.ObjectId.isValid(lookup)
+            ? User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt").lean()
+            : User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt").lean();
+        const viewerPromise = User.findById(req.userId).select("age interests lookingFor location preferences").lean();
+
+        const [user, viewer] = await Promise.all([userPromise, viewerPromise]);
         if (!user) return res.status(404).json({ message: "User not found" });
         if (await Block.exists({
             $or: [
@@ -184,8 +194,7 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
             return res.status(403).json({ message: "This user is unavailable" });
         }
 
-        const viewer = await User.findById(req.userId).select("age interests lookingFor location preferences");
-        const uObj = user.toObject();
+        const uObj = { ...user };
         // Compute compatibility score
         let score = 52;
         if (viewer) {

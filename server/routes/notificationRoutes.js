@@ -7,20 +7,36 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
 
-// Get my notifications
-router.get("/", authMiddleware, async (req, res) => {
+// Quick unread count for badges (super fast indexed count)
+router.get("/unread-count", authMiddleware, async (req, res) => {
     try {
-        const notifications = await Notification.find({
-            recipient: req.userId
-        })
-        .populate("sender", "name profileImage")
-        .sort({ createdAt: -1 })
-        .limit(50);
-
         const unreadCount = await Notification.countDocuments({
             recipient: req.userId,
             read: false
         });
+        res.json({ unreadCount });
+    } catch (e) {
+        res.status(500).json({ unreadCount: 0 });
+    }
+});
+
+// Get my notifications
+router.get("/", authMiddleware, async (req, res) => {
+    try {
+        const [notifications, unreadCount] = await Promise.all([
+            Notification.find({
+                recipient: req.userId
+            })
+            .populate("sender", "name profileImage")
+            .sort({ createdAt: -1 })
+            .limit(40)
+            .lean(),
+
+            Notification.countDocuments({
+                recipient: req.userId,
+                read: false
+            })
+        ]);
 
         res.json({
             notifications,

@@ -53,9 +53,8 @@
     if (!localStorage.getItem("token")) return;
 
     try {
-      const response = await fetch("/api/notifications", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        cache: "no-store"
+      const response = await fetch("/api/notifications/unread-count", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
 
       if (!response.ok) return;
@@ -63,7 +62,6 @@
       const data = await response.json();
       render(data.unreadCount || 0);
     } catch (error) {
-      // Do not interrupt the current page if the notification request fails.
       if (lastCount === null) render(0);
     }
   }
@@ -72,19 +70,12 @@
     render(0);
     refresh();
 
-    // Keep the red count current while the user is using another page.
-    window.setInterval(refresh, 10000);
+    // Refresh every 30 seconds
+    window.setInterval(refresh, 30000);
 
-    // Useful for pages that already have Socket.IO loaded.
-    if (typeof window.io === "function") {
-      try {
-        const socket = window.io({ auth: { token } });
-        socket.on("newNotification", function () {
-          refresh();
-        });
-      } catch (_) {
-        // Polling above is the fallback.
-      }
+    // If an existing socket is on the page, listen for push notifications
+    if (window.socket && typeof window.socket.on === "function") {
+      window.socket.on("newNotification", refresh);
     }
   }
 

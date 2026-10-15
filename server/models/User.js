@@ -42,4 +42,7 @@ const userSchema = new mongoose.Schema({
   }]
 }, { timestamps: true });
 
+userSchema.index({ isActive: 1, isIncognito: 1, lastSeen: -1 });
+userSchema.index({ gender: 1, lookingFor: 1, age: 1 });
+
 module.exports = mongoose.model("User", userSchema);

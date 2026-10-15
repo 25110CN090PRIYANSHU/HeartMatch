@@ -61,7 +61,9 @@ module.exports = (io) => {
             const likers = await User.find({
                 _id: { $in: pendingSenderIds },
                 isActive: { $ne: false }
-            }).select("-password");
+            })
+            .select("name age gender bio location profileImage isVerified lastSeen isActive")
+            .lean();
 
             res.json({
                 message: "Received likes fetched successfully ❤️",
