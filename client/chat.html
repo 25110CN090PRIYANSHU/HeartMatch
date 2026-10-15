@@ -725,35 +725,84 @@
       }
       .attach-wrap {
         position: relative;
+        flex-shrink: 0;
       }
       .attach-menu {
         position: absolute;
         bottom: 58px;
         left: 0;
-        background: #211d2c;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        padding: 7px;
+        width: 220px;
+        min-width: 220px;
+        background: #1c182a;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+        padding: 8px;
         display: none;
-        z-index: 20;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+        flex-direction: column;
+        gap: 4px;
+        z-index: 100;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(16px);
       }
       .attach-menu.open {
-        display: block;
+        display: flex !important;
+        animation: attachMenuPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes attachMenuPop {
+        from { opacity: 0; transform: translateY(8px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
       }
       .attach-option {
-        display: block;
-        width: 190px;
-        padding: 11px;
+        display: flex !important;
+        align-items: center;
+        gap: 12px;
+        width: 100% !important;
+        padding: 10px 14px;
         border: 0;
         background: transparent;
         color: #fff;
         text-align: left;
-        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 10px;
         cursor: pointer;
+        white-space: nowrap !important;
+        transition: background 0.18s ease, transform 0.15s ease;
       }
       .attach-option:hover {
-        background: rgba(255, 255, 255, 0.07);
+        background: rgba(255, 255, 255, 0.08) !important;
+        transform: translateX(3px);
+      }
+      .attach-option .attach-icon {
+        font-size: 18px;
+        width: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* Chat input circular buttons */
+      .chat-input .call-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #eee;
+        font-size: 19px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+      }
+      .chat-input .call-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 63, 142, 0.35);
+        color: #fff;
+        transform: scale(1.06);
       }
       .file-input {
         display: none;
@@ -1102,8 +1151,13 @@
           min-width: 0;
           width: min(100%, 280px);
         }
+        .attach-menu {
+          min-width: 0;
+          width: min(220px, calc(100vw - 32px));
+        }
         .attach-option {
-          width: min(190px, calc(100vw - 32px));
+          width: 100%;
+          white-space: nowrap;
         }
         .call-top {
           padding-top: 18px;
@@ -1230,10 +1284,12 @@
           </button>
           <div class="attach-menu" id="attachMenu">
             <button type="button" class="attach-option" id="photoOption">
-              🖼️ Photos & videos
+              <span class="attach-icon">🖼️</span>
+              <span>Photos &amp; videos</span>
             </button>
             <button type="button" class="attach-option" id="fileOption">
-              📎 Document
+              <span class="attach-icon">📄</span>
+              <span>Document</span>
             </button>
           </div>
           <input class="file-input" id="fileInput" type="file" />
