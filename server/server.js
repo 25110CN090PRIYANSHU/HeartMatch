@@ -666,6 +666,12 @@ socket.on("stopTyping", (data) => {
                 // CREATE MESSAGE
                 // ===============================
 
+                const replyToData = data?.replyTo && typeof data.replyTo === "object" ? {
+                    messageId: mongoose.Types.ObjectId.isValid(data.replyTo.messageId) ? data.replyTo.messageId : null,
+                    text: String(data.replyTo.text || "").slice(0, 150),
+                    senderName: String(data.replyTo.senderName || "").slice(0, 50)
+                } : undefined;
+
                 const message =
                     await Message.create({
 
@@ -679,7 +685,10 @@ socket.on("stopTyping", (data) => {
                             content.trim(),
 
                         type:
-                            ["text", "image", "audio", "view_once"].includes(data?.type) ? data.type : "text",
+                            ["text", "image", "video", "audio", "view_once"].includes(data?.type) ? data.type : "text",
+
+                        replyTo:
+                            replyToData,
 
                         viewOnce: Boolean(data?.viewOnce || data?.type === "view_once"),
 
@@ -842,12 +851,18 @@ socket.on("stopTyping", (data) => {
                 viewOnce: isViewOnce,
                 isViewed: false
             });
-            if (payload.length > 6500000) return respond({success:false,message:"Attachment is too large"});
+            const replyToData = a?.replyTo && typeof a.replyTo === "object" ? {
+                messageId: mongoose.Types.ObjectId.isValid(a.replyTo.messageId) ? a.replyTo.messageId : null,
+                text: String(a.replyTo.text || "").slice(0, 150),
+                senderName: String(a.replyTo.senderName || "").slice(0, 50)
+            } : undefined;
+
             const message = await Message.create({
                 sender: socket.userId,
                 receiver,
                 content: (isViewOnce ? "__HM_VIEW_ONCE__" : "__HM_ATTACHMENT__") + payload,
-                type: isViewOnce ? "view_once" : (a.kind === "image" ? "image" : "text"),
+                type: isViewOnce ? "view_once" : (a.kind === "video" ? "video" : (a.kind === "image" ? "image" : "text")),
+                replyTo: replyToData,
                 viewOnce: isViewOnce,
                 isViewed: false
             });

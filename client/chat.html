@@ -1419,6 +1419,315 @@
         user-select: none;
         -webkit-user-select: none;
       }
+
+      /* Instagram Swipe-to-Reply & Quoted Bubble */
+      .reply-preview-bar {
+        display: flex;
+        align-items: center;
+        background: rgba(20, 16, 32, 0.98);
+        border-top: 1px solid rgba(255, 61, 141, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 8px 14px;
+        gap: 12px;
+        position: relative;
+        z-index: 55;
+        backdrop-filter: blur(16px);
+        animation: replySlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes replySlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .reply-bar-accent {
+        width: 4px;
+        height: 34px;
+        border-radius: 4px;
+        background: linear-gradient(180deg, #ff3d8d, #8b5cf6);
+        flex-shrink: 0;
+      }
+      .reply-bar-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .reply-bar-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: #ff6aa9;
+        margin-bottom: 2px;
+      }
+      .reply-bar-snippet {
+        font-size: 13px;
+        color: #ddd;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .reply-bar-close {
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        color: #aaa;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: 0.15s;
+      }
+      .reply-bar-close:hover {
+        background: rgba(255, 60, 60, 0.3);
+        color: #fff;
+      }
+      .quoted-reply-box {
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 3px solid #ff3d8d;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-bottom: 7px;
+        cursor: pointer;
+        font-size: 12px;
+        user-select: none;
+      }
+      .message-row.mine .quoted-reply-box {
+        background: rgba(0, 0, 0, 0.22);
+        border-left-color: #ffffff;
+      }
+      .quoted-reply-name {
+        font-weight: 700;
+        color: #ff85b2;
+        margin-bottom: 2px;
+        font-size: 11px;
+      }
+      .message-row.mine .quoted-reply-name {
+        color: #fff;
+        opacity: 0.92;
+      }
+      .quoted-reply-text {
+        color: rgba(255, 255, 255, 0.88);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 12px;
+      }
+      .message-row {
+        position: relative;
+        touch-action: pan-y;
+      }
+      .swipe-reply-icon {
+        position: absolute;
+        left: -38px;
+        top: 50%;
+        transform: translateY(-50%) scale(0.6);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff3d8d, #8b5cf6);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        opacity: 0;
+        transition: opacity 0.15s, transform 0.15s;
+        pointer-events: none;
+        z-index: 10;
+      }
+      .message-row.mine .swipe-reply-icon {
+        left: auto;
+        right: -38px;
+      }
+      .message-highlight-pulse {
+        animation: msgHighlightPulse 1.6s ease;
+      }
+      @keyframes msgHighlightPulse {
+        0%, 100% { filter: none; }
+        25%, 75% { filter: drop-shadow(0 0 18px rgba(255, 61, 141, 0.95)); transform: scale(1.03); }
+      }
+
+      /* Long Press Reaction Popover */
+      .reaction-picker-bar {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        background: rgba(24, 18, 36, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 30px;
+        padding: 5px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 61, 141, 0.2);
+        z-index: 100;
+        backdrop-filter: blur(18px);
+        animation: reactionPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-origin: bottom center;
+      }
+      @keyframes reactionPop {
+        from { opacity: 0; transform: translateY(8px) scale(0.7); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .reaction-emoji-btn {
+        background: none;
+        border: none;
+        font-size: 22px;
+        cursor: pointer;
+        padding: 3px 4px;
+        line-height: 1;
+        transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .reaction-emoji-btn:hover,
+      .reaction-emoji-btn:active {
+        transform: scale(1.4) translateY(-4px);
+      }
+
+      /* Camera Button and Modal */
+      .chat-camera-btn {
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        font-size: 18px !important;
+      }
+      .chat-camera-btn:hover {
+        background: rgba(255, 61, 141, 0.2) !important;
+        border-color: #ff3d8d !important;
+      }
+      .camera-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(0, 0, 0, 0.88);
+        backdrop-filter: blur(16px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .camera-card {
+        width: min(440px, 100%);
+        background: #141022;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+      }
+      .camera-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .camera-title {
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .camera-close-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .camera-viewfinder-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #000;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .camera-viewfinder-wrap video,
+      .camera-viewfinder-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .camera-rec-timer {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: #ff334b;
+        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid rgba(255, 51, 75, 0.4);
+      }
+      .camera-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 16px 20px;
+        background: #110d1c;
+      }
+      .cam-btn {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        font-size: 22px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+      }
+      .cam-btn:hover { transform: scale(1.08); }
+      .cam-btn.snap {
+        width: 62px;
+        height: 62px;
+        background: linear-gradient(135deg, #ff3d8d, #a855f7);
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 61, 141, 0.4);
+      }
+      .cam-btn.record {
+        background: rgba(255, 50, 50, 0.2);
+        color: #ff334b;
+        border: 2px solid #ff334b;
+      }
+      .cam-btn.record.recording {
+        background: #ff334b;
+        color: #fff;
+        animation: pulseRec 1s infinite alternate;
+      }
+      .cam-btn.switch {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+      .cam-action-btn {
+        padding: 10px 22px;
+        border-radius: 25px;
+        border: none;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .cam-action-btn.retake {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .cam-action-btn.send {
+        background: linear-gradient(135deg, #ff3d8d, #a855f7);
+        color: #fff;
+        box-shadow: 0 4px 18px rgba(255, 61, 141, 0.4);
+      }
     </style>
     <link rel="stylesheet" href="css/animated-ui.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -1509,6 +1818,16 @@
         <span id="typingText"></span>
       </div>
 
+      <!-- REPLY PREVIEW BAR (Instagram swipe reply) -->
+      <div id="replyBar" class="reply-preview-bar" style="display: none;">
+        <div class="reply-bar-accent"></div>
+        <div class="reply-bar-content">
+          <div class="reply-bar-name" id="replyBarName">Replying to Priyanshu</div>
+          <div class="reply-bar-snippet" id="replyBarSnippet">Message snippet...</div>
+        </div>
+        <button type="button" class="reply-bar-close" id="cancelReplyBtn" title="Cancel Reply">✕</button>
+      </div>
+
       <!-- INPUT -->
 
       <form class="chat-input" id="chatForm" style="position: relative">
@@ -1517,13 +1836,17 @@
             📎
           </button>
           <div class="attach-menu" id="attachMenu">
-            <button type="button" class="attach-option" id="viewOnceOption">
-              <span class="attach-icon">👁️</span>
-              <span>View Once Photo (Disappears)</span>
+            <button type="button" class="attach-option" id="cameraOption">
+              <span class="attach-icon">📷</span>
+              <span>Camera (Photo &amp; Video)</span>
             </button>
             <button type="button" class="attach-option" id="photoOption">
               <span class="attach-icon">🖼️</span>
               <span>Photos &amp; videos</span>
+            </button>
+            <button type="button" class="attach-option" id="viewOnceOption">
+              <span class="attach-icon">👁️</span>
+              <span>View Once Photo (Disappears)</span>
             </button>
             <button type="button" class="attach-option" id="fileOption">
               <span class="attach-icon">📄</span>
@@ -1533,9 +1856,10 @@
           <input class="file-input" id="fileInput" type="file" />
         </div>
 
-        <button type="button" class="call-btn view-once-toggle-btn" id="viewOnceBtn" title="Send View Once Photo (Disappears after opened)">
-          👁️
+        <button type="button" class="call-btn chat-camera-btn" id="openCameraBtn" title="Take Photo or Video">
+          📷
         </button>
+        <input type="file" id="cameraDirectInput" accept="image/*,video/*" capture="environment" hidden />
         <input type="file" id="viewOnceFileInput" accept="image/*" hidden />
 
         <input
@@ -1631,11 +1955,14 @@
     </style>
 
     <div class="msg-menu" id="msgMenu" role="menu" aria-label="Message options">
+      <button type="button" role="menuitem" data-action="reply">
+        ↩️ Reply
+      </button>
       <button type="button" role="menuitem" data-action="copy">
         📋 Copy text
       </button>
       <button type="button" role="menuitem" data-action="unsend" class="danger">
-        ↩️ Unsend
+        🗑️ Unsend
       </button>
       <button type="button" role="menuitem" data-action="background">
         🎨 Chat background
@@ -1727,6 +2054,35 @@
       </div>
       <div class="view-once-img-wrap">
         <img id="viewOnceImg" src="" alt="View Once Photo" />
+    </div>
+
+    <!-- CAMERA CAPTURE MODAL -->
+    <div id="cameraModal" class="camera-modal" style="display: none;">
+      <div class="camera-card">
+        <div class="camera-header">
+          <div class="camera-title">📷 Photo &amp; Video Camera</div>
+          <button type="button" class="camera-close-btn" id="cameraCloseBtn" title="Close Camera">✕</button>
+        </div>
+        <div class="camera-viewfinder-wrap">
+          <video id="cameraViewfinder" autoplay playsinline muted></video>
+          <img id="cameraCapturedImg" style="display: none;" alt="Captured Photo" />
+          <video id="cameraRecordedVideo" controls playsinline style="display: none;"></video>
+          <div id="cameraRecTimer" class="camera-rec-timer" style="display: none;">
+            <span class="rec-dot"></span> <span id="cameraRecTimerText">0:00</span>
+          </div>
+        </div>
+        <div class="camera-controls" id="cameraLiveControls">
+          <button type="button" class="cam-btn switch" id="cameraSwitchBtn" title="Switch Front/Back Camera">🔄</button>
+          <button type="button" class="cam-btn snap" id="cameraSnapBtn" title="Take Photo">📸</button>
+          <button type="button" class="cam-btn record" id="cameraRecordBtn" title="Record Video">🎥</button>
+        </div>
+        <div class="camera-controls preview-controls" id="cameraPreviewControls" style="display: none;">
+          <button type="button" class="cam-action-btn retake" id="cameraRetakeBtn">🔄 Retake</button>
+          <button type="button" class="cam-action-btn send" id="cameraSendBtn">Send ▶️</button>
+        </div>
+        <div style="text-align: center; padding: 0 16px 12px; font-size: 12px;">
+          <a href="javascript:void(0)" id="cameraDeviceFallbackLink" style="color: #ff85b2; text-decoration: underline;">Use native device camera 📱</a>
+        </div>
       </div>
     </div>
 
@@ -1773,6 +2129,39 @@
       const attachBtn = document.getElementById("attachBtn");
       const attachMenu = document.getElementById("attachMenu");
       const fileInput = document.getElementById("fileInput");
+      const openCameraBtn = document.getElementById("openCameraBtn");
+      const cameraOption = document.getElementById("cameraOption");
+      const cameraDirectInput = document.getElementById("cameraDirectInput");
+      const cameraModal = document.getElementById("cameraModal");
+      const cameraCloseBtn = document.getElementById("cameraCloseBtn");
+      const cameraViewfinder = document.getElementById("cameraViewfinder");
+      const cameraCapturedImg = document.getElementById("cameraCapturedImg");
+      const cameraRecordedVideo = document.getElementById("cameraRecordedVideo");
+      const cameraRecTimer = document.getElementById("cameraRecTimer");
+      const cameraRecTimerText = document.getElementById("cameraRecTimerText");
+      const cameraLiveControls = document.getElementById("cameraLiveControls");
+      const cameraPreviewControls = document.getElementById("cameraPreviewControls");
+      const cameraSwitchBtn = document.getElementById("cameraSwitchBtn");
+      const cameraSnapBtn = document.getElementById("cameraSnapBtn");
+      const cameraRecordBtn = document.getElementById("cameraRecordBtn");
+      const cameraRetakeBtn = document.getElementById("cameraRetakeBtn");
+      const cameraSendBtn = document.getElementById("cameraSendBtn");
+      const cameraDeviceFallbackLink = document.getElementById("cameraDeviceFallbackLink");
+      let cameraStream = null;
+      let cameraMediaRecorder = null;
+      let cameraRecordedChunks = [];
+      let cameraRecInterval = null;
+      let cameraRecSecs = 0;
+      let cameraCapturedData = null;
+      let currentFacingMode = "user";
+
+      // Reply Bar
+      const replyBar = document.getElementById("replyBar");
+      const replyBarName = document.getElementById("replyBarName");
+      const replyBarSnippet = document.getElementById("replyBarSnippet");
+      const cancelReplyBtn = document.getElementById("cancelReplyBtn");
+      let currentReplyTarget = null;
+
       const viewOnceBtn = document.getElementById("viewOnceBtn");
       const viewOnceOption = document.getElementById("viewOnceOption");
       const viewOnceFileInput = document.getElementById("viewOnceFileInput");
@@ -1994,9 +2383,60 @@
       }
 
       // =========================
+      // REPLY SYSTEM (Instagram-style)
+      // =========================
+      function setReplyTarget(message) {
+        if (!message) {
+          cancelReply();
+          return;
+        }
+        const isMine = (message.sender || "").toString() === currentUserId;
+        const senderName = isMine ? "You" : (chatUserName || "They");
+        let snippet = "";
+        if (message.type === "view_once" || message.viewOnce) {
+          snippet = "📷 View once photo";
+        } else if (message.type === "image" || (typeof message.content === "string" && message.content.startsWith("data:image/"))) {
+          snippet = "📷 Photo";
+        } else if (message.type === "video" || (typeof message.content === "string" && message.content.startsWith("data:video/"))) {
+          snippet = "🎥 Video";
+        } else if (message.type === "audio" || (typeof message.content === "string" && message.content.startsWith("data:audio/"))) {
+          snippet = "🎤 Voice note";
+        } else if (typeof message.content === "string" && message.content.startsWith("__HM_ATTACHMENT__")) {
+          try {
+            const att = JSON.parse(message.content.slice(17));
+            snippet = att.name || "Attachment";
+          } catch (e) {
+            snippet = "Attachment";
+          }
+        } else {
+          snippet = message.content || "";
+        }
+        if (snippet.length > 55) snippet = snippet.slice(0, 52) + "...";
+
+        currentReplyTarget = {
+          messageId: message._id || "",
+          senderName: senderName,
+          text: snippet,
+        };
+
+        if (replyBar && replyBarName && replyBarSnippet) {
+          replyBarName.textContent = `Replying to ${senderName}`;
+          replyBarSnippet.textContent = snippet || "Message";
+          replyBar.classList.add("active");
+        }
+        messageInput?.focus();
+      }
+
+      function cancelReply() {
+        currentReplyTarget = null;
+        if (replyBar) replyBar.classList.remove("active");
+      }
+
+      cancelReplyBtn?.addEventListener("click", cancelReply);
+
+      // =========================
       // DISPLAY MESSAGE
       // =========================
-
       function displayMessage(message) {
         if (
           message._id &&
@@ -2012,6 +2452,31 @@
         row.id = `msg-${message._id}`;
         const bubble = document.createElement("div");
         bubble.className = "message";
+
+        // Quoted reply snippet if this message is a reply
+        if (message.replyTo && (message.replyTo.text || message.replyTo.messageId)) {
+          const quoted = document.createElement("div");
+          quoted.className = "quoted-reply-box";
+          quoted.innerHTML = `
+            <div class="quoted-sender">${escapeHTML(message.replyTo.senderName || "Replied message")}</div>
+            <div class="quoted-snippet">${escapeHTML(message.replyTo.text || "Message")}</div>
+          `;
+          if (message.replyTo.messageId) {
+            quoted.style.cursor = "pointer";
+            quoted.onclick = (e) => {
+              e.stopPropagation();
+              const targetMsg =
+                document.getElementById(`msg-${message.replyTo.messageId}`) ||
+                document.querySelector(`[data-message-id="${message.replyTo.messageId}"]`);
+              if (targetMsg) {
+                targetMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+                targetMsg.classList.add("message-highlight-pulse");
+                setTimeout(() => targetMsg.classList.remove("message-highlight-pulse"), 1600);
+              }
+            };
+          }
+          bubble.appendChild(quoted);
+        }
 
         let isViewOnce = message.type === "view_once" || Boolean(message.viewOnce);
         let viewOnceData = null;
@@ -2036,6 +2501,7 @@
 
         const isAudio = message.type === "audio" || (typeof message.content === "string" && message.content.startsWith("data:audio/"));
         const isImage = message.type === "image" || (typeof message.content === "string" && message.content.startsWith("data:image/"));
+        const isVideo = message.type === "video" || (typeof message.content === "string" && message.content.startsWith("data:video/"));
 
         if (isViewOnce) {
           row.dataset.type = "view_once";
@@ -2076,6 +2542,14 @@
           img.onclick = () => window.open(message.content, "_blank");
           bubble.appendChild(img);
           row.dataset.type = "image";
+        } else if (isVideo) {
+          const video = document.createElement("video");
+          video.className = "attach-preview";
+          video.src = message.content;
+          video.controls = true;
+          video.playsInline = true;
+          bubble.appendChild(video);
+          row.dataset.type = "video";
         } else if (attachment) {
           if (attachment.kind === "image") {
             const img = document.createElement("img");
@@ -2089,6 +2563,7 @@
             video.className = "attach-preview";
             video.src = attachment.data;
             video.controls = true;
+            video.playsInline = true;
             bubble.appendChild(video);
           } else {
             const card = document.createElement("div");
@@ -2102,6 +2577,12 @@
           bubble.appendChild(content);
           row.dataset.text = message.content;
         }
+
+        // Swipe-to-reply icon indicator
+        const swipeIcon = document.createElement("div");
+        swipeIcon.className = "swipe-reply-icon";
+        swipeIcon.innerHTML = "↩️";
+        row.appendChild(swipeIcon);
 
         // Reactions row
         const reactionsRow = document.createElement("div");
@@ -2139,13 +2620,160 @@
           row.appendChild(bubble);
           row.appendChild(reactBtn);
         }
+
+        // Attach Swipe-to-reply gesture
+        attachSwipeToReply(row, bubble, swipeIcon, message);
+
+        // Attach Instagram Long-Press emoji reactions
+        attachLongPressReaction(bubble, row, message._id);
+
+        // Desktop double-click to reply
+        bubble.addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          setReplyTarget(message);
+        });
+
         messagesContainer.appendChild(row);
+      }
+
+      // =========================
+      // SWIPE TO REPLY (Instagram Style)
+      // =========================
+      function attachSwipeToReply(row, bubble, swipeIcon, message) {
+        let startX = 0;
+        let startY = 0;
+        let diffX = 0;
+        let diffY = 0;
+        let isSwiping = false;
+        let hasDecided = false;
+        let hapticFired = false;
+
+        bubble.addEventListener(
+          "touchstart",
+          (e) => {
+            if (e.touches.length > 1) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            diffX = 0;
+            diffY = 0;
+            isSwiping = false;
+            hasDecided = false;
+            hapticFired = false;
+            bubble.style.transition = "none";
+          },
+          { passive: true },
+        );
+
+        bubble.addEventListener(
+          "touchmove",
+          (e) => {
+            if (e.touches.length > 1) return;
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            diffX = currentX - startX;
+            diffY = currentY - startY;
+
+            if (!hasDecided) {
+              if (Math.hypot(diffX, diffY) > 8) {
+                hasDecided = true;
+                if (Math.abs(diffX) > Math.abs(diffY) && diffX > 0) {
+                  isSwiping = true;
+                  cancelLongPress?.();
+                } else {
+                  isSwiping = false;
+                }
+              }
+            }
+
+            if (isSwiping && diffX > 0) {
+              if (e.cancelable) e.preventDefault();
+              const drag = Math.min(diffX * 0.42, 65);
+              bubble.style.transform = `translateX(${drag}px)`;
+              swipeIcon.style.opacity = `${Math.min(drag / 36, 1)}`;
+              swipeIcon.style.transform = `translateY(-50%) translateX(${Math.min(drag * 0.7, 36)}px) scale(${Math.min(0.6 + drag / 70, 1.15)})`;
+
+              if (drag > 44 && !hapticFired) {
+                navigator.vibrate?.(18);
+                hapticFired = true;
+              }
+            }
+          },
+          { passive: false },
+        );
+
+        const endSwipe = () => {
+          if (isSwiping) {
+            if (diffX > 55) {
+              setReplyTarget(message);
+              if (!hapticFired) navigator.vibrate?.(25);
+            }
+            bubble.style.transition = "transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)";
+            bubble.style.transform = "";
+            swipeIcon.style.transition = "all 0.22s ease";
+            swipeIcon.style.opacity = "0";
+            swipeIcon.style.transform = "translateY(-50%) scale(0.6)";
+            setTimeout(() => {
+              bubble.style.transition = "";
+              swipeIcon.style.transition = "";
+            }, 230);
+            isSwiping = false;
+          }
+        };
+
+        bubble.addEventListener("touchend", endSwipe, { passive: true });
+        bubble.addEventListener("touchcancel", endSwipe, { passive: true });
+      }
+
+      // =========================
+      // LONG PRESS EMOJI REACTION (Instagram Style)
+      // =========================
+      function attachLongPressReaction(bubble, row, messageId) {
+        let pressTimer = null;
+        let startX = 0;
+        let startY = 0;
+
+        bubble.addEventListener(
+          "touchstart",
+          (e) => {
+            if (e.touches.length > 1) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            pressTimer = setTimeout(() => {
+              navigator.vibrate?.(20);
+              toggleReactionPicker(row, messageId);
+            }, 360);
+          },
+          { passive: true },
+        );
+
+        bubble.addEventListener(
+          "touchmove",
+          (e) => {
+            if (!pressTimer) return;
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            if (Math.hypot(currentX - startX, currentY - startY) > 10) {
+              clearTimeout(pressTimer);
+              pressTimer = null;
+            }
+          },
+          { passive: true },
+        );
+
+        const cancel = () => {
+          if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+          }
+        };
+        bubble.addEventListener("touchend", cancel, { passive: true });
+        bubble.addEventListener("touchcancel", cancel, { passive: true });
       }
 
       // =========================
       // MESSAGE REACTIONS
       // =========================
-      const EMOJIS = ["❤️", "😂", "🔥", "👍", "😮"];
+      const EMOJIS = ["❤️", "😂", "🔥", "👍", "😮", "😢"];
 
       function toggleReactionPicker(row, messageId) {
         const existing = document.querySelector(".reaction-picker-bar");
@@ -2281,19 +2909,20 @@
             const reader = new FileReader();
             reader.onload = () => {
               const base64Audio = reader.result;
-              socket.emit(
-                "sendMessage",
-                {
-                  receiver: otherUserId,
-                  content: base64Audio,
-                  type: "audio",
-                },
-                (response) => {
-                  if (!response || !response.success) {
-                    alert(response?.message || "Failed to send voice note");
-                  }
-                },
-              );
+              const payload = {
+                receiver: otherUserId,
+                content: base64Audio,
+                type: "audio",
+              };
+              if (currentReplyTarget) {
+                payload.replyTo = currentReplyTarget;
+                cancelReply();
+              }
+              socket.emit("sendMessage", payload, (response) => {
+                if (!response || !response.success) {
+                  alert(response?.message || "Failed to send voice note");
+                }
+              });
             };
             reader.readAsDataURL(blob);
 
@@ -2641,14 +3270,17 @@
 
         sendBtn.disabled = true;
 
+        const payload = {
+          receiver: otherUserId,
+          content: content,
+        };
+        if (currentReplyTarget) {
+          payload.replyTo = currentReplyTarget;
+        }
+
         socket.emit(
           "sendMessage",
-          {
-            receiver: otherUserId,
-
-            content: content,
-          },
-
+          payload,
           function (response) {
             sendBtn.disabled = false;
 
@@ -2659,6 +3291,7 @@
             }
 
             messageInput.value = "";
+            cancelReply();
             updateInputBarState();
 
             messageInput.focus();
@@ -2715,23 +3348,24 @@
             : file.type.startsWith("video/")
               ? "video"
               : "file";
-          socket.emit(
-            "sendAttachment",
-            {
-              receiver: otherUserId,
-              attachment: {
-                kind,
-                name: file.name,
-                type: file.type,
-                data: reader.result,
-              },
+          const payload = {
+            receiver: otherUserId,
+            attachment: {
+              kind,
+              name: file.name,
+              type: file.type,
+              data: reader.result,
             },
-            (response) => {
-              if (!response || !response.success)
-                alert(response?.message || "Failed to send attachment");
-              fileInput.value = "";
-            },
-          );
+          };
+          if (currentReplyTarget) {
+            payload.replyTo = currentReplyTarget;
+            cancelReply();
+          }
+          socket.emit("sendAttachment", payload, (response) => {
+            if (!response || !response.success)
+              alert(response?.message || "Failed to send attachment");
+            fileInput.value = "";
+          });
         };
         reader.readAsDataURL(file);
       });
@@ -2877,8 +3511,328 @@
       window.openViewOnceModal = openViewOnceModal;
 
       // =========================
-      // MESSAGE MENU (right click / long press)
+      // IN-APP CAMERA & RECORDING
       // =========================
+      async function startCameraStream(facingMode = "user") {
+        stopCameraStream();
+        currentFacingMode = facingMode;
+        try {
+          const constraints = {
+            audio: true,
+            video: {
+              facingMode: { ideal: facingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          };
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (cameraViewfinder) {
+            cameraViewfinder.srcObject = cameraStream;
+            cameraViewfinder.style.display = "block";
+            cameraViewfinder.play().catch(() => {});
+          }
+        } catch (err) {
+          console.warn("Could not start camera with audio, falling back to video only:", err);
+          try {
+            const fallbackConstraints = {
+              video: { facingMode: { ideal: facingMode } },
+            };
+            cameraStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+            if (cameraViewfinder) {
+              cameraViewfinder.srcObject = cameraStream;
+              cameraViewfinder.style.display = "block";
+              cameraViewfinder.play().catch(() => {});
+            }
+          } catch (e) {
+            console.error("Camera access failed:", e);
+            alert("Unable to access camera directly in browser. Opening device camera...");
+            closeCameraModal();
+            cameraDirectInput?.click();
+          }
+        }
+      }
+
+      function stopCameraStream() {
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((t) => t.stop());
+          cameraStream = null;
+        }
+        if (cameraViewfinder) {
+          cameraViewfinder.srcObject = null;
+        }
+      }
+
+      function openCameraModal() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          cameraDirectInput?.click();
+          return;
+        }
+        retakeCameraCapture();
+        if (cameraModal) cameraModal.style.display = "flex";
+        startCameraStream(currentFacingMode);
+      }
+
+      function closeCameraModal() {
+        if (cameraMediaRecorder && cameraMediaRecorder.state === "recording") {
+          try { cameraMediaRecorder.stop(); } catch (e) {}
+        }
+        clearInterval(cameraRecInterval);
+        cameraRecInterval = null;
+        stopCameraStream();
+        if (cameraModal) cameraModal.style.display = "none";
+        retakeCameraCapture();
+      }
+
+      function snapCameraPhoto() {
+        if (!cameraViewfinder || !cameraStream) return;
+        const video = cameraViewfinder;
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 480;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        if (currentFacingMode === "user") {
+          ctx.translate(width, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        cameraCapturedData = {
+          type: "image",
+          data: dataUrl,
+          name: `photo_${Date.now()}.jpg`,
+        };
+
+        if (cameraCapturedImg) {
+          cameraCapturedImg.src = dataUrl;
+          cameraCapturedImg.style.display = "block";
+        }
+        video.style.display = "none";
+        if (cameraLiveControls) cameraLiveControls.style.display = "none";
+        if (cameraPreviewControls) cameraPreviewControls.style.display = "flex";
+      }
+
+      function startCameraRecording() {
+        if (!cameraStream) return;
+        cameraRecordedChunks = [];
+        let options = { mimeType: "video/webm;codecs=vp9,opus" };
+        if (typeof MediaRecorder !== "undefined" && !MediaRecorder.isTypeSupported(options.mimeType)) {
+          options = { mimeType: "video/webm;codecs=vp8,opus" };
+          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options = { mimeType: "video/webm" };
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+              options = { mimeType: "video/mp4" };
+              if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                options = {};
+              }
+            }
+          }
+        }
+        try {
+          cameraMediaRecorder = new MediaRecorder(cameraStream, options);
+        } catch (e) {
+          cameraMediaRecorder = new MediaRecorder(cameraStream);
+        }
+
+        cameraMediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) cameraRecordedChunks.push(e.data);
+        };
+
+        cameraMediaRecorder.onstop = () => {
+          const blob = new Blob(cameraRecordedChunks, {
+            type: cameraMediaRecorder.mimeType || "video/webm",
+          });
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            cameraCapturedData = {
+              type: "video",
+              data: dataUrl,
+              name: `video_${Date.now()}.webm`,
+            };
+            if (cameraRecordedVideo) {
+              cameraRecordedVideo.src = dataUrl;
+              cameraRecordedVideo.style.display = "block";
+              cameraRecordedVideo.play().catch(() => {});
+            }
+            if (cameraViewfinder) cameraViewfinder.style.display = "none";
+            if (cameraLiveControls) cameraLiveControls.style.display = "none";
+            if (cameraPreviewControls) cameraPreviewControls.style.display = "flex";
+          };
+          reader.readAsDataURL(blob);
+        };
+
+        cameraMediaRecorder.start();
+        cameraRecSecs = 0;
+        if (cameraRecTimerText) cameraRecTimerText.textContent = "0:00";
+        if (cameraRecTimer) cameraRecTimer.style.display = "flex";
+        if (cameraRecordBtn) {
+          cameraRecordBtn.classList.add("recording");
+          cameraRecordBtn.title = "Stop Recording";
+          cameraRecordBtn.textContent = "⏹️";
+        }
+        if (cameraSnapBtn) cameraSnapBtn.disabled = true;
+        if (cameraSwitchBtn) cameraSwitchBtn.disabled = true;
+
+        cameraRecInterval = setInterval(() => {
+          cameraRecSecs++;
+          const m = Math.floor(cameraRecSecs / 60);
+          const s = cameraRecSecs % 60;
+          if (cameraRecTimerText) cameraRecTimerText.textContent = `${m}:${s < 10 ? "0" : ""}${s}`;
+          if (cameraRecSecs >= 60) {
+            stopCameraRecording();
+          }
+        }, 1000);
+      }
+
+      function stopCameraRecording() {
+        clearInterval(cameraRecInterval);
+        cameraRecInterval = null;
+        if (cameraRecTimer) cameraRecTimer.style.display = "none";
+        if (cameraRecordBtn) {
+          cameraRecordBtn.classList.remove("recording");
+          cameraRecordBtn.title = "Record Video";
+          cameraRecordBtn.textContent = "🎥";
+        }
+        if (cameraSnapBtn) cameraSnapBtn.disabled = false;
+        if (cameraSwitchBtn) cameraSwitchBtn.disabled = false;
+
+        if (cameraMediaRecorder && cameraMediaRecorder.state === "recording") {
+          cameraMediaRecorder.stop();
+        }
+      }
+
+      function retakeCameraCapture() {
+        cameraCapturedData = null;
+        if (cameraCapturedImg) {
+          cameraCapturedImg.src = "";
+          cameraCapturedImg.style.display = "none";
+        }
+        if (cameraRecordedVideo) {
+          cameraRecordedVideo.pause();
+          cameraRecordedVideo.src = "";
+          cameraRecordedVideo.style.display = "none";
+        }
+        if (cameraViewfinder) cameraViewfinder.style.display = "block";
+        if (cameraLiveControls) cameraLiveControls.style.display = "flex";
+        if (cameraPreviewControls) cameraPreviewControls.style.display = "none";
+        if (cameraRecTimer) cameraRecTimer.style.display = "none";
+      }
+
+      function sendCameraCapture() {
+        if (!cameraCapturedData) return;
+        const payload = {
+          receiver: otherUserId,
+          attachment: {
+            kind: cameraCapturedData.type,
+            name: cameraCapturedData.name,
+            type: cameraCapturedData.type === "image" ? "image/jpeg" : "video/webm",
+            data: cameraCapturedData.data,
+          },
+        };
+        if (currentReplyTarget) {
+          payload.replyTo = currentReplyTarget;
+          cancelReply();
+        }
+
+        socket.emit("sendAttachment", payload, (response) => {
+          if (!response || !response.success) {
+            alert(response?.message || "Failed to send camera capture");
+          }
+        });
+        closeCameraModal();
+      }
+
+      function switchCameraFacing() {
+        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+        startCameraStream(currentFacingMode);
+      }
+
+      openCameraBtn?.addEventListener("click", openCameraModal);
+      cameraOption?.addEventListener("click", () => {
+        attachMenu?.classList.remove("open");
+        openCameraModal();
+      });
+      cameraCloseBtn?.addEventListener("click", closeCameraModal);
+      cameraSnapBtn?.addEventListener("click", snapCameraPhoto);
+      cameraRecordBtn?.addEventListener("click", () => {
+        if (cameraMediaRecorder && cameraMediaRecorder.state === "recording") {
+          stopCameraRecording();
+        } else {
+          startCameraRecording();
+        }
+      });
+      cameraSwitchBtn?.addEventListener("click", switchCameraFacing);
+      cameraRetakeBtn?.addEventListener("click", retakeCameraCapture);
+      cameraSendBtn?.addEventListener("click", sendCameraCapture);
+      cameraDeviceFallbackLink?.addEventListener("click", () => {
+        closeCameraModal();
+        cameraDirectInput?.click();
+      });
+
+      // Direct fallback file picker listener
+      cameraDirectInput?.addEventListener("change", async () => {
+        const file = cameraDirectInput.files && cameraDirectInput.files[0];
+        if (!file) return;
+        const isImg = file.type.startsWith("image/");
+        const isVid = file.type.startsWith("video/");
+        if (!isImg && !isVid) {
+          alert("Please select a photo or video.");
+          cameraDirectInput.value = "";
+          return;
+        }
+
+        try {
+          if (isImg) {
+            const dataUrl = await compressImage(file, 1600, 0.85);
+            const payload = {
+              receiver: otherUserId,
+              attachment: {
+                kind: "image",
+                name: file.name || "photo.jpg",
+                type: "image/jpeg",
+                data: dataUrl,
+              },
+            };
+            if (currentReplyTarget) {
+              payload.replyTo = currentReplyTarget;
+              cancelReply();
+            }
+            socket.emit("sendAttachment", payload, (res) => {
+              if (!res || !res.success) alert(res?.message || "Failed to send photo");
+              cameraDirectInput.value = "";
+            });
+          } else {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const payload = {
+                receiver: otherUserId,
+                attachment: {
+                  kind: "video",
+                  name: file.name || "video.mp4",
+                  type: file.type || "video/mp4",
+                  data: reader.result,
+                },
+              };
+              if (currentReplyTarget) {
+                payload.replyTo = currentReplyTarget;
+                cancelReply();
+              }
+              socket.emit("sendAttachment", payload, (res) => {
+                if (!res || !res.success) alert(res?.message || "Failed to send video");
+                cameraDirectInput.value = "";
+              });
+            };
+            reader.readAsDataURL(file);
+          }
+        } catch (err) {
+          console.error("Camera direct file error:", err);
+          cameraDirectInput.value = "";
+        }
+      });
       const msgMenu = document.getElementById("msgMenu");
       const menuCopy = msgMenu.querySelector('[data-action="copy"]');
       const menuUnsend = msgMenu.querySelector('[data-action="unsend"]');
@@ -2999,7 +3953,16 @@
         const action = event.target.closest("button")?.dataset.action;
         const row = menuTargetRow;
         closeMessageMenu();
-        if (action === "copy" && row?.dataset.text) {
+        if (action === "reply" && row) {
+          const msgId = row.dataset.messageId;
+          const isMine = row.dataset.mine === "1";
+          const snippet = row.dataset.text || (row.querySelector(".quoted-snippet")?.textContent) || (row.dataset.type === "image" ? "Photo" : row.dataset.type === "video" ? "Video" : "Message");
+          setReplyTarget({
+            _id: msgId,
+            sender: isMine ? currentUserId : otherUserId,
+            content: snippet,
+          });
+        } else if (action === "copy" && row?.dataset.text) {
           try {
             await navigator.clipboard.writeText(row.dataset.text);
           } catch (e) {

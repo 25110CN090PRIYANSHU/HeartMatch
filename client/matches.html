@@ -844,7 +844,7 @@
                 if (currentTab === "matches") {
                     actionHTML = `
                         <button class="chat-btn" onclick="openChat('${user._id}')">
-                            💬 Start Chat
+                            ${user.lastMessage ? '💬 Continue Chat' : '💬 Start Chat'}
                         </button>
                     `;
                 } else {
@@ -860,6 +860,19 @@
                     `;
                 }
 
+                const snippetHTML = (currentTab === "matches" && user.lastMessage) ? `
+                    <div class="last-msg-preview" style="display:flex; align-items:center; justify-content:space-between; gap:6px; background:rgba(255,255,255,0.05); padding:7px 10px; border-radius:10px; margin:8px 0; border:1px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:12px; color:${user.unreadCount > 0 ? '#ff85b2' : '#ccc'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">
+                            ${user.lastMessageSender === 'mine' ? '<span style="opacity:0.65">You: </span>' : ''}<b>${escapeHTML(user.lastMessage)}</b>
+                        </div>
+                        ${user.unreadCount > 0 ? `<span style="background:linear-gradient(135deg, #ff3d8d, #a855f7); color:#fff; font-size:10px; font-weight:bold; border-radius:10px; padding:2px 7px;">${user.unreadCount}</span>` : ''}
+                    </div>
+                ` : `
+                    <div class="bio">
+                        ${escapeHTML(user.bio || (currentTab === "matches" ? "Say hello and start getting to know each other. 💕" : "Liked your profile! Match with them now."))}
+                    </div>
+                `;
+
                 card.innerHTML = `
                     <div class="photo" onclick="viewPerson('${user._id}')" style="cursor: pointer;" title="View full profile">
                         ${photoHTML}
@@ -872,9 +885,7 @@
                         <div class="location">
                             📍 ${escapeHTML(user.location || "Location not specified")}
                         </div>
-                        <div class="bio">
-                            ${escapeHTML(user.bio || (currentTab === "matches" ? "Say hello and start getting to know each other. 💕" : "Liked your profile! Match with them now."))}
-                        </div>
+                        ${snippetHTML}
                         ${actionHTML}
                         <button class="view-profile-btn" onclick="viewPerson('${user._id}')">
                             View Full Profile ↗

@@ -79,7 +79,7 @@ router.get("/test", (req, res) =>
 
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, age, gender } = req.body || {};
+    const { name, email, password, age, gender, profileImage } = req.body || {};
     const normalizedName = String(name || "").trim();
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const numericAge = Number(age);
@@ -97,6 +97,10 @@ router.post("/signup", async (req, res) => {
       return res
         .status(400)
         .json({ message: "Please provide valid account details" });
+    if (!profileImage || typeof profileImage !== "string" || !profileImage.trim())
+      return res
+        .status(400)
+        .json({ message: "Uploading a profile picture is mandatory 📸" });
     if (numericAge < 18 || numericAge > 100)
       return res.status(400).json({ message: "HeartMatch is 18+ only" });
     if (typeof password !== "string" || password.length < 8)
@@ -110,14 +114,49 @@ router.post("/signup", async (req, res) => {
     const isAdmin =
       !!process.env.ADMIN_EMAIL &&
       normalizedEmail === process.env.ADMIN_EMAIL.toLowerCase().trim();
+
+    const uniqueUserId = await generateUniqueUserId(normalizedName);
+    let finalProfileImage = "";
+    let finalProfileImageFileId = null;
+
+    if (profileImage.startsWith("data:image/") && mongoose.connection.db) {
+      try {
+        const matches = profileImage.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (matches) {
+          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+          const buffer = Buffer.from(matches[2], "base64");
+          const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+            bucketName: "profileImages",
+          });
+          const uploadStream = bucket.openUploadStream(`signup-${uniqueUserId}-${Date.now()}.${ext}`, {
+            contentType: `image/${matches[1]}`,
+          });
+          await new Promise((resolve, reject) => {
+            uploadStream.on("finish", resolve);
+            uploadStream.on("error", reject);
+            uploadStream.end(buffer);
+          });
+          finalProfileImageFileId = uploadStream.id;
+          finalProfileImage = `/api/profile/photo/${uniqueUserId}`;
+        }
+      } catch (err) {
+        console.error("Error saving signup profile image to GridFS:", err);
+      }
+    }
+    if (!finalProfileImage) {
+      finalProfileImage = profileImage;
+    }
+
     const user = await User.create({
-      userId: await generateUniqueUserId(normalizedName),
+      userId: uniqueUserId,
       name: normalizedName,
       email: normalizedEmail,
       password: await bcrypt.hash(password, 12),
       age: numericAge,
       gender,
       lookingFor,
+      profileImage: finalProfileImage,
+      profileImageFileId: finalProfileImageFileId,
       isAdmin,
     });
     const raw = crypto.randomBytes(32).toString("hex");

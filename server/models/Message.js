@@ -28,8 +28,14 @@ const messageSchema = new mongoose.Schema(
 
         type: {
             type: String,
-            enum: ["text", "image", "audio", "view_once"],
+            enum: ["text", "image", "video", "audio", "view_once"],
             default: "text"
+        },
+
+        replyTo: {
+            messageId: { type: mongoose.Schema.Types.ObjectId, ref: "Message", default: null },
+            text: { type: String, default: "" },
+            senderName: { type: String, default: "" }
         },
 
         viewOnce: {

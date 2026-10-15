@@ -181,9 +181,23 @@ video {
   padding: 13px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.05);
+  background: #191426;
   color: #fff;
   outline: none;
+  color-scheme: dark !important;
+}
+select {
+  color-scheme: dark !important;
+}
+select option {
+  background-color: #1a1528 !important;
+  color: #ffffff !important;
+  padding: 10px 14px !important;
+}
+select option:checked,
+select option:hover {
+  background-color: #ff3d8d !important;
+  color: #ffffff !important;
 }
 .field textarea {
   min-height: 110px;

@@ -87,6 +87,7 @@ img, video, canvas, iframe { max-width: 100%; }
   .search-input {
     min-height: 46px;
     font-size: 16px; /* prevents iOS/phone browser zoom */
+    color-scheme: dark !important;
   }
 
   .field textarea { min-height: 105px; }
