@@ -847,25 +847,28 @@
         flex-shrink: 0;
       }
       .attach-menu {
-        position: absolute;
-        bottom: 58px;
-        left: 0;
-        width: 220px;
-        min-width: 220px;
-        background: #1c182a;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 16px;
-        padding: 8px;
+        position: absolute !important;
+        bottom: 54px !important;
+        left: 0 !important;
+        width: 240px !important;
+        min-width: 240px !important;
+        max-width: calc(100vw - 24px) !important;
+        box-sizing: border-box !important;
+        background: rgba(23, 19, 34, 0.96) !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
+        border-radius: 18px !important;
+        padding: 8px !important;
         display: none;
-        flex-direction: column;
-        gap: 4px;
-        z-index: 100;
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(16px);
+        flex-direction: column !important;
+        gap: 4px !important;
+        z-index: 1000 !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
       }
       .attach-menu.open {
         display: flex !important;
-        animation: attachMenuPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: attachMenuPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
       }
       @keyframes attachMenuPop {
         from { opacity: 0; transform: translateY(8px) scale(0.96); }
@@ -873,32 +876,35 @@
       }
       .attach-option {
         display: flex !important;
-        align-items: center;
-        gap: 12px;
+        align-items: center !important;
+        gap: 12px !important;
         width: 100% !important;
-        padding: 10px 14px;
-        border: 0;
-        background: transparent;
-        color: #fff;
-        text-align: left;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 10px;
-        cursor: pointer;
+        box-sizing: border-box !important;
+        padding: 11px 14px !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: #fff !important;
+        text-align: left !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        border-radius: 12px !important;
+        cursor: pointer !important;
         white-space: nowrap !important;
-        transition: background 0.18s ease, transform 0.15s ease;
+        transition: background 0.18s ease, transform 0.15s ease !important;
       }
-      .attach-option:hover {
-        background: rgba(255, 255, 255, 0.08) !important;
-        transform: translateX(3px);
+      .attach-option:hover,
+      .attach-option:active {
+        background: rgba(255, 255, 255, 0.1) !important;
+        transform: translateX(3px) !important;
       }
       .attach-option .attach-icon {
-        font-size: 18px;
-        width: 24px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
+        font-size: 19px !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
       }
 
       /* Chat input circular buttons */
@@ -1271,12 +1277,15 @@
           width: min(100%, 280px);
         }
         .attach-menu {
-          min-width: 0;
-          width: min(220px, calc(100vw - 32px));
+          width: 240px !important;
+          min-width: 220px !important;
+          max-width: calc(100vw - 24px) !important;
+          box-sizing: border-box !important;
         }
         .attach-option {
-          width: 100%;
-          white-space: nowrap;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          white-space: nowrap !important;
         }
         .call-top {
           padding-top: 18px;
@@ -1951,10 +1960,6 @@
               <span class="attach-icon">🖼️</span>
               <span>Photos &amp; videos</span>
             </button>
-            <button type="button" class="attach-option" id="viewOnceOption">
-              <span class="attach-icon">👁️</span>
-              <span>View Once Photo (Disappears)</span>
-            </button>
             <button type="button" class="attach-option" id="fileOption">
               <span class="attach-icon">📄</span>
               <span>Document</span>
@@ -1967,7 +1972,6 @@
           📷
         </button>
         <input type="file" id="cameraDirectInput" accept="image/*,video/*" capture="environment" hidden />
-        <input type="file" id="viewOnceFileInput" accept="image/*" hidden />
 
         <input
           type="text"
@@ -2117,9 +2121,10 @@
         ><video id="localVideo" autoplay muted playsinline></video>
       </div>
       <div class="call-controls">
-        <button class="call-control" id="muteBtn" type="button">🎙️</button
-        ><button class="call-control" id="cameraBtn" type="button">📷</button
-        ><button class="call-control end" id="endCallBtn" type="button">
+        <button class="call-control" id="muteBtn" type="button" title="Mute/Unmute Mic">🎙️</button
+        ><button class="call-control" id="cameraBtn" type="button" title="Turn Video On/Off">📷</button
+        ><button class="call-control" id="flipCameraBtn" type="button" title="Switch Camera (Front/Rear)">🔄</button
+        ><button class="call-control end" id="endCallBtn" type="button" title="End Call">
           ☎
         </button>
       </div>
@@ -2303,6 +2308,7 @@
       const localVideo = document.getElementById("localVideo");
       const muteBtn = document.getElementById("muteBtn");
       const cameraBtn = document.getElementById("cameraBtn");
+      const flipCameraBtn = document.getElementById("flipCameraBtn");
       const endCallBtn = document.getElementById("endCallBtn");
       const userName = document.getElementById("userName");
 
@@ -4481,6 +4487,11 @@ function openCall(
         : "Audio call";
   }
 
+  if (flipCameraBtn) {
+    flipCameraBtn.style.display = mode === "video" ? "inline-flex" : "none";
+    flipCameraBtn.title = "Switch Camera (Front/Rear)";
+  }
+
   if (callStatus) {
     callStatus.textContent = statusText;
   }
@@ -4500,6 +4511,14 @@ remoteMediaStream = null;
 
   if (localVideo) {
     localVideo.srcObject = null;
+    localVideo.style.transform = "scaleX(-1)";
+  }
+
+  callFacingMode = "user";
+  if (flipCameraBtn) {
+    flipCameraBtn.style.transform = "";
+    flipCameraBtn.classList.remove("flipping");
+    flipCameraBtn.title = "Switch Camera (Front/Rear)";
   }
 
   if (callStatus) {
@@ -5519,6 +5538,90 @@ cameraBtn?.addEventListener(
 
 
 // --------------------------------------------------
+// FLIP CAMERA (FRONT <-> REAR/BACK)
+// --------------------------------------------------
+
+let callFacingMode = "user"; // "user" (front/selfie) or "environment" (rear/back)
+let isFlippingCamera = false;
+
+async function flipCallCamera() {
+  if (isFlippingCamera) return;
+  if (!localStream || callMode !== "video") return;
+
+  const currentVideoTrack = localStream.getVideoTracks()[0];
+  if (!currentVideoTrack) return;
+
+  isFlippingCamera = true;
+  if (flipCameraBtn) {
+    flipCameraBtn.classList.add("flipping");
+  }
+
+  const nextFacingMode = callFacingMode === "user" ? "environment" : "user";
+
+  try {
+    let newStream = null;
+    try {
+      newStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: nextFacingMode },
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+        },
+      });
+    } catch (err1) {
+      console.warn("Retrying camera switch with simple constraints:", err1);
+      newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: nextFacingMode },
+      });
+    }
+
+    const newVideoTrack = newStream?.getVideoTracks()[0];
+    if (!newVideoTrack) {
+      throw new Error("No video track found for switched camera");
+    }
+
+    // 1. Replace track in RTCPeerConnection sender so remote peer sees new camera stream
+    if (peer) {
+      const senders = peer.getSenders ? peer.getSenders() : [];
+      const videoSender = senders.find((s) => s.track && s.track.kind === "video");
+      if (videoSender) {
+        await videoSender.replaceTrack(newVideoTrack);
+      }
+    }
+
+    // 2. Stop old track and swap in localStream
+    currentVideoTrack.stop();
+    localStream.removeTrack(currentVideoTrack);
+    localStream.addTrack(newVideoTrack);
+
+    // 3. Update local preview element
+    if (localVideo) {
+      localVideo.srcObject = localStream;
+      // Front camera is mirrored for natural selfie feel; rear camera is not mirrored
+      localVideo.style.transform = nextFacingMode === "environment" ? "scaleX(1)" : "scaleX(-1)";
+    }
+
+    callFacingMode = nextFacingMode;
+    if (flipCameraBtn) {
+      flipCameraBtn.title = nextFacingMode === "user" ? "Switch to Rear Camera" : "Switch to Front Camera";
+    }
+  } catch (err) {
+    console.error("Failed to switch camera:", err);
+    alert("Could not switch camera. Your device might only have one camera available.");
+  } finally {
+    setTimeout(() => {
+      if (flipCameraBtn) {
+        flipCameraBtn.classList.remove("flipping");
+      }
+      isFlippingCamera = false;
+    }, 280);
+  }
+}
+
+flipCameraBtn?.addEventListener("click", flipCallCamera);
+
+
+// --------------------------------------------------
 // PAGE CLOSE
 // --------------------------------------------------
 
@@ -5638,6 +5741,14 @@ window.addEventListener(
   border: 1px solid rgba(255,255,255,.08) !important;
   font-size: 20px !important;
   box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background 0.2s, transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2) !important;
+}
+.call-overlay .call-control#flipCameraBtn.flipping {
+  transform: rotate(180deg) scale(0.92) !important;
 }
 .call-overlay .call-control.end {
   width: 56px !important;
@@ -5659,8 +5770,8 @@ window.addEventListener(
     max-width: calc(100% - 135px) !important;
     padding-left: 14px !important;
   }
-  .call-overlay .call-controls { gap: 7px !important; }
-  .call-overlay .call-control { width: 48px !important; height: 48px !important; flex-basis: 48px !important; }
-  .call-overlay .call-control.end { width: 52px !important; height: 52px !important; flex-basis: 52px !important; }
+  .call-overlay .call-controls { gap: 8px !important; padding: 6px 10px !important; }
+  .call-overlay .call-control { width: 46px !important; height: 46px !important; flex: 0 0 46px !important; font-size: 18px !important; }
+  .call-overlay .call-control.end { width: 50px !important; height: 50px !important; flex: 0 0 50px !important; font-size: 20px !important; }
 }
 </style>
