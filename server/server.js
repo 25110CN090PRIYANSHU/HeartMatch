@@ -128,8 +128,9 @@ app.use("/api/discover", discoverRoutes);
 
 app.use("/api/notifications", notificationRoutes);
 
-// Pass Socket.IO to like routes
+// Pass Socket.IO to like routes (both plural and singular supported)
 app.use("/api/likes", likeRoutes(io));
+app.use("/api/like", likeRoutes(io));
 
 app.use("/api/matches", matchRoutes);
 

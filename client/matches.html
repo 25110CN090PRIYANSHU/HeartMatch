@@ -817,6 +817,13 @@
                     <input type="text" id="storyReplyInput" class="hm-story-reply-input" placeholder="Send message..." onkeydown="if(event.key==='Enter') sendStoryReply()" />
                     <button class="hm-story-send-btn" onclick="sendStoryReply()">Send</button>
                 </div>
+            <!-- Bottom Instagram-style Seen By footer (for your own stories) -->
+            <div class="hm-story-self-footer" id="storySelfFooter" style="display: none;" onclick="openStoryViewersSheet()">
+                <div class="hm-story-viewer-avatars-preview" id="storyViewerAvatarsPreview"></div>
+                <div class="hm-story-seen-label">
+                    <span id="storySeenCountText">Seen by 0</span>
+                    <span class="hm-story-seen-chevron">▲</span>
+                </div>
             </div>
 
             <!-- Feedback Toast -->
@@ -1226,6 +1233,9 @@
             const deleteBtn = document.getElementById("storyDeleteBtn");
             const addMoreBtn = document.getElementById("storyAddMoreBtn");
             const footer = document.getElementById("storyFooter");
+            const selfFooter = document.getElementById("storySelfFooter");
+            const seenCountText = document.getElementById("storySeenCountText");
+            const avatarsPreview = document.getElementById("storyViewerAvatarsPreview");
 
             if (avatarEl) avatarEl.src = user?.profileImage || "/images/icons/icon-192.png";
             if (nameEl) nameEl.textContent = group.isSelf ? "Your Story" : (user?.name || "User");
@@ -1234,15 +1244,27 @@
             if (group.isSelf) {
                 if (viewsBtn) {
                     viewsBtn.style.display = "flex";
-                    if (viewsCount) viewsCount.textContent = story.viewsCount || (story.viewers?.length || 0);
+                    if (viewsCount) viewsCount.textContent = story.viewsCount !== undefined ? story.viewsCount : (story.viewers?.length || 0);
                 }
                 if (deleteBtn) deleteBtn.style.display = "flex";
                 if (addMoreBtn) addMoreBtn.style.display = "flex";
                 if (footer) footer.style.display = "none";
+                if (selfFooter) {
+                    selfFooter.style.display = "flex";
+                    const viewers = story.viewers || [];
+                    const vCount = story.viewsCount !== undefined ? story.viewsCount : viewers.length;
+                    if (seenCountText) seenCountText.textContent = `Seen by ${vCount}`;
+                    if (avatarsPreview) {
+                        avatarsPreview.innerHTML = viewers.slice(0, 3).map(v => 
+                            `<img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" alt="${escapeAttribute(v.name || 'User')}" onerror="this.src='/images/icons/icon-192.png'" />`
+                        ).join('');
+                    }
+                }
             } else {
                 if (viewsBtn) viewsBtn.style.display = "none";
                 if (deleteBtn) deleteBtn.style.display = "none";
                 if (addMoreBtn) addMoreBtn.style.display = "none";
+                if (selfFooter) selfFooter.style.display = "none";
                 if (footer) footer.style.display = "flex";
 
                 // Mark as viewed on server
@@ -1422,8 +1444,26 @@
                 stage.addEventListener("mousedown", pause);
                 window.addEventListener("mouseup", resume);
 
-                stage.addEventListener("touchstart", pause, { passive: true });
-                window.addEventListener("touchend", resume);
+                let touchStartY = 0;
+                stage.addEventListener("touchstart", (e) => {
+                    pause();
+                    if (e.touches && e.touches[0]) {
+                        touchStartY = e.touches[0].clientY;
+                    }
+                }, { passive: true });
+
+                window.addEventListener("touchend", (e) => {
+                    resume();
+                    if (e.changedTouches && e.changedTouches[0]) {
+                        const diffY = touchStartY - e.changedTouches[0].clientY;
+                        if (diffY > 55) {
+                            const group = getCurrentGroupData();
+                            if (group && group.isSelf) {
+                                openStoryViewersSheet();
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -1530,20 +1570,25 @@
             const viewers = story.viewers || [];
             if (viewers.length === 0) {
                 list.innerHTML = `
-                    <div style="text-align: center; color: var(--hm-text-muted); padding: 24px 0;">
-                        <div style="font-size: 32px; margin-bottom: 8px;">👁️</div>
-                        <p>No views yet</p>
-                        <small>When mutual matches watch your story, they will appear here.</small>
+                    <div style="text-align: center; color: var(--hm-text-muted); padding: 32px 0;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">👁️</div>
+                        <p style="font-weight: 700; color: #fff; margin-bottom: 4px;">No views yet</p>
+                        <small style="color: rgba(255,255,255,0.6);">When mutual matches watch your story, they will appear here.</small>
                     </div>
                 `;
             } else {
                 list.innerHTML = viewers.map(v => `
-                    <div class="hm-story-viewer-row">
-                        <img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;" onerror="this.src='/images/icons/icon-192.png'" />
-                        <div style="flex: 1;">
-                            <div style="font-weight: 700; font-size: 14px; color: #fff;">${escapeHTML(v.name || 'User')}</div>
-                            <div style="font-size: 11px; color: var(--hm-text-muted);">${formatStoryTime(v.viewedAt)}</div>
+                    <div class="hm-story-viewer-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                            <img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.25);" onerror="this.src='/images/icons/icon-192.png'" />
+                            <div style="min-width: 0; flex: 1;">
+                                <div style="font-weight: 700; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(v.name || 'User')}</div>
+                                <div style="font-size: 11px; color: var(--hm-text-muted);">${formatStoryTime(v.viewedAt)}</div>
+                            </div>
                         </div>
+                        <a href="chat.html?user=${encodeURIComponent(v._id)}" class="hm-viewer-chat-btn" title="Message ${escapeAttribute(v.name)}">
+                            💬 Message
+                        </a>
                     </div>
                 `).join('');
             }
@@ -1557,7 +1602,7 @@
             isPaused = false;
         }
 
-        // Initialize story tap & pause handlers
+        // Initialize story tap, pause & swipe-up handlers
         initStoryInteractions();
 
         function render() {

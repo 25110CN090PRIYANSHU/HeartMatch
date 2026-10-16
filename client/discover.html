@@ -153,7 +153,41 @@
 
     <div id="grid" class="grid"></div>
     <div id="swipeView" class="swipe-mode-wrap" style="display:none"></div>
+
+    <!-- FLOATING GOLDEN REWIND BUTTON -->
+    <button id="hmFloatingRewindBtn" class="hm-floating-rewind-btn" type="button" title="Rewind / Undo Last Swipe (Z or Backspace)" disabled>↺</button>
   </main>
+
+  <!-- FULLSCREEN IT'S A MATCH CELEBRATION MODAL -->
+  <div id="hmMatchModal" class="hm-match-modal" style="display: none;">
+    <canvas id="hmMatchConfettiCanvas" class="hm-match-confetti-canvas"></canvas>
+    <div class="hm-match-backdrop" onclick="stopMatchCelebration()"></div>
+    <div class="hm-match-card">
+      <div class="hm-match-badge">IT'S A MATCH! 💕</div>
+      <p class="hm-match-subtitle" id="hmMatchSubtitle">You and someone liked each other</p>
+      
+      <div class="hm-match-avatars-wrap">
+        <div class="hm-match-avatar-col left">
+          <img id="hmMatchMyAvatar" src="/images/icons/icon-192.png" alt="You" />
+          <span class="hm-match-avatar-name">You</span>
+        </div>
+        <div class="hm-match-heart-burst">💖</div>
+        <div class="hm-match-avatar-col right">
+          <img id="hmMatchTheirAvatar" src="/images/icons/icon-192.png" alt="Match" />
+          <span id="hmMatchTheirName" class="hm-match-avatar-name">Match</span>
+        </div>
+      </div>
+
+      <div class="hm-match-actions">
+        <button type="button" id="hmMatchChatBtn" class="hm-match-btn-chat">
+          <span>💬 Send a Message</span>
+        </button>
+        <button type="button" id="hmMatchKeepBtn" class="hm-match-btn-keep">
+          <span>Keep Swiping</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="/js/app.js"></script>
   <script>
@@ -345,8 +379,10 @@
         const compScore = u.compatibility || 75;
 
         return `
-        <article class="card">
-          <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
+        <article class="card" data-id="${u._id}">
+          <div class="card-img-wrap" style="position:relative;overflow:hidden;border-radius:14px;cursor:pointer;" onclick="handleCardPhotoTap(this, '${u._id}', event)" title="Double-tap to like ❤️">
+            <img class="profile-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE" style="width:100%;display:block;">
+          </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
             <h3 style="margin:0">${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
             <span class="compatibility-pill">⚡ ${compScore}% Match</span>
@@ -406,7 +442,9 @@
               <div class="swipe-card-item" id="swipeCard_${i}" data-id="${u._id}" data-userid="${u.userId || u._id}" style="z-index:${zIndex};transform:translateY(${translateY}px) scale(${scale})">
                 <span class="swipe-badge like">LIKE ❤️</span>
                 <span class="swipe-badge pass">PASS ✖️</span>
-                <img class="swipe-card-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE">
+                <div style="position:relative;width:100%;height:380px;overflow:hidden;cursor:pointer;" onclick="handleCardPhotoTap(this, '${u._id}', event)" title="Double-tap to like ❤️">
+                  <img class="swipe-card-img" src="${profileImage(u)}" alt="Profile" onerror="this.onerror=null;this.src=HM_FALLBACK_IMAGE" style="width:100%;height:100%;object-fit:cover;">
+                </div>
                 <div class="swipe-card-body">
                   <div style="display:flex;justify-content:space-between;align-items:center">
                     <h3 style="margin:0;font-size:20px">${HM.esc(u.name)}, ${HM.esc(u.age)} ${u.isVerified ? "✓" : ""}</h3>
@@ -430,13 +468,180 @@
           <button id="swipeInfoBtn" class="swipe-circle-btn star" title="View Profile" type="button">ℹ️</button>
           <button id="swipeLikeBtn" class="swipe-circle-btn like" title="Like (Right arrow)" type="button">❤️</button>
         </div>
-        <p class="muted" style="text-align:center;font-size:12px;margin-top:10px">Tip: Drag card or use ← / → / ⏪ Rewind</p>
+        <p class="muted" style="text-align:center;font-size:12px;margin-top:10px">Tip: Drag card or double-tap photo to like ❤️</p>
       `;
 
       initSwipeGestures();
     }
 
     let swipeHistory = [];
+    let myProfile = null;
+
+    async function fetchMyProfile() {
+      try {
+        const { r, d } = await HM.api("/api/profile/me");
+        if (r.ok && d?.user) {
+          myProfile = d.user;
+        }
+      } catch (err) {}
+    }
+
+    // Double-tap to Like detection
+    let lastCardTapTime = 0;
+    let lastCardTapEl = null;
+
+    function handleCardPhotoTap(containerEl, userId, e) {
+      const now = Date.now();
+      if (lastCardTapEl === containerEl && (now - lastCardTapTime) < 380) {
+        e.stopPropagation();
+        lastCardTapTime = 0;
+        lastCardTapEl = null;
+
+        // Spawn flying heart animation
+        const rect = containerEl.getBoundingClientRect();
+        const heart = document.createElement("div");
+        heart.className = "hm-heart-burst-fly";
+        heart.innerHTML = "💖";
+        const x = e.clientX ? (e.clientX - rect.left) : (rect.width / 2);
+        const y = e.clientY ? (e.clientY - rect.top) : (rect.height / 2);
+        heart.style.left = `${x}px`;
+        heart.style.top = `${y}px`;
+        containerEl.appendChild(heart);
+        setTimeout(() => heart.remove(), 900);
+
+        if (navigator.vibrate) navigator.vibrate([25, 50]);
+
+        if (currentMode === "swipe") {
+          triggerCardSwipe("like");
+        } else {
+          const card = containerEl.closest("article.card");
+          const likeBtn = card?.querySelector("button[onclick*='like']");
+          act(userId, "like", likeBtn);
+        }
+        return;
+      }
+      lastCardTapTime = now;
+      lastCardTapEl = containerEl;
+    }
+
+    function updateRewindButtonState() {
+      const swipeRewindBtn = document.getElementById("swipeRewindBtn");
+      const floatRewindBtn = document.getElementById("hmFloatingRewindBtn");
+      const hasHistory = swipeHistory && swipeHistory.length > 0;
+      if (swipeRewindBtn) swipeRewindBtn.disabled = !hasHistory;
+      if (floatRewindBtn) {
+        floatRewindBtn.disabled = !hasHistory;
+        floatRewindBtn.style.opacity = hasHistory ? "1" : "0.35";
+      }
+    }
+
+    // Confetti animation for Match celebration
+    let confettiActive = false;
+    let confettiAnimId = null;
+
+    function runMatchConfetti() {
+      const canvas = document.getElementById("hmMatchConfettiCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = [];
+      const colors = ["#ff3f8e", "#a855f7", "#ff8a65", "#ffd700", "#38bdf8", "#34d399", "#ffffff"];
+      for (let i = 0; i < 90; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height * 0.4 - 50,
+          w: Math.random() * 9 + 6,
+          h: Math.random() * 5 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 5,
+          vy: Math.random() * 4 + 2.5,
+          rot: Math.random() * 360,
+          vrot: (Math.random() - 0.5) * 8
+        });
+      }
+
+      confettiActive = true;
+      function loop() {
+        if (!confettiActive) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vrot;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+          if (p.y > canvas.height) {
+            p.y = -20;
+            p.x = Math.random() * canvas.width;
+          }
+        });
+        confettiAnimId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function stopMatchConfetti() {
+      confettiActive = false;
+      if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+      const canvas = document.getElementById("hmMatchConfettiCanvas");
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function showMatchCelebration(targetUser) {
+      if (!targetUser) return;
+      const modal = document.getElementById("hmMatchModal");
+      const myAvatar = document.getElementById("hmMatchMyAvatar");
+      const theirAvatar = document.getElementById("hmMatchTheirAvatar");
+      const theirName = document.getElementById("hmMatchTheirName");
+      const subtitle = document.getElementById("hmMatchSubtitle");
+      const chatBtn = document.getElementById("hmMatchChatBtn");
+      const keepBtn = document.getElementById("hmMatchKeepBtn");
+
+      const myPhoto = (myProfile && (myProfile.profileImage || (myProfile.photos && myProfile.photos[0]))) || "/images/icons/icon-192.png";
+      const theirPhoto = profileImage(targetUser);
+
+      if (myAvatar) myAvatar.src = myPhoto;
+      if (theirAvatar) theirAvatar.src = theirPhoto;
+      if (theirName) theirName.textContent = targetUser.name || "Match";
+      if (subtitle) subtitle.textContent = `You and ${targetUser.name || "they"} liked each other!`;
+
+      if (chatBtn) {
+        chatBtn.onclick = () => {
+          stopMatchCelebration();
+          window.location.href = `chat.html?user=${encodeURIComponent(targetUser._id)}`;
+        };
+      }
+
+      if (keepBtn) {
+        keepBtn.onclick = stopMatchCelebration;
+      }
+
+      if (navigator.vibrate) navigator.vibrate([40, 80, 140]);
+
+      if (modal) {
+        modal.style.display = "flex";
+        requestAnimationFrame(() => modal.classList.add("open"));
+      }
+      runMatchConfetti();
+    }
+
+    function stopMatchCelebration() {
+      const modal = document.getElementById("hmMatchModal");
+      if (modal) {
+        modal.classList.remove("open");
+        setTimeout(() => { modal.style.display = "none"; }, 350);
+      }
+      stopMatchConfetti();
+    }
 
     async function rewindLastSwipe() {
       if (swipeHistory.length === 0) {
@@ -444,8 +649,9 @@
         return;
       }
       const last = swipeHistory.pop();
+      updateRewindButtonState();
       try {
-        const { r, d } = await HM.api("/api/like/undo", {
+        const { r, d } = await HM.api("/api/likes/undo", {
           method: "POST",
           body: { to: last.id }
         });
@@ -453,8 +659,20 @@
           setMessage(d.message || "Could not undo swipe", "err");
           return;
         }
-        currentSwipeIndex = Math.max(0, last.index);
-        renderSwipeDeck();
+
+        // Put user back into loadedUsers at beginning
+        if (last.user && !loadedUsers.some(u => String(u._id) === String(last.id))) {
+          loadedUsers.unshift(last.user);
+          updateBadge(loadedUsers.length);
+        }
+
+        if (currentMode === "swipe") {
+          currentSwipeIndex = Math.max(0, (last.index !== undefined ? last.index : currentSwipeIndex - 1));
+          renderSwipeDeck();
+        } else {
+          renderUsers(loadedUsers);
+        }
+
         setMessage("Undid last swipe ⏪", "ok");
         setTimeout(() => setMessage(""), 2200);
       } catch (err) {
@@ -702,6 +920,7 @@
 
     async function act(id, type, button) {
       if (button) button.disabled = true;
+      const targetUser = loadedUsers.find(u => String(u._id) === String(id));
       try {
         const { r, d } = await HM.api("/api/likes", {
           method: "POST",
@@ -710,6 +929,17 @@
         if (!r.ok) {
           if (button) button.disabled = false;
           return;
+        }
+
+        // Add to swipeHistory for Rewind
+        if (targetUser) {
+          swipeHistory.push({ id, user: targetUser, direction: type, index: currentSwipeIndex });
+          updateRewindButtonState();
+        }
+
+        // Mutual Match Celebration!
+        if (d?.matched && targetUser) {
+          showMatchCelebration(targetUser);
         }
 
         // Remove from loaded users
@@ -760,6 +990,11 @@
     if (applyFiltersBtn) applyFiltersBtn.addEventListener("click", load);
     if (resetFiltersBtn) resetFiltersBtn.addEventListener("click", resetFilters);
 
+    const floatRewindBtn = document.getElementById("hmFloatingRewindBtn");
+    if (floatRewindBtn) {
+      floatRewindBtn.addEventListener("click", rewindLastSwipe);
+    }
+
     [filterCategory, filterLookingFor, filterInterest, filterSortBy, filterVerified, filterOnline, filterPhoto, filterBio].forEach(el => {
       if (el) el.addEventListener("change", load);
     });
@@ -779,6 +1014,7 @@
       if (event.key === "Enter") searchUser();
     });
 
+    fetchMyProfile();
     load();
   </script>
   <script src="js/notification-badge.js"></script>

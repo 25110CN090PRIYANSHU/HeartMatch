@@ -1357,4 +1357,398 @@ div.hm-bottom-dock,
   width: 100%;
 }
 
+/* ==========================================================
+   1. FULLSCREEN "IT'S A MATCH!" CELEBRATION MODAL
+   ========================================================== */
+.hm-match-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hm-match-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.hm-match-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(35, 14, 48, 0.95), rgba(8, 6, 16, 0.98));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.hm-match-confetti-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.hm-match-card {
+  position: relative;
+  z-index: 2;
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 24px;
+  gap: 16px;
+  animation: hmMatchCardPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes hmMatchCardPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.hm-match-badge {
+  font-size: clamp(32px, 8vw, 44px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #ff3f8e, #ff8a65, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(255, 63, 142, 0.65));
+  animation: hmMatchPulse 2s ease-in-out infinite;
+}
+@keyframes hmMatchPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.hm-match-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: -6px;
+}
+.hm-match-avatars-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 22px 0 14px;
+}
+.hm-match-avatar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.hm-match-avatar-col.left img {
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3.5px solid #ff3f8e;
+  box-shadow: 0 0 35px rgba(255, 63, 142, 0.6);
+  transform: rotate(-8deg) translateX(14px);
+  animation: hmAvatarSlideLeft 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.hm-match-avatar-col.right img {
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3.5px solid #a855f7;
+  box-shadow: 0 0 35px rgba(168, 85, 247, 0.6);
+  transform: rotate(8deg) translateX(-14px);
+  animation: hmAvatarSlideRight 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes hmAvatarSlideLeft {
+  0% { transform: translateX(-80px) rotate(-30deg); opacity: 0; }
+  100% { transform: rotate(-8deg) translateX(14px); opacity: 1; }
+}
+@keyframes hmAvatarSlideRight {
+  0% { transform: translateX(80px) rotate(30deg); opacity: 0; }
+  100% { transform: rotate(8deg) translateX(-14px); opacity: 1; }
+}
+.hm-match-avatar-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.hm-match-heart-burst {
+  position: absolute;
+  z-index: 5;
+  font-size: 40px;
+  filter: drop-shadow(0 0 15px rgba(255, 63, 142, 0.8));
+  animation: hmCenterHeartPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes hmCenterHeartPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.hm-match-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+}
+.hm-match-btn-chat {
+  width: 100%;
+  padding: 15px 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff3f8e, #a855f7);
+  border: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(255, 63, 142, 0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.hm-match-btn-chat:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 35px rgba(255, 63, 142, 0.7);
+}
+.hm-match-btn-keep {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.hm-match-btn-keep:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================
+   2. DOUBLE-TAP HEART BURST
+   ========================================================== */
+.hm-heart-burst-fly {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 68px;
+  z-index: 100;
+  animation: hmHeartBurstFly 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes hmHeartBurstFly {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(-15deg);
+    opacity: 0;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1.4) rotate(0deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px rgba(255, 63, 142, 0.95));
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, calc(-50% - 60px)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================
+   3. FLOATING GOLDEN REWIND BUTTON
+   ========================================================== */
+.hm-floating-rewind-btn {
+  position: fixed;
+  bottom: 86px;
+  right: 20px;
+  z-index: 90;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.45);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hm-floating-rewind-btn:hover {
+  transform: scale(1.08) rotate(-15deg);
+  box-shadow: 0 14px 32px rgba(245, 158, 11, 0.6);
+}
+.hm-floating-rewind-btn:active {
+  transform: scale(0.95);
+}
+.hm-floating-rewind-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================
+   4. INSTAGRAM-STYLE STORY "SEEN BY" BOTTOM BAR & SHEET
+   ========================================================== */
+.hm-story-self-footer {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+.hm-story-self-footer:hover {
+  background: rgba(0, 0, 0, 0.78);
+  transform: translateY(-2px);
+}
+.hm-story-viewer-avatars-preview {
+  display: flex;
+  align-items: center;
+}
+.hm-story-viewer-avatars-preview img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #fff;
+  margin-right: -8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.hm-story-seen-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.hm-story-seen-chevron {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.hm-viewer-chat-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff3f8e, #a855f7);
+  color: #fff !important;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 3px 12px rgba(255, 63, 142, 0.35);
+  transition: transform 0.15s;
+}
+.hm-viewer-chat-btn:hover {
+  transform: scale(1.05);
+}
+
+/* ==========================================================
+   5. WHATSAPP-STYLE WAVEFORM AUDIO PLAYER
+   ========================================================== */
+.hm-waveform-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 15px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  max-width: 320px;
+  min-width: 230px;
+  user-select: none;
+  box-sizing: border-box;
+}
+.message-row.mine .hm-waveform-player {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.hm-waveform-player .hm-play-btn {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff3f8e, #a855f7);
+  border: 0;
+  color: #fff;
+  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 63, 142, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hm-waveform-player .hm-play-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(255, 63, 142, 0.6);
+}
+.hm-waveform-player .hm-wave-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.hm-waveform-player .hm-wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 26px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.hm-waveform-player .hm-wave-bar {
+  flex: 1;
+  min-width: 2.5px;
+  background: rgba(255, 255, 255, 0.32);
+  border-radius: 3px;
+  transition: height 0.12s, background 0.12s;
+}
+.hm-waveform-player .hm-wave-bar.played {
+  background: #ff3f8e;
+  box-shadow: 0 0 6px rgba(255, 63, 142, 0.5);
+}
+.hm-waveform-player .hm-wave-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+.hm-waveform-player .hm-speed-btn {
+  background: rgba(255, 255, 255, 0.14);
+  border: 0;
+  color: #fff;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.hm-waveform-player .hm-speed-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 

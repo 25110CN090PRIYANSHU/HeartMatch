@@ -2565,6 +2565,139 @@
       cancelReplyBtn?.addEventListener("click", cancelReply);
 
       // =========================
+      // WHATSAPP-STYLE WAVEFORM AUDIO PLAYER
+      // =========================
+      function createWaveformAudioPlayer(src) {
+        const player = document.createElement("div");
+        player.className = "hm-waveform-player";
+
+        const audio = new Audio();
+        audio.preload = "metadata";
+        audio.src = src;
+
+        const playBtn = document.createElement("button");
+        playBtn.type = "button";
+        playBtn.className = "hm-play-btn";
+        playBtn.innerHTML = "▶";
+        playBtn.title = "Play voice note";
+
+        const waveWrap = document.createElement("div");
+        waveWrap.className = "hm-wave-wrap";
+
+        const waveBars = document.createElement("div");
+        waveBars.className = "hm-wave-bars";
+
+        // Generate 26 speech-like waveform bars with pseudo-random amplitudes
+        const barCount = 26;
+        const barHeights = [
+          25, 45, 60, 35, 75, 90, 65, 40, 80, 100, 70, 50, 85,
+          95, 60, 45, 70, 85, 55, 40, 65, 50, 40, 30, 20, 15
+        ];
+        const barElements = [];
+        for (let i = 0; i < barCount; i++) {
+          const bar = document.createElement("div");
+          bar.className = "hm-wave-bar";
+          const h = barHeights[i % barHeights.length];
+          bar.style.height = `${Math.max(15, h)}%`;
+          waveBars.appendChild(bar);
+          barElements.push(bar);
+        }
+
+        const waveMeta = document.createElement("div");
+        waveMeta.className = "hm-wave-meta";
+
+        const timeEl = document.createElement("span");
+        timeEl.textContent = "0:00";
+
+        const speedBtn = document.createElement("button");
+        speedBtn.type = "button";
+        speedBtn.className = "hm-speed-btn";
+        speedBtn.textContent = "1x";
+        speedBtn.title = "Change speed";
+
+        waveMeta.appendChild(timeEl);
+        waveMeta.appendChild(speedBtn);
+
+        waveWrap.appendChild(waveBars);
+        waveWrap.appendChild(waveMeta);
+
+        player.appendChild(playBtn);
+        player.appendChild(waveWrap);
+
+        function formatAudioTime(seconds) {
+          if (isNaN(seconds) || seconds < 0) return "0:00";
+          const m = Math.floor(seconds / 60);
+          const s = Math.floor(seconds % 60);
+          return `${m}:${s < 10 ? "0" : ""}${s}`;
+        }
+
+        audio.addEventListener("loadedmetadata", () => {
+          timeEl.textContent = formatAudioTime(audio.duration);
+        });
+
+        audio.addEventListener("timeupdate", () => {
+          const curr = audio.currentTime;
+          const dur = audio.duration || 1;
+          const progress = curr / dur;
+          timeEl.textContent = `${formatAudioTime(curr)} / ${formatAudioTime(dur)}`;
+
+          const activeIndex = Math.floor(progress * barCount);
+          barElements.forEach((b, idx) => {
+            if (idx <= activeIndex) {
+              b.classList.add("played");
+            } else {
+              b.classList.remove("played");
+            }
+          });
+        });
+
+        audio.addEventListener("ended", () => {
+          playBtn.innerHTML = "▶";
+          barElements.forEach(b => b.classList.remove("played"));
+          timeEl.textContent = formatAudioTime(audio.duration);
+        });
+
+        playBtn.addEventListener("click", () => {
+          if (window._currentPlayingAudio && window._currentPlayingAudio !== audio) {
+            window._currentPlayingAudio.pause();
+          }
+          if (audio.paused) {
+            audio.play().then(() => {
+              playBtn.innerHTML = "⏸";
+              window._currentPlayingAudio = audio;
+            }).catch(err => console.warn("Audio play error:", err));
+          } else {
+            audio.pause();
+            playBtn.innerHTML = "▶";
+          }
+        });
+
+        audio.addEventListener("pause", () => {
+          playBtn.innerHTML = "▶";
+        });
+
+        waveBars.addEventListener("click", (e) => {
+          const rect = waveBars.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const pct = Math.max(0, Math.min(1, clickX / rect.width));
+          if (audio.duration) {
+            audio.currentTime = pct * audio.duration;
+          }
+        });
+
+        const speeds = [1, 1.5, 2];
+        let speedIdx = 0;
+        speedBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          speedIdx = (speedIdx + 1) % speeds.length;
+          audio.playbackRate = speeds[speedIdx];
+          speedBtn.textContent = `${speeds[speedIdx]}x`;
+        });
+
+        return player;
+      }
+
+      // =========================
       // DISPLAY MESSAGE
       // =========================
       function displayMessage(message) {
@@ -2655,13 +2788,8 @@
             bubble.appendChild(openBtn);
           }
         } else if (isAudio) {
-          const audioWrap = document.createElement("div");
-          audioWrap.className = "msg-audio-player";
-          const audioEl = document.createElement("audio");
-          audioEl.controls = true;
-          audioEl.src = message.content;
-          audioWrap.appendChild(audioEl);
-          bubble.appendChild(audioWrap);
+          const waveformPlayer = createWaveformAudioPlayer(message.content);
+          bubble.appendChild(waveformPlayer);
           row.dataset.type = "audio";
         } else if (isImage) {
           const img = document.createElement("img");
