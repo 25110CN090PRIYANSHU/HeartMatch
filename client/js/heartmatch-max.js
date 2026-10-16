@@ -27,9 +27,12 @@
     const isNotifs = path.endsWith('/notifications.html');
     const isProfile = path.endsWith('/profile.html') || path.endsWith('/person.html') || path.endsWith('/settings.html');
 
-    const dock = document.createElement('nav');
+    const dock = document.createElement('div');
     dock.className = 'hm-bottom-dock';
+    dock.id = 'hmBottomDock';
+    dock.setAttribute('role', 'navigation');
     dock.setAttribute('aria-label', 'Mobile Navigation');
+    dock.style.cssText = 'position: fixed !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 999999 !important;';
     dock.innerHTML = `
       <a href="discover.html" class="hm-dock-item ${isDiscover ? 'active' : ''}">
         <span class="hm-dock-icon">🔥</span>
