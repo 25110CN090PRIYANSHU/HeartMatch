@@ -1,12 +1,86 @@
 /* ==========================================================================
    HEARTMATCH MAX // CLIENT ENGINE
-   Handles chat double-tap heart reactions and UI interactions.
+   Handles mobile sticky bottom navigation, chat double-tap heart reactions,
+   and dynamic badges.
    ========================================================================== */
 
 (function () {
   'use strict';
 
-  // 1. Chat Double-Tap to Heart Reaction
+  // 1. Instagram-Style Sticky Bottom Navigation Bar (Mobile Only)
+  function initBottomDock() {
+    const path = window.location.pathname.toLowerCase();
+    
+    // Do not show on auth pages or chat
+    const excludedPages = ['chat.html', 'login.html', 'signup.html', 'forgot-password.html', 'reset-password.html', 'admin.html', 'verify.html'];
+    const isExcluded = excludedPages.some(page => path.endsWith('/' + page) || path.includes(page));
+    if (isExcluded) {
+      if (path.includes('chat.html')) document.body.classList.add('in-chat-page');
+      return;
+    }
+
+    // Prevent duplicate injection
+    if (document.querySelector('.hm-bottom-dock')) return;
+
+    const isDiscover = path.endsWith('/discover.html') || path.endsWith('/') || path.endsWith('/index.html');
+    const isMatches = path.endsWith('/matches.html');
+    const isNotifs = path.endsWith('/notifications.html');
+    const isProfile = path.endsWith('/profile.html') || path.endsWith('/person.html') || path.endsWith('/settings.html');
+
+    const dock = document.createElement('nav');
+    dock.className = 'hm-bottom-dock';
+    dock.setAttribute('aria-label', 'Mobile Navigation');
+    dock.innerHTML = `
+      <a href="discover.html" class="hm-dock-item ${isDiscover ? 'active' : ''}">
+        <span class="hm-dock-icon">🔥</span>
+        <span class="hm-dock-label">Discover</span>
+      </a>
+      <a href="matches.html" class="hm-dock-item ${isMatches ? 'active' : ''}">
+        <span class="hm-dock-icon">💬</span>
+        <span class="hm-dock-label">Matches</span>
+        <span class="hm-dock-badge" id="hmMatchesBadge" style="display: none;">0</span>
+      </a>
+      <a href="notifications.html" class="hm-dock-item ${isNotifs ? 'active' : ''}">
+        <span class="hm-dock-icon">🔔</span>
+        <span class="hm-dock-label">Alerts</span>
+        <span class="hm-dock-badge" id="hmNotifsBadge" style="display: none;">0</span>
+      </a>
+      <a href="profile.html" class="hm-dock-item ${isProfile ? 'active' : ''}">
+        <span class="hm-dock-icon">👤</span>
+        <span class="hm-dock-label">Profile</span>
+      </a>
+    `;
+
+    document.body.appendChild(dock);
+
+    // Sync notification badge count from server
+    syncDockBadges();
+  }
+
+  async function syncDockBadges() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const res = await fetch('/api/notifications/unread-count', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const badge = document.getElementById('hmNotifsBadge');
+        if (badge) {
+          if (data.unreadCount > 0) {
+            badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 2. Chat Double-Tap to Heart Reaction
   function initChatDoubleTap() {
     const messagesContainer = document.querySelector('.messages') || document.getElementById('messages');
     if (!messagesContainer) return;
@@ -55,17 +129,20 @@
     }
   }
 
-  // 2. Auto-initialize when DOM is ready
+  // 3. Auto-initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+      initBottomDock();
       initChatDoubleTap();
     });
   } else {
+    initBottomDock();
     initChatDoubleTap();
   }
 
   // Expose global HeartMatchMax utility
   window.HMM = {
+    syncBadges: syncDockBadges,
     triggerHeartBurst: triggerHeartBurst
   };
 })();
