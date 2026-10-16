@@ -1,0 +1,606 @@
+/* ==========================================================================
+   HEARTMATCH MAX // EXTREME UI ENGINE (60-120 FPS GPU ACCELERATED)
+   Engineered for ultra-smooth mobile & desktop experience.
+   Uses transform & opacity only — zero CPU repaints, zero lag.
+   ========================================================================== */
+
+:root {
+  --hm-pink: #ff3d8d;
+  --hm-pink-glow: rgba(255, 61, 141, 0.35);
+  --hm-purple: #8b5cf6;
+  --hm-purple-glow: rgba(139, 92, 246, 0.3);
+  --hm-cyan: #06b6d4;
+  --hm-green: #10b981;
+  --hm-dark-bg: #090812;
+  --hm-surface: rgba(20, 16, 34, 0.82);
+  --hm-surface-card: rgba(26, 21, 44, 0.75);
+  --hm-border: rgba(255, 255, 255, 0.08);
+  --hm-border-bright: rgba(255, 255, 255, 0.16);
+  --hm-text-main: #ffffff;
+  --hm-text-muted: rgba(255, 255, 255, 0.6);
+  --hm-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --hm-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   1. FLOATING MOBILE BOTTOM NAVIGATION DOCK (iOS/Android Native Feel)
+   ========================================================================== */
+.hm-bottom-dock {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hm-bottom-dock {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 12px !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateZ(0) !important;
+    width: min(92%, 400px) !important;
+    height: 64px !important;
+    background: rgba(15, 12, 26, 0.92) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 36px !important;
+    padding: 0 10px !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 61, 141, 0.15) !important;
+    z-index: 9999 !important;
+    will-change: transform;
+  }
+
+  /* Safe area for iPhone home indicator */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .hm-bottom-dock {
+      bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    }
+  }
+
+  .hm-dock-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 48px;
+    text-decoration: none;
+    color: var(--hm-text-muted);
+    transition: transform 0.25s var(--hm-spring), color 0.2s ease;
+    border-radius: 20px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .hm-dock-item:active {
+    transform: scale(0.88);
+  }
+
+  .hm-dock-icon {
+    font-size: 22px;
+    transition: transform 0.3s var(--hm-spring);
+    line-height: 1;
+  }
+
+  .hm-dock-label {
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 3px;
+    letter-spacing: -0.01em;
+    opacity: 0.85;
+  }
+
+  .hm-dock-item.active {
+    color: #ffffff;
+  }
+
+  .hm-dock-item.active .hm-dock-icon {
+    transform: translateY(-2px) scale(1.15);
+    filter: drop-shadow(0 2px 8px var(--hm-pink));
+  }
+
+  .hm-dock-item.active .hm-dock-label {
+    color: var(--hm-pink);
+    font-weight: 800;
+  }
+
+  .hm-dock-badge {
+    position: absolute;
+    top: 2px;
+    right: 8px;
+    background: linear-gradient(135deg, #ff3d8d, #ff1744);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 2px 8px rgba(255, 61, 141, 0.6);
+    border: 2px solid #0f0c1a;
+    pointer-events: none;
+    animation: hmBadgePop 0.3s var(--hm-spring);
+  }
+
+  /* Padding spacer so page content isn't covered by bottom dock */
+  body:not(.in-chat-page) {
+    padding-bottom: 90px !important;
+  }
+
+  /* Hide the top navbar on mobile when bottom dock is used */
+  nav.nav, .nav {
+    display: none !important;
+  }
+}
+
+@keyframes hmBadgePop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* ==========================================================================
+   2. SKELETON SHIMMER ENGINE (Instant Feedback, Zero Blank States)
+   ========================================================================== */
+.hm-skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.04) 75%);
+  background-size: 200% 100%;
+  animation: hmShimmer 1.6s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes hmShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   3. "NEW MATCHES" STORY TRAY (Instagram/Raya Style)
+   ========================================================================== */
+.hm-stories-section {
+  width: 100%;
+  padding: 14px 0 6px 0;
+  margin-bottom: 12px;
+}
+
+.hm-stories-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--hm-text-muted);
+}
+
+.hm-stories-count {
+  background: rgba(255, 61, 141, 0.15);
+  color: var(--hm-pink);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.hm-stories-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 16px 12px 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hm-stories-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.hm-story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  width: 68px;
+  transition: transform 0.2s var(--hm-spring);
+}
+
+.hm-story-item:active {
+  transform: scale(0.92);
+}
+
+.hm-story-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: linear-gradient(135deg, #ff3d8d, #8b5cf6, #38bdf8);
+  box-shadow: 0 4px 16px rgba(255, 61, 141, 0.35);
+  animation: hmRingGlow 4s ease infinite alternate;
+}
+
+@keyframes hmRingGlow {
+  0% { filter: drop-shadow(0 2px 8px rgba(255, 61, 141, 0.4)); }
+  100% { filter: drop-shadow(0 4px 14px rgba(139, 92, 246, 0.5)); }
+}
+
+.hm-story-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #1a162b;
+  border: 2px solid #090812;
+  display: block;
+}
+
+.hm-story-online-pip {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 13px;
+  height: 13px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2.5px solid #090812;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.hm-story-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  max-width: 66px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   4. 3D DISCOVER SWIPE CARD STACK & LIKE/NOPE STAMPS
+   ========================================================================== */
+.hm-discover-stage {
+  position: relative;
+  width: min(94vw, 420px);
+  height: min(72vh, 600px);
+  margin: 10px auto;
+  perspective: 1000px;
+}
+
+.hm-card-3d-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Background preview cards in stack */
+.hm-stack-peek-1 {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: rgba(30, 24, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transform: translateY(12px) scale(0.95) translateZ(-20px);
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 0.3s var(--hm-smooth);
+}
+
+.hm-stack-peek-2 {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: rgba(22, 17, 36, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transform: translateY(22px) scale(0.90) translateZ(-40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Segmented Story Photo Bars at top of Discover Cards */
+.hm-card-photo-bars {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  gap: 5px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hm-card-photo-bar {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 3px;
+  overflow: hidden;
+  transition: background 0.25s ease;
+}
+
+.hm-card-photo-bar.active {
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+/* Dynamic Live LIKE / NOPE / SUPERLIKE Stamps */
+.hm-stamp {
+  position: absolute;
+  top: 40px;
+  padding: 6px 18px;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  border: 4px solid;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 25;
+  will-change: opacity, transform;
+}
+
+.hm-stamp-like {
+  right: 24px;
+  color: #10b981;
+  border-color: #10b981;
+  transform: rotate(14deg);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.hm-stamp-nope {
+  left: 24px;
+  color: #ef4444;
+  border-color: #ef4444;
+  transform: rotate(-14deg);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.hm-stamp-super {
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) rotate(0deg);
+  color: #38bdf8;
+  border-color: #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+/* ==========================================================================
+   5. RADIAL COMPATIBILITY SCORE GAUGE
+   ========================================================================== */
+.hm-gauge-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.hm-gauge-svg {
+  transform: rotate(-90deg);
+  width: 90px;
+  height: 90px;
+}
+
+.hm-gauge-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 7;
+}
+
+.hm-gauge-fill {
+  fill: none;
+  stroke: url(#hmGaugeGradient);
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s var(--hm-smooth);
+}
+
+.hm-gauge-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.hm-gauge-percent {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ff3d8d, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.hm-gauge-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--hm-text-muted);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   6. HINGE-STYLE PROFILE PROMPT CARDS
+   ========================================================================== */
+.hm-prompt-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin: 12px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hm-prompt-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #ff3d8d, #8b5cf6);
+}
+
+.hm-prompt-question {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ff6aa9;
+  margin-bottom: 6px;
+}
+
+.hm-prompt-answer {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   7. DOUBLE-TAP HEART BURST ON CHAT
+   ========================================================================== */
+.hm-heart-burst {
+  position: absolute;
+  pointer-events: none;
+  font-size: 42px;
+  animation: hmHeartBurst 0.75s var(--hm-spring) forwards;
+  z-index: 100;
+  filter: drop-shadow(0 4px 14px rgba(255, 61, 141, 0.7));
+}
+
+@keyframes hmHeartBurst {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  35% { transform: scale(1.35) rotate(0deg); opacity: 1; }
+  60% { transform: scale(1) translateY(-10px); opacity: 0.95; }
+  100% { transform: scale(0.6) translateY(-40px); opacity: 0; }
+}
+
+/* Message grouping corner tweaks */
+.message-row + .message-row {
+  margin-top: 3px !important;
+}
+.message-row.mine + .message-row.mine .message {
+  border-top-right-radius: 6px !important;
+}
+.message-row:not(.mine) + .message-row:not(.mine) .message {
+  border-top-left-radius: 6px !important;
+}
+
+/* ==========================================================================
+   8. LUXURY MATCHES CONVERSATION TILES
+   ========================================================================== */
+.hm-conv-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 9px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s var(--hm-spring), background 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.hm-conv-row:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 61, 141, 0.25);
+  transform: translateY(-2px);
+}
+
+.hm-conv-row:active {
+  transform: scale(0.98);
+}
+
+.hm-conv-avatar-wrap {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
+.hm-conv-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.hm-conv-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hm-conv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.hm-conv-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hm-verified-badge {
+  color: #38bdf8;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hm-conv-time {
+  font-size: 11px;
+  color: var(--hm-text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.hm-conv-preview {
+  font-size: 13px;
+  color: var(--hm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hm-unread-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--hm-pink);
+  box-shadow: 0 0 8px var(--hm-pink);
+  flex-shrink: 0;
+}

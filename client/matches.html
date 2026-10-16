@@ -623,6 +623,7 @@
 
   <link rel="stylesheet" href="css/animated-ui.css">
   <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/heartmatch-max.css">
 </head>
 
 
@@ -689,6 +690,15 @@
             <button class="tab-btn" id="tabLikes" onclick="switchTab('likes')">
                 💌 Likes You <span class="tab-badge" id="likesCount">0</span>
             </button>
+        </div>
+
+        <!-- NEW MATCHES STORY TRAY -->
+        <div id="storiesSection" class="hm-stories-section" style="display: none;">
+            <div class="hm-stories-header">
+                <span>⚡ New Matches</span>
+                <span class="hm-stories-count" id="storiesCountBadge">0 new</span>
+            </div>
+            <div class="hm-stories-scroll" id="storiesScroll"></div>
         </div>
 
         <!-- SEARCH BAR -->
@@ -790,7 +800,35 @@
             }
         }
 
+        function renderStories() {
+            const tray = document.getElementById("storiesSection");
+            const scroll = document.getElementById("storiesScroll");
+            if (!tray || !scroll) return;
+            if (currentTab !== "matches" || matchesList.length === 0) {
+                tray.style.display = "none";
+                return;
+            }
+            tray.style.display = "block";
+            const badge = document.getElementById("storiesCountBadge");
+            if (badge) badge.textContent = `${matchesList.length} new`;
+            scroll.innerHTML = matchesList.slice(0, 16).map(u => {
+                const photo = u.profileImage || (u.photos && u.photos[0]) || "";
+                const photoSrc = photo ? escapeAttribute(photo) : "/images/icons/icon-192.png";
+                const isOnline = u.isActive || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 5 * 60 * 1000);
+                return `
+                    <a href="chat.html?user=${u._id}" class="hm-story-item" title="Chat with ${escapeAttribute(u.name)}">
+                        <div class="hm-story-ring">
+                            <img src="${photoSrc}" class="hm-story-avatar" alt="${escapeAttribute(u.name)}" onerror="this.src='/images/icons/icon-192.png'" />
+                            ${isOnline ? '<span class="hm-story-online-pip"></span>' : ''}
+                        </div>
+                        <span class="hm-story-name">${escapeHTML(u.name || 'User')}</span>
+                    </a>
+                `;
+            }).join('');
+        }
+
         function render() {
+            renderStories();
             const list = currentTab === "matches" ? matchesList : likersList;
             const filtered = list.filter(user => {
                 if (!searchQuery) return true;
@@ -842,6 +880,9 @@
                     : `<div class="default-photo">❤️</div>`;
 
                 const badgeText = currentTab === "matches" ? "❤️ Matched" : "💌 Liked You";
+                const isOnline = user.isActive || (user.lastSeen && (Date.now() - new Date(user.lastSeen).getTime()) < 5 * 60 * 1000);
+                const verifiedHTML = user.isVerified ? '<span class="hm-verified-badge" title="Verified Profile"> ✓</span>' : '';
+                const onlineDotHTML = isOnline ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;margin-left:6px;" title="Online now"></span>' : '';
 
                 let actionHTML = "";
                 if (currentTab === "matches") {
@@ -869,8 +910,9 @@
                         <div class="match-badge">${badgeText}</div>
                     </div>
                     <div class="card-body">
-                        <div class="name" onclick="viewPerson('${user._id}')" style="cursor: pointer;">
-                            ${escapeHTML(user.name)}${user.age ? `, ${user.age}` : ""}
+                        <div class="name" onclick="viewPerson('${user._id}')" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                            <span>${escapeHTML(user.name)}${user.age ? `, ${user.age}` : ""}${verifiedHTML}</span>
+                            ${onlineDotHTML}
                         </div>
                         <div class="location">
                             📍 ${escapeHTML(user.location || "Location not specified")}
@@ -996,6 +1038,7 @@
 
   <script src="js/animated-ui.js"></script>
   <script src="js/notification-badge.js"></script>
+  <script src="js/heartmatch-max.js"></script>
   <script src="/js/pwa-install.js" defer></script>
 </body>
 </html>

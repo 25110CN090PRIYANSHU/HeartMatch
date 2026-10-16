@@ -1,5 +1,5 @@
-// HeartMatch PWA Service Worker v2.0
-const CACHE_NAME = 'heartmatch-pwa-v2';
+// HeartMatch PWA Service Worker (HeartMatch Max Edition)
+const CACHE_NAME = 'heartmatch-max-v1';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -16,9 +16,11 @@ const PRECACHE_ASSETS = [
   '/css/animated-ui.css',
   '/css/responsive.css',
   '/css/notification-badge.css',
+  '/css/heartmatch-max.css',
   '/js/app.js',
   '/js/animated-ui.js',
   '/js/notification-badge.js',
+  '/js/heartmatch-max.js',
   '/manifest.json',
   '/images/icons/icon-192.png',
   '/images/icons/icon-512.png',
