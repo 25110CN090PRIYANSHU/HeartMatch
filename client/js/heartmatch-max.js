@@ -32,7 +32,6 @@
     dock.id = 'hmBottomDock';
     dock.setAttribute('role', 'navigation');
     dock.setAttribute('aria-label', 'Mobile Navigation');
-    dock.style.cssText = 'position: fixed !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 999999 !important;';
     dock.innerHTML = `
       <a href="discover.html" class="hm-dock-item ${isDiscover ? 'active' : ''}">
         <span class="hm-dock-icon">🔥</span>

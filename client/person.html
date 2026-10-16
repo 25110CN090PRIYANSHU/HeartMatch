@@ -540,8 +540,8 @@
                     ? `<span class="person-intent-pill">${escapeHTML(intentLabels[user.lookingFor])}</span>`
                     : "";
 
-                const compatHTML = user.compatibility
-                    ? `<span class="person-compat-badge">⚡ ${user.compatibility}% Match</span>`
+                const compatHTML = (user.compatibility != null && !isNaN(user.compatibility))
+                    ? `<span class="person-compat-badge" title="Compatibility Score based on shared interests, goals, and age/location alignment">⚡ ${user.compatibility}% Match</span>`
                     : "";
 
                 const promptsHTML = Array.isArray(user.prompts) && user.prompts.length > 0

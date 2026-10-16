@@ -154,8 +154,8 @@
     <div id="grid" class="grid"></div>
     <div id="swipeView" class="swipe-mode-wrap" style="display:none"></div>
 
-    <!-- FLOATING GOLDEN REWIND BUTTON -->
-    <button id="hmFloatingRewindBtn" class="hm-floating-rewind-btn" type="button" title="Rewind / Undo Last Swipe (Z or Backspace)" disabled>↺</button>
+    <!-- FLOATING GOLDEN REWIND BUTTON (Undo last swipe) -->
+    <button id="hmFloatingRewindBtn" class="hm-floating-rewind-btn" type="button" title="Rewind / Undo Last Swipe" aria-label="Rewind / Undo Last Swipe">↺</button>
   </main>
 
   <!-- FULLSCREEN IT'S A MATCH CELEBRATION MODAL -->
@@ -376,7 +376,7 @@
         const catLabel = formatCategory(u.gender);
         const intentLabel = formatLookingFor(u.lookingFor);
         const isOnline = isRecentlyActive(u.lastSeen);
-        const compScore = u.compatibility || 75;
+        const compScore = (u.compatibility != null && !isNaN(u.compatibility)) ? u.compatibility : 75;
 
         return `
         <article class="card" data-id="${u._id}">
@@ -436,7 +436,7 @@
             const translateY = i * 10;
             const catLabel = formatCategory(u.gender);
             const intentLabel = formatLookingFor(u.lookingFor);
-            const compScore = u.compatibility || 75;
+            const compScore = (u.compatibility != null && !isNaN(u.compatibility)) ? u.compatibility : 75;
 
             return `
               <div class="swipe-card-item" id="swipeCard_${i}" data-id="${u._id}" data-userid="${u.userId || u._id}" style="z-index:${zIndex};transform:translateY(${translateY}px) scale(${scale})">
@@ -530,8 +530,8 @@
       const hasHistory = swipeHistory && swipeHistory.length > 0;
       if (swipeRewindBtn) swipeRewindBtn.disabled = !hasHistory;
       if (floatRewindBtn) {
-        floatRewindBtn.disabled = !hasHistory;
-        floatRewindBtn.style.opacity = hasHistory ? "1" : "0.35";
+        floatRewindBtn.style.opacity = hasHistory ? "1" : "0.45";
+        floatRewindBtn.title = hasHistory ? "Rewind / Undo Last Swipe (Tap to bring back previous profile)" : "Rewind / Undo: Swipe on someone first to undo ↺";
       }
     }
 
@@ -992,7 +992,14 @@
 
     const floatRewindBtn = document.getElementById("hmFloatingRewindBtn");
     if (floatRewindBtn) {
-      floatRewindBtn.addEventListener("click", rewindLastSwipe);
+      floatRewindBtn.addEventListener("click", () => {
+        if (!swipeHistory || swipeHistory.length === 0) {
+          setMessage("Rewind / Undo: When you swipe on a profile, tap this ↺ to undo your last action!", "info");
+          setTimeout(() => setMessage(""), 2800);
+          return;
+        }
+        rewindLastSwipe();
+      });
     }
 
     [filterCategory, filterLookingFor, filterInterest, filterSortBy, filterVerified, filterOnline, filterPhoto, filterBio].forEach(el => {

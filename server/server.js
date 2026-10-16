@@ -29,6 +29,7 @@ const reportRoutes = require("./routes/reportRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const storyRoutes = require("./routes/storyRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
+const { calculateCompatibility } = require("./utils/compatibility");
 
 const Message = require("./models/Message");
 const Like = require("./models/Like");
@@ -200,7 +201,7 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
         const userPromise = mongoose.Types.ObjectId.isValid(lookup)
             ? User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt").lean()
             : User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt").lean();
-        const viewerPromise = User.findById(req.userId).select("age interests lookingFor location preferences").lean();
+        const viewerPromise = User.findById(req.userId).select("_id userId age interests lookingFor location preferences").lean();
 
         const [user, viewer] = await Promise.all([userPromise, viewerPromise]);
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -214,25 +215,7 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
         }
 
         const uObj = { ...user };
-        // Compute compatibility score
-        let score = 52;
-        if (viewer) {
-            const myInterests = (viewer.interests || []).map(i => String(i).toLowerCase().trim());
-            const theirInterests = (uObj.interests || []).map(i => String(i).toLowerCase().trim());
-            const shared = myInterests.filter(i => theirInterests.includes(i));
-            score += Math.min(36, shared.length * 12);
-            if (viewer.lookingFor && uObj.lookingFor && viewer.lookingFor === uObj.lookingFor && viewer.lookingFor !== "any") {
-                score += 14;
-            }
-            if (viewer.location && uObj.location && String(viewer.location).toLowerCase().trim() === String(uObj.location).toLowerCase().trim()) {
-                score += 8;
-            }
-            const p = viewer.preferences || {};
-            if (uObj.age >= (p.minAge || 18) && uObj.age <= (p.maxAge || 100)) {
-                score += 6;
-            }
-        }
-        uObj.compatibility = Math.min(99, Math.max(55, score));
+        uObj.compatibility = calculateCompatibility(viewer, uObj);
         if ((!uObj.photos || uObj.photos.length === 0) && uObj.profileImage) {
             uObj.photos = [uObj.profileImage];
         }

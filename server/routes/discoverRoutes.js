@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Block = require("../models/Block");
 const Like = require("../models/Like");
 const authMiddleware = require("../middleware/authMiddleware");
+const { calculateCompatibility } = require("../utils/compatibility");
 const router = express.Router();
 
 function escapeRegex(text) {
@@ -121,38 +122,17 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 
     const [me, rawUsers] = await Promise.all([
-      User.findById(req.userId).select("age interests lookingFor location preferences isIncognito").lean(),
+      User.findById(req.userId).select("userId age interests lookingFor location preferences isIncognito").lean(),
       User.find(filter)
-        .select("name age gender lookingFor bio profileImage interests location isVerified lastSeen createdAt")
+        .select("userId name age gender lookingFor bio profileImage interests location isVerified lastSeen createdAt")
         .sort({ lastSeen: -1, createdAt: -1 })
         .limit(80)
         .lean()
     ]);
 
-    function computeCompatibility(userA, userB) {
-      if (!userA) return 75;
-      let score = 52;
-      const myInterests = (userA.interests || []).map(i => String(i).toLowerCase().trim());
-      const theirInterests = (userB.interests || []).map(i => String(i).toLowerCase().trim());
-      const shared = myInterests.filter(i => theirInterests.includes(i));
-      score += Math.min(36, shared.length * 12);
-
-      if (userA.lookingFor && userB.lookingFor && userA.lookingFor === userB.lookingFor && userA.lookingFor !== "any") {
-        score += 14;
-      }
-      if (userA.location && userB.location && String(userA.location).toLowerCase().trim() === String(userB.location).toLowerCase().trim()) {
-        score += 8;
-      }
-      const p = userA.preferences || {};
-      if (userB.age >= (p.minAge || 18) && userB.age <= (p.maxAge || 100)) {
-        score += 6;
-      }
-      return Math.min(99, Math.max(55, score));
-    }
-
     let users = rawUsers.map(u => {
       const uObj = { ...u };
-      uObj.compatibility = computeCompatibility(me, u);
+      uObj.compatibility = calculateCompatibility(me, u);
       // Ensure photos array includes profileImage if photos is empty
       if ((!uObj.photos || uObj.photos.length === 0) && uObj.profileImage) {
         uObj.photos = [uObj.profileImage];

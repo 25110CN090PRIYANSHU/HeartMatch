@@ -850,11 +850,15 @@
                 <span>❤️</span> <span id="storyToastMsg">Reply sent!</span>
             </div>
 
-            <!-- Viewers List Sheet (for own stories) -->
-            <div class="hm-story-viewers-sheet" id="storyViewersSheet">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                    <h3 style="font-size: 16px; font-weight: 800; color: #fff;">👁️ Story Viewers</h3>
-                    <button style="background:none; border:none; color:#ddd; font-size:18px; cursor:pointer;" onclick="closeStoryViewersSheet()">✕</button>
+            <!-- Viewers List Sheet Backdrop & Sheet (for own stories) -->
+            <div class="hm-story-viewers-backdrop" id="storyViewersBackdrop" onclick="closeStoryViewersSheet()"></div>
+            <div class="hm-story-viewers-sheet" id="storyViewersSheet" onclick="event.stopPropagation();" ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();">
+                <div class="hm-sheet-handle" onclick="closeStoryViewersSheet()" title="Drag or tap to close"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>👁️</span> Story Viewers <span id="storyViewersCountBadge" style="font-size: 12px; background: rgba(255,61,141,0.22); color: #ff6b9d; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0</span>
+                    </h3>
+                    <button type="button" style="background: rgba(255,255,255,0.12); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="closeStoryViewersSheet()">✕</button>
                 </div>
                 <div id="storyViewersList"></div>
             </div>
@@ -1185,6 +1189,9 @@
         function openStoryViewer(userGroupIdx, storyIdx) {
             activeUserGroupIdx = userGroupIdx;
             activeStoryIdx = storyIdx || 0;
+            document.body.classList.add("hm-story-open");
+            const dock = document.getElementById("hmBottomDock");
+            if (dock) dock.style.setProperty("display", "none", "important");
             const modal = document.getElementById("storyViewerModal");
             if (modal) modal.classList.add("open");
             playCurrentStory();
@@ -1192,6 +1199,9 @@
 
         function closeStoryViewer() {
             clearStoryTimer();
+            document.body.classList.remove("hm-story-open");
+            const dock = document.getElementById("hmBottomDock");
+            if (dock) dock.style.removeProperty("display");
             const modal = document.getElementById("storyViewerModal");
             if (modal) modal.classList.remove("open");
             const video = document.getElementById("storyViewerVideo");
@@ -1587,22 +1597,25 @@
             const list = document.getElementById("storyViewersList");
             if (!list) return;
 
+            const countBadge = document.getElementById("storyViewersCountBadge");
+            if (countBadge) countBadge.textContent = Array.isArray(viewers) ? viewers.length : 0;
+
             if (!viewers || viewers.length === 0) {
                 list.innerHTML = `
-                    <div style="text-align: center; color: var(--hm-text-muted); padding: 32px 0;">
-                        <div style="font-size: 40px; margin-bottom: 8px;">👁️</div>
-                        <p style="font-weight: 700; color: #fff; margin-bottom: 4px;">No views yet</p>
-                        <small style="color: rgba(255,255,255,0.6);">When mutual matches watch your story, they will appear here.</small>
+                    <div style="text-align: center; color: var(--hm-text-muted); padding: 36px 12px;">
+                        <div style="font-size: 38px; margin-bottom: 8px;">👀</div>
+                        <p style="font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 15px;">No views yet</p>
+                        <small style="color: rgba(255,255,255,0.65); font-size: 12px; line-height: 1.4; display: block;">When people view your story, their profile and timestamp will appear here.</small>
                     </div>
                 `;
             } else {
                 list.innerHTML = viewers.map(v => `
-                    <div class="hm-story-viewer-row" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
-                            <img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.25);" onerror="this.src='/images/icons/icon-192.png'" />
+                    <div class="hm-story-viewer-row">
+                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+                            <img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.25); flex-shrink: 0;" onerror="this.src='/images/icons/icon-192.png'" />
                             <div style="min-width: 0; flex: 1;">
                                 <div style="font-weight: 700; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(v.name || 'User')}</div>
-                                <div style="font-size: 11px; color: var(--hm-text-muted);">${formatStoryTime(v.viewedAt)}</div>
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px;">${formatStoryTime(v.viewedAt)}</div>
                             </div>
                         </div>
                         <a href="chat.html?user=${encodeURIComponent(v._id)}" class="hm-viewer-chat-btn" title="Message ${escapeAttribute(v.name)}">
@@ -1623,7 +1636,12 @@
 
             const story = group.stories[activeStoryIdx];
             const sheet = document.getElementById("storyViewersSheet");
+            const backdrop = document.getElementById("storyViewersBackdrop");
             if (!sheet || !story) return;
+
+            // Ensure bottom dock is completely hidden while sheet is active
+            const dock = document.getElementById("hmBottomDock");
+            if (dock) dock.style.setProperty("display", "none", "important");
 
             // Render existing cached viewers first
             const viewers = story.viewers || [];
@@ -1655,10 +1673,13 @@
                 .catch(() => {});
             }
 
+            if (backdrop) backdrop.classList.add("open");
             sheet.classList.add("open");
         }
 
         function closeStoryViewersSheet() {
+            const backdrop = document.getElementById("storyViewersBackdrop");
+            if (backdrop) backdrop.classList.remove("open");
             const sheet = document.getElementById("storyViewersSheet");
             if (sheet) sheet.classList.remove("open");
             isPaused = false;
