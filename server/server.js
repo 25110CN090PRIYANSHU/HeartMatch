@@ -68,8 +68,16 @@ app.use("/api/auth/forgot-password", authLimiter);
 // ===============================
 
 app.use(express.static(path.join(__dirname, "../client"), {
-    maxAge: "2h",
-    etag: true
+    etag: true,
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".html")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            res.setHeader("Pragma", "no-cache");
+            res.setHeader("Expires", "0");
+        } else {
+            res.setHeader("Cache-Control", "public, max-age=3600");
+        }
+    }
 }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "7d", etag: true }));
 

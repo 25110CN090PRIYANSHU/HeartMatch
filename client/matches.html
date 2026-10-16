@@ -687,6 +687,7 @@
         <div class="tab-group">
             <button class="tab-btn active" id="tabMatches" onclick="switchTab('matches')">
                 💕 Matches <span class="tab-badge" id="matchesCount">0</span>
+                <span class="hm-tab-unread-pill" id="matchesUnreadTabPill" style="display: none;">💬 <span id="matchesUnreadTabCount">0</span> new</span>
             </button>
             <button class="tab-btn" id="tabLikes" onclick="switchTab('likes')">
                 💌 Likes You <span class="tab-badge" id="likesCount">0</span>
@@ -834,6 +835,19 @@
         </div>
     </div>
 
+    <!-- NO ACTIVE STORY MODAL -->
+    <div class="hm-no-story-backdrop" id="noStoryModal">
+        <div class="hm-no-story-card">
+            <img id="noStoryAvatar" class="hm-no-story-avatar" src="/images/icons/icon-192.png" alt="Avatar" onerror="this.src='/images/icons/icon-192.png'" />
+            <div class="hm-no-story-title" id="noStoryTitle">No Active Story</div>
+            <div class="hm-no-story-sub" id="noStorySub">This user hasn't posted a story in the last 24 hours. Would you like to say hello in direct chat?</div>
+            <div class="hm-no-story-actions">
+                <button class="btn-pass" style="flex: 1;" onclick="closeNoStoryModal()">Close</button>
+                <button class="chat-btn" id="noStoryChatBtn" style="flex: 1.4;">💬 Send Message</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = localStorage.getItem("token");
         if (!token) {
@@ -965,19 +979,23 @@
                 const firstUnviewedIdx = group.stories.findIndex(s => !s.isViewed);
                 const startIdx = firstUnviewedIdx >= 0 ? firstUnviewedIdx : 0;
                 const isOnline = u.isActive || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 5 * 60 * 1000);
+                
+                // Match unread count
+                const matchObj = matchesList.find(m => String(m._id) === String(u._id));
+                const unread = matchObj ? (Number(matchObj.unreadCount) || 0) : 0;
 
                 html += `
                     <div class="hm-story-item" onclick="openStoryViewer(${gIdx}, ${startIdx})" title="Watch ${escapeAttribute(u.name)}'s story">
                         <div class="hm-story-ring ${ringClass}">
                             <img src="${escapeAttribute(photo)}" class="hm-story-avatar" alt="${escapeAttribute(u.name)}" onerror="this.src='/images/icons/icon-192.png'" />
-                            ${isOnline ? '<span class="hm-story-online-pip"></span>' : ''}
+                            ${unread > 0 ? `<span class="hm-story-msg-pip" title="${unread} unread messages">${unread > 9 ? '9+' : unread}</span>` : (isOnline ? '<span class="hm-story-online-pip"></span>' : '')}
                         </div>
                         <span class="hm-story-name">${escapeHTML(u.name || 'User')}</span>
                     </div>
                 `;
             });
 
-            // 3. Other matches without active stories (subtle gray ring for quick chat discovery)
+            // 3. Other matches without active stories (Click shows no-story prompt, never forcibly opens chat!)
             const storyUserIds = new Set(usersWithStories.map(g => String(g.user._id)));
             matchesList
                 .filter(m => !storyUserIds.has(String(m._id)))
@@ -986,19 +1004,52 @@
                     const photo = u.profileImage || (u.photos && u.photos[0]) || "";
                     const photoSrc = photo ? escapeAttribute(photo) : "/images/icons/icon-192.png";
                     const isOnline = u.isActive || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 5 * 60 * 1000);
+                    const unread = Number(u.unreadCount) || 0;
 
                     html += `
-                        <a href="chat.html?user=${u._id}" class="hm-story-item" title="Chat with ${escapeAttribute(u.name)}">
+                        <div class="hm-story-item" onclick="handleMatchNoStoryClick('${u._id}', '${escapeAttribute(u.name)}', '${escapeAttribute(photoSrc)}')" title="${escapeAttribute(u.name)} (No active story)">
                             <div class="hm-story-ring viewed">
                                 <img src="${photoSrc}" class="hm-story-avatar" alt="${escapeAttribute(u.name)}" onerror="this.src='/images/icons/icon-192.png'" />
-                                ${isOnline ? '<span class="hm-story-online-pip"></span>' : ''}
+                                ${unread > 0 ? `<span class="hm-story-msg-pip" title="${unread} unread messages">${unread > 9 ? '9+' : unread}</span>` : (isOnline ? '<span class="hm-story-online-pip"></span>' : '')}
                             </div>
                             <span class="hm-story-name">${escapeHTML(u.name || 'User')}</span>
-                        </a>
+                        </div>
                     `;
                 });
 
             scroll.innerHTML = html;
+        }
+
+        function handleMatchNoStoryClick(userId, userName, userAvatar) {
+            // Check if story exists in userStories first
+            const gIdx = (storiesData.userStories || []).findIndex(g => String(g.user?._id) === String(userId));
+            if (gIdx >= 0 && storiesData.userStories[gIdx].stories?.length > 0) {
+                const group = storiesData.userStories[gIdx];
+                const firstUnviewed = group.stories.findIndex(s => !s.isViewed);
+                openStoryViewer(gIdx, firstUnviewed >= 0 ? firstUnviewed : 0);
+                return;
+            }
+
+            const modal = document.getElementById("noStoryModal");
+            const avatarEl = document.getElementById("noStoryAvatar");
+            const titleEl = document.getElementById("noStoryTitle");
+            const subEl = document.getElementById("noStorySub");
+            const chatBtn = document.getElementById("noStoryChatBtn");
+
+            if (avatarEl) avatarEl.src = userAvatar || "/images/icons/icon-192.png";
+            if (titleEl) titleEl.textContent = `${userName} has no active story`;
+            if (subEl) subEl.textContent = `${userName} hasn't shared a 24-hour story today. Would you like to say hello in direct chat?`;
+            if (chatBtn) chatBtn.onclick = () => {
+                closeNoStoryModal();
+                openChat(userId);
+            };
+
+            if (modal) modal.classList.add("open");
+        }
+
+        function closeNoStoryModal() {
+            const modal = document.getElementById("noStoryModal");
+            if (modal) modal.classList.remove("open");
         }
 
         // ==================================================
@@ -1511,6 +1562,31 @@
 
         function render() {
             renderStories();
+
+            // Calculate and display total unread messages count across matches
+            const totalUnreadMessages = matchesList.reduce((sum, m) => sum + (Number(m.unreadCount) || 0), 0);
+            const tabUnreadPill = document.getElementById("matchesUnreadTabPill");
+            const tabUnreadCount = document.getElementById("matchesUnreadTabCount");
+            if (tabUnreadPill && tabUnreadCount) {
+                if (totalUnreadMessages > 0) {
+                    tabUnreadCount.textContent = totalUnreadMessages > 99 ? "99+" : totalUnreadMessages;
+                    tabUnreadPill.style.display = "inline-flex";
+                } else {
+                    tabUnreadPill.style.display = "none";
+                }
+            }
+
+            // Sync with bottom navigation dock
+            const dockMatchesBadge = document.getElementById("hmMatchesBadge");
+            if (dockMatchesBadge) {
+                if (totalUnreadMessages > 0) {
+                    dockMatchesBadge.textContent = totalUnreadMessages > 99 ? "99+" : totalUnreadMessages;
+                    dockMatchesBadge.style.display = "flex";
+                } else {
+                    dockMatchesBadge.style.display = "none";
+                }
+            }
+
             const list = currentTab === "matches" ? matchesList : likersList;
             const filtered = list.filter(user => {
                 if (!searchQuery) return true;
@@ -1566,13 +1642,25 @@
                 const verifiedHTML = user.isVerified ? '<span class="hm-verified-badge" title="Verified Profile"> ✓</span>' : '';
                 const onlineDotHTML = isOnline ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;margin-left:6px;" title="Online now"></span>' : '';
 
+                const unreadCount = Number(user.unreadCount) || 0;
+                const hasUnread = currentTab === "matches" && unreadCount > 0;
+                const unreadBadgeHTML = hasUnread ? `<div class="hm-unread-badge-card">💬 ${unreadCount} new</div>` : '';
+
                 let actionHTML = "";
                 if (currentTab === "matches") {
-                    actionHTML = `
-                        <button class="chat-btn" onclick="openChat('${user._id}')">
-                            ${user.lastMessage ? '💬 Continue Chat' : '💬 Start Chat'}
-                        </button>
-                    `;
+                    if (hasUnread) {
+                        actionHTML = `
+                            <button class="chat-btn has-unread" onclick="openChat('${user._id}')">
+                                💬 Reply (${unreadCount} new ${unreadCount === 1 ? 'message' : 'messages'})
+                            </button>
+                        `;
+                    } else {
+                        actionHTML = `
+                            <button class="chat-btn" onclick="openChat('${user._id}')">
+                                ${user.lastMessage ? '💬 Continue Chat' : '💬 Start Chat'}
+                            </button>
+                        `;
+                    }
                 } else {
                     actionHTML = `
                         <div class="liker-actions">
@@ -1590,6 +1678,7 @@
                     <div class="photo" onclick="viewPerson('${user._id}')" style="cursor: pointer;" title="View full profile">
                         ${photoHTML}
                         <div class="match-badge">${badgeText}</div>
+                        ${unreadBadgeHTML}
                     </div>
                     <div class="card-body">
                         <div class="name" onclick="viewPerson('${user._id}')" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
@@ -1600,7 +1689,9 @@
                             📍 ${escapeHTML(user.location || "Location not specified")}
                         </div>
                         <div class="bio">
-                            ${escapeHTML(user.bio || (currentTab === "matches" ? "Say hello and start getting to know each other. 💕" : "Liked your profile! Match with them now."))}
+                            ${hasUnread 
+                                ? `<span style="color:#ff3d8d; font-weight:700;">💬 ${unreadCount} new: </span>${escapeHTML(user.lastMessage || 'Sent you a message')}`
+                                : escapeHTML(user.lastMessage || user.bio || (currentTab === "matches" ? "Say hello and start getting to know each other. 💕" : "Liked your profile! Match with them now."))}
                         </div>
                         ${actionHTML}
                         <button class="view-profile-btn" onclick="viewPerson('${user._id}')">
@@ -1736,6 +1827,9 @@
                         }).catch(() => {});
                 });
                 socket.on("match", () => {
+                    loadData();
+                });
+                socket.on("newMessage", () => {
                     loadData();
                 });
             } catch (_) {}

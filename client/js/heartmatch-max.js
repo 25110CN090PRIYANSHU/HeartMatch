@@ -65,15 +65,36 @@
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/notifications/unread-count', {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const [notifsRes, chatRes] = await Promise.all([
+        fetch('/api/notifications/unread-count', {
+          headers: { Authorization: 'Bearer ' + token }
+        }).catch(() => null),
+        fetch('/api/chat/unread-count', {
+          headers: { Authorization: 'Bearer ' + token }
+        }).catch(() => null)
+      ]);
+
+      if (notifsRes && notifsRes.ok) {
+        const data = await notifsRes.json();
         const badge = document.getElementById('hmNotifsBadge');
         if (badge) {
-          if (data.unreadCount > 0) {
-            badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+          const count = Number(data.unreadCount) || 0;
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      }
+
+      if (chatRes && chatRes.ok) {
+        const data = await chatRes.json();
+        const badge = document.getElementById('hmMatchesBadge');
+        if (badge) {
+          const count = Number(data.unreadCount) || 0;
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
             badge.style.display = 'flex';
           } else {
             badge.style.display = 'none';
@@ -142,6 +163,8 @@
     initBottomDock();
     initChatDoubleTap();
   }
+
+  setInterval(syncDockBadges, 15000);
 
   // Expose global HeartMatchMax utility
   window.HMM = {

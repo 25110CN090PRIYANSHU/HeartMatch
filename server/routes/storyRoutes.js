@@ -81,9 +81,15 @@ module.exports = (io) => {
                 }))
             }));
 
-            // Find mutual matches
+            // Find mutual matches with String and ObjectId robustness
+            const myIdStr = req.userId.toString();
+            const myIdObj = mongoose.Types.ObjectId.isValid(req.userId)
+                ? new mongoose.Types.ObjectId(req.userId)
+                : req.userId;
+            const myIdVariants = [myIdStr, myIdObj];
+
             const myLikes = await Like.find({
-                from: req.userId,
+                from: { $in: myIdVariants },
                 type: "like"
             }).select("to").lean();
 
@@ -95,7 +101,7 @@ module.exports = (io) => {
                 // Find who liked me back
                 const mutualLikes = await Like.find({
                     from: { $in: likedIds },
-                    to: req.userId,
+                    to: { $in: myIdVariants },
                     type: "like"
                 }).select("from").lean();
 
@@ -187,6 +193,11 @@ module.exports = (io) => {
                 }
             }
 
+            const storiesByUserId = {};
+            usersWithStories.forEach((g) => {
+                if (g.user?._id) storiesByUserId[g.user._id.toString()] = g.stories || [];
+            });
+
             res.json({
                 success: true,
                 myUser: {
@@ -196,7 +207,8 @@ module.exports = (io) => {
                 },
                 myStories,
                 hasMyStories: myStories.length > 0,
-                userStories: usersWithStories
+                userStories: usersWithStories,
+                storiesByUserId
             });
         } catch (error) {
             console.error("[Stories] Tray fetch error:", error);

@@ -100,3 +100,11 @@
     line-height: 30px !important;
   }
 }
+
+/* Strictly hide duplicate notification badges inside mobile bottom dock */
+.hm-bottom-dock .hm-notification-badge,
+.hm-dock-item .hm-notification-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}

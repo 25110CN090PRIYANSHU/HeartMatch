@@ -12,7 +12,8 @@
   let lastCount = null;
 
   function getLinks() {
-    return Array.from(document.querySelectorAll('a[href$="notifications.html"], a[href*="/notifications.html"]'));
+    return Array.from(document.querySelectorAll('a[href$="notifications.html"], a[href*="/notifications.html"]'))
+      .filter((link) => !link.closest(".hm-bottom-dock") && !link.classList.contains("hm-dock-item"));
   }
 
   function ensureBadge(link) {

@@ -10,6 +10,20 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
 
+// Get total unread messages count for current user
+router.get("/unread-count", authMiddleware, async (req, res) => {
+    try {
+        const unreadCount = await Message.countDocuments({
+            receiver: req.userId,
+            read: false
+        });
+        res.json({ success: true, unreadCount });
+    } catch (error) {
+        console.error("Chat unread-count error:", error);
+        res.status(500).json({ success: false, unreadCount: 0 });
+    }
+});
+
 // Get messages with a matched user
 router.get("/:userId", authMiddleware, async (req, res) => {
 

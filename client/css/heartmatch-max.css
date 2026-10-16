@@ -1216,3 +1216,145 @@ div.hm-bottom-dock,
   border-bottom: none;
 }
 
+/* ==========================================================================
+   9. UNREAD MESSAGE COUNT BADGES & MATCH PROMPTS
+   ========================================================================== */
+
+/* Unread pill on Matches tab header */
+.hm-tab-unread-pill {
+  background: linear-gradient(135deg, #ff1744, #ff3d8d);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(255, 23, 68, 0.6);
+  animation: hmBadgePop 0.3s var(--hm-spring);
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Floating unread badge on match photo card */
+.hm-unread-badge-card {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #ff1744, #ff3d8d);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(255, 23, 68, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: hmUnreadPulse 2s infinite ease-in-out;
+}
+
+@keyframes hmUnreadPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 8px rgba(255, 23, 68, 0.6)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 4px 14px rgba(255, 23, 68, 0.9)); }
+}
+
+/* Glowing reply button when unread messages are waiting */
+.chat-btn.has-unread {
+  background: linear-gradient(135deg, #ff1744, #ff3d8d) !important;
+  box-shadow: 0 6px 20px rgba(255, 23, 68, 0.5) !important;
+  font-weight: 800 !important;
+  animation: hmChatBtnGlow 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes hmChatBtnGlow {
+  0% { box-shadow: 0 4px 14px rgba(255, 23, 68, 0.4); }
+  100% { box-shadow: 0 8px 25px rgba(255, 61, 141, 0.7); }
+}
+
+/* Unread message indicator on match story avatar */
+.hm-story-msg-pip {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ff1744;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid #090812;
+  box-shadow: 0 0 8px #ff1744;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* No Story Modal (When clicking match who hasn't posted a story yet) */
+.hm-no-story-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 100002;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.hm-no-story-backdrop.open {
+  display: flex;
+  animation: hmFadeIn 0.2s ease;
+}
+
+.hm-no-story-card {
+  background: #151124;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  width: min(360px, 92vw);
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hm-no-story-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: #1a162b;
+}
+
+.hm-no-story-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.hm-no-story-sub {
+  font-size: 13px;
+  color: var(--hm-text-muted);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.hm-no-story-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+
