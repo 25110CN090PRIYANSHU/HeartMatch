@@ -608,3 +608,611 @@ div.hm-bottom-dock,
   box-shadow: 0 0 8px var(--hm-pink);
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   8. INSTAGRAM STORIES ENGINE (Tray, Creator & Full-Screen Viewer)
+   ========================================================================== */
+
+/* Story Rings */
+.hm-story-ring.unviewed {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+  box-shadow: 0 4px 18px rgba(220, 39, 67, 0.45) !important;
+  animation: hmStoryPulse 3s ease infinite alternate;
+}
+
+.hm-story-ring.viewed {
+  background: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.hm-story-ring.my-empty {
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  animation: none !important;
+}
+
+.hm-story-ring.my-active {
+  background: linear-gradient(135deg, #00c6ff, #0072ff) !important;
+  box-shadow: 0 4px 16px rgba(0, 114, 255, 0.4) !important;
+  animation: none !important;
+}
+
+@keyframes hmStoryPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 2px 8px rgba(220, 39, 67, 0.4)); }
+  100% { transform: scale(1.02); filter: drop-shadow(0 4px 14px rgba(188, 24, 136, 0.6)); }
+}
+
+/* Plus badge on Your Story */
+.hm-story-add-badge {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0095f6, #0077e6);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid #090812;
+  box-shadow: 0 2px 8px rgba(0, 149, 246, 0.7);
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   STORY CREATOR MODAL
+   ========================================================================== */
+.hm-story-creator-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 100000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.hm-story-creator-backdrop.open {
+  display: flex;
+  animation: hmFadeIn 0.25s ease;
+}
+
+@keyframes hmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hm-story-creator-card {
+  background: #141024;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  width: min(420px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px 20px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.hm-creator-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hm-creator-title {
+  font-size: 19px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #fff, #ff85b3);
+  -webkit-background-clip: text;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hm-creator-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.hm-creator-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.hm-creator-preview-box {
+  width: 100%;
+  aspect-ratio: 9 / 13;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.hm-creator-preview-box:hover {
+  border-color: var(--hm-pink);
+  background: rgba(255, 61, 141, 0.04);
+}
+
+.hm-creator-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.hm-creator-prompt {
+  text-align: center;
+  padding: 16px;
+}
+
+.hm-creator-prompt span {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.hm-creator-prompt p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hm-creator-prompt small {
+  color: var(--hm-text-muted);
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+}
+
+.hm-creator-caption-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.hm-creator-caption-input:focus {
+  border-color: var(--hm-pink);
+}
+
+.hm-creator-share-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #ff3d8d, #8b5cf6);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 61, 141, 0.4);
+  transition: transform 0.2s var(--hm-spring), opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hm-creator-share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(255, 61, 141, 0.55);
+}
+
+.hm-creator-share-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================================
+   FULL-SCREEN INSTAGRAM STORY VIEWER MODAL
+   ========================================================================== */
+.hm-story-viewer {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 100001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hm-story-viewer.open {
+  display: flex;
+}
+
+.hm-story-viewer-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 440px;
+  max-height: 880px;
+  background: #0d0a16;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 861px) {
+  .hm-story-viewer-stage {
+    border-radius: 22px;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 61, 141, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    height: 94vh;
+  }
+}
+
+/* Progress Segment Bars */
+.hm-story-progress-container {
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px 6px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+}
+
+.hm-story-segment {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hm-story-segment-fill {
+  height: 100%;
+  width: 0%;
+  background: #ffffff;
+  border-radius: 3px;
+  transition: width 0.05s linear;
+}
+
+/* Top Header Bar */
+.hm-story-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  position: absolute;
+  top: 18px;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+}
+
+.hm-story-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.hm-story-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #fff;
+}
+
+.hm-story-user-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.hm-story-user-name {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.hm-story-user-time {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.hm-story-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hm-story-viewcount-btn {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.hm-story-del-btn {
+  background: rgba(255, 20, 50, 0.35);
+  border: 1px solid rgba(255, 50, 80, 0.4);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.hm-story-close-btn {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+/* Media Display */
+.hm-story-media-wrap {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.hm-story-bg-blur {
+  position: absolute;
+  inset: -30px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) brightness(0.35);
+  transform: scale(1.15);
+  pointer-events: none;
+}
+
+.hm-story-media {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  z-index: 5;
+}
+
+/* Left / Right Tap Zones */
+.hm-story-tap-prev {
+  position: absolute;
+  top: 70px;
+  bottom: 90px;
+  left: 0;
+  width: 32%;
+  z-index: 15;
+  cursor: pointer;
+}
+
+.hm-story-tap-next {
+  position: absolute;
+  top: 70px;
+  bottom: 90px;
+  right: 0;
+  width: 68%;
+  z-index: 15;
+  cursor: pointer;
+}
+
+/* Caption Overlay */
+.hm-story-caption-overlay {
+  position: absolute;
+  bottom: 82px;
+  left: 0;
+  right: 0;
+  padding: 18px 20px 10px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  z-index: 20;
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+/* Story Bottom Reply Footer */
+.hm-story-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 10px 14px max(14px, env(safe-area-inset-bottom, 14px));
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.88) 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hm-story-emojis {
+  display: flex;
+  gap: 10px;
+  justify-content: space-around;
+  padding: 0 6px;
+}
+
+.hm-story-emoji-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  cursor: pointer;
+  transition: transform 0.18s var(--hm-spring), background 0.18s;
+  backdrop-filter: blur(8px);
+}
+
+.hm-story-emoji-btn:active {
+  transform: scale(1.35);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.hm-story-reply-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hm-story-reply-input {
+  flex: 1;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 0 18px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  backdrop-filter: blur(12px);
+}
+
+.hm-story-reply-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.hm-story-send-btn {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #ff3d8d, #8b5cf6);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 61, 141, 0.4);
+}
+
+/* Toast Message */
+.hm-story-toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: rgba(13, 10, 22, 0.95);
+  border: 1px solid rgba(255, 61, 141, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  padding: 12px 24px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  pointer-events: none;
+  opacity: 0;
+  transition: transform 0.25s var(--hm-spring), opacity 0.25s;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hm-story-toast.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* Viewers Sheet */
+.hm-story-viewers-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 65%;
+  background: #141022;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 22px 22px 0 0;
+  z-index: 40;
+  padding: 18px;
+  transform: translateY(100%);
+  transition: transform 0.28s var(--hm-spring);
+  overflow-y: auto;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.hm-story-viewers-sheet.open {
+  transform: translateY(0%);
+}
+
+.hm-story-viewer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hm-story-viewer-row:last-child {
+  border-bottom: none;
+}
+

@@ -27,6 +27,7 @@ const chatRoutes = require("./routes/chatRoutes");
 const blockRoutes = require("./routes/blockRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const storyRoutes = require("./routes/storyRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 
 const Message = require("./models/Message");
@@ -125,6 +126,8 @@ app.use("/api/likes", likeRoutes(io));
 app.use("/api/matches", matchRoutes);
 
 app.use("/api/chat", chatRoutes);
+
+app.use("/api/stories", storyRoutes(io));
 
 // ===============================
 // WEBRTC TURN CONFIG

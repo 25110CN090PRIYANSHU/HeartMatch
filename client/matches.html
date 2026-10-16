@@ -624,6 +624,7 @@
   <link rel="stylesheet" href="css/animated-ui.css">
   <link rel="stylesheet" href="css/responsive.css">
   <link rel="stylesheet" href="css/heartmatch-max.css">
+  <script src="js/socket.io.min.js"></script>
 </head>
 
 
@@ -692,11 +693,11 @@
             </button>
         </div>
 
-        <!-- NEW MATCHES STORY TRAY -->
-        <div id="storiesSection" class="hm-stories-section" style="display: none;">
+        <!-- INSTAGRAM STORIES & NEW MATCHES TRAY -->
+        <div id="storiesSection" class="hm-stories-section">
             <div class="hm-stories-header">
-                <span>⚡ New Matches</span>
-                <span class="hm-stories-count" id="storiesCountBadge">0 new</span>
+                <span>✨ Stories & Matches</span>
+                <span class="hm-stories-count" id="storiesCountBadge">0 stories</span>
             </div>
             <div class="hm-stories-scroll" id="storiesScroll"></div>
         </div>
@@ -730,6 +731,109 @@
         </div>
     </div>
 
+    <!-- INSTAGRAM STORY CREATOR MODAL -->
+    <div class="hm-story-creator-backdrop" id="storyCreatorModal">
+        <div class="hm-story-creator-card">
+            <div class="hm-creator-header">
+                <div class="hm-creator-title">📸 Create Your Story</div>
+                <button class="hm-creator-close" onclick="closeStoryCreator()">✕</button>
+            </div>
+            
+            <input type="file" id="storyFileInput" accept="image/*,video/*" style="display: none;" onchange="onStoryFileSelected(event)" />
+            
+            <div class="hm-creator-preview-box" id="storyPreviewBox" onclick="document.getElementById('storyFileInput').click()">
+                <img id="storyPreviewImg" class="hm-creator-preview-img" alt="Story preview" />
+                <div class="hm-creator-prompt" id="storyUploadPrompt">
+                    <span>📸</span>
+                    <p>Tap to select photo or selfie</p>
+                    <small>Disappears automatically after 24 hours</small>
+                </div>
+            </div>
+
+            <input type="text" id="storyCaptionInput" class="hm-creator-caption-input" placeholder="Write a caption... (optional)" maxlength="200" />
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-pass" style="flex: 1;" onclick="closeStoryCreator()">Cancel</button>
+                <button class="hm-creator-share-btn" id="storyShareBtn" style="flex: 2;" onclick="submitStory()">
+                    <span>Share to Story</span> ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL-SCREEN INSTAGRAM STORY VIEWER MODAL -->
+    <div class="hm-story-viewer" id="storyViewerModal">
+        <div class="hm-story-viewer-stage" id="storyViewerStage">
+            <!-- Top segmented timer bars -->
+            <div class="hm-story-progress-container" id="storyProgressContainer"></div>
+
+            <!-- Top user header -->
+            <div class="hm-story-header">
+                <div class="hm-story-user-badge">
+                    <img id="storyViewerAvatar" class="hm-story-user-avatar" src="/images/icons/icon-192.png" alt="Avatar" onerror="this.src='/images/icons/icon-192.png'" />
+                    <div class="hm-story-user-meta">
+                        <span id="storyViewerName" class="hm-story-user-name">User</span>
+                        <span id="storyViewerTime" class="hm-story-user-time">Just now</span>
+                    </div>
+                </div>
+                <div class="hm-story-header-actions">
+                    <button id="storyAddMoreBtn" class="hm-story-viewcount-btn" style="display: none; background: rgba(0, 149, 246, 0.45); border-color: rgba(0, 149, 246, 0.6);" onclick="closeStoryViewer(); openStoryCreator();" title="Add another story">
+                        ➕ Add
+                    </button>
+                    <button id="storyViewsBtn" class="hm-story-viewcount-btn" style="display: none;" onclick="openStoryViewersSheet()">
+                        👁️ <span id="storyViewsCount">0</span>
+                    </button>
+                    <button id="storyDeleteBtn" class="hm-story-del-btn" style="display: none;" title="Delete story" onclick="deleteCurrentStory()">
+                        🗑️
+                    </button>
+                    <button class="hm-story-close-btn" onclick="closeStoryViewer()">✕</button>
+                </div>
+            </div>
+
+            <!-- Media display -->
+            <div class="hm-story-media-wrap" id="storyMediaWrap">
+                <div class="hm-story-bg-blur" id="storyBgBlur"></div>
+                <img id="storyViewerImg" class="hm-story-media" alt="Story" />
+                <video id="storyViewerVideo" class="hm-story-media" style="display: none;" playsinline muted></video>
+                <div class="hm-story-caption-overlay" id="storyCaptionOverlay" style="display: none;"></div>
+            </div>
+
+            <!-- Tap navigation zones -->
+            <div class="hm-story-tap-prev" id="storyTapPrev"></div>
+            <div class="hm-story-tap-next" id="storyTapNext"></div>
+
+            <!-- Bottom reply bar (for mutual match stories) -->
+            <div class="hm-story-footer" id="storyFooter">
+                <div class="hm-story-emojis">
+                    <button class="hm-story-emoji-btn" onclick="sendStoryReaction('❤️')">❤️</button>
+                    <button class="hm-story-emoji-btn" onclick="sendStoryReaction('🔥')">🔥</button>
+                    <button class="hm-story-emoji-btn" onclick="sendStoryReaction('😂')">😂</button>
+                    <button class="hm-story-emoji-btn" onclick="sendStoryReaction('👏')">👏</button>
+                    <button class="hm-story-emoji-btn" onclick="sendStoryReaction('😍')">😍</button>
+                    <button class="hm-story-emoji-btn" onclick="sendStoryReaction('😮')">😮</button>
+                </div>
+                <div class="hm-story-reply-row">
+                    <input type="text" id="storyReplyInput" class="hm-story-reply-input" placeholder="Send message..." onkeydown="if(event.key==='Enter') sendStoryReply()" />
+                    <button class="hm-story-send-btn" onclick="sendStoryReply()">Send</button>
+                </div>
+            </div>
+
+            <!-- Feedback Toast -->
+            <div class="hm-story-toast" id="storyToast">
+                <span>❤️</span> <span id="storyToastMsg">Reply sent!</span>
+            </div>
+
+            <!-- Viewers List Sheet (for own stories) -->
+            <div class="hm-story-viewers-sheet" id="storyViewersSheet">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <h3 style="font-size: 16px; font-weight: 800; color: #fff;">👁️ Story Viewers</h3>
+                    <button style="background:none; border:none; color:#ddd; font-size:18px; cursor:pointer;" onclick="closeStoryViewersSheet()">✕</button>
+                </div>
+                <div id="storyViewersList"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = localStorage.getItem("token");
         if (!token) {
@@ -740,6 +844,21 @@
         let matchesList = [];
         let likersList = [];
         let searchQuery = "";
+        let storiesData = {
+            myUser: null,
+            myStories: [],
+            userStories: [],
+            hasMyStories: false
+        };
+        let selectedStoryFile = null;
+
+        // Viewer state
+        let activeUserGroupIdx = 0; // -1 for self, or index in userStories
+        let activeStoryIdx = 0;
+        let storyTimer = null;
+        let storyProgress = 0;
+        let isPaused = false;
+        const storyDurationMs = 5000;
 
         const matchesContainer = document.getElementById("matches");
         const matchesCountEl = document.getElementById("matchesCount");
@@ -770,26 +889,31 @@
 
         async function loadData() {
             try {
-                const [matchesRes, likersRes] = await Promise.all([
+                const [matchesRes, likersRes, storiesRes] = await Promise.all([
                     fetch("/api/matches", { headers: { Authorization: `Bearer ${token}` } }),
-                    fetch("/api/likes/received", { headers: { Authorization: `Bearer ${token}` } })
+                    fetch("/api/likes/received", { headers: { Authorization: `Bearer ${token}` } }),
+                    fetch("/api/stories/tray", { headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
                 ]);
 
-                if (matchesRes.ok) {
+                if (matchesRes && matchesRes.ok) {
                     const d = await matchesRes.json();
                     matchesList = d.matches || [];
                     matchesCountEl.textContent = matchesList.length;
                 }
 
-                if (likersRes.ok) {
+                if (likersRes && likersRes.ok) {
                     const d = await likersRes.json();
                     likersList = d.likers || [];
                     likesCountEl.textContent = likersList.length;
                 }
 
+                if (storiesRes && storiesRes.ok) {
+                    storiesData = await storiesRes.json();
+                }
+
                 render();
             } catch (err) {
-                console.error("Error loading matches/likes:", err);
+                console.error("Error loading matches/likes/stories:", err);
                 matchesContainer.innerHTML = `
                     <div class="empty">
                         <div class="empty-icon">⚠️</div>
@@ -804,28 +928,586 @@
             const tray = document.getElementById("storiesSection");
             const scroll = document.getElementById("storiesScroll");
             if (!tray || !scroll) return;
-            if (currentTab !== "matches" || matchesList.length === 0) {
+
+            if (currentTab !== "matches") {
                 tray.style.display = "none";
                 return;
             }
             tray.style.display = "block";
+
             const badge = document.getElementById("storiesCountBadge");
-            if (badge) badge.textContent = `${matchesList.length} new`;
-            scroll.innerHTML = matchesList.slice(0, 16).map(u => {
-                const photo = u.profileImage || (u.photos && u.photos[0]) || "";
-                const photoSrc = photo ? escapeAttribute(photo) : "/images/icons/icon-192.png";
+            const totalStoriesCount = (storiesData.myStories?.length || 0) + (storiesData.userStories?.reduce((acc, u) => acc + (u.stories?.length || 0), 0) || 0);
+            if (badge) badge.textContent = `${totalStoriesCount} active`;
+
+            let html = "";
+
+            // 1. "Your Story" (Always first, exactly like Instagram)
+            const myUser = storiesData.myUser || {};
+            const myAvatar = myUser.profileImage || "/images/icons/icon-192.png";
+            const hasMine = storiesData.hasMyStories && storiesData.myStories.length > 0;
+            
+            html += `
+                <div class="hm-story-item" onclick="${hasMine ? 'openStoryViewer(-1, 0)' : 'openStoryCreator()'}" title="${hasMine ? 'View your story' : 'Add to your story'}">
+                    <div class="hm-story-ring ${hasMine ? 'my-active' : 'my-empty'}">
+                        <img src="${escapeAttribute(myAvatar)}" class="hm-story-avatar" alt="Your Story" onerror="this.src='/images/icons/icon-192.png'" />
+                        <span class="hm-story-add-badge" onclick="${hasMine ? 'event.stopPropagation(); openStoryCreator();' : ''}" title="Add Story">+</span>
+                    </div>
+                    <span class="hm-story-name">Your Story</span>
+                </div>
+            `;
+
+            // 2. Mutual matches with active stories (Instagram colorful gradient rings)
+            const usersWithStories = storiesData.userStories || [];
+            usersWithStories.forEach((group, gIdx) => {
+                const u = group.user;
+                const photo = u.profileImage || "/images/icons/icon-192.png";
+                const ringClass = group.hasUnviewed ? "unviewed" : "viewed";
+                const firstUnviewedIdx = group.stories.findIndex(s => !s.isViewed);
+                const startIdx = firstUnviewedIdx >= 0 ? firstUnviewedIdx : 0;
                 const isOnline = u.isActive || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 5 * 60 * 1000);
-                return `
-                    <a href="chat.html?user=${u._id}" class="hm-story-item" title="Chat with ${escapeAttribute(u.name)}">
-                        <div class="hm-story-ring">
-                            <img src="${photoSrc}" class="hm-story-avatar" alt="${escapeAttribute(u.name)}" onerror="this.src='/images/icons/icon-192.png'" />
+
+                html += `
+                    <div class="hm-story-item" onclick="openStoryViewer(${gIdx}, ${startIdx})" title="Watch ${escapeAttribute(u.name)}'s story">
+                        <div class="hm-story-ring ${ringClass}">
+                            <img src="${escapeAttribute(photo)}" class="hm-story-avatar" alt="${escapeAttribute(u.name)}" onerror="this.src='/images/icons/icon-192.png'" />
                             ${isOnline ? '<span class="hm-story-online-pip"></span>' : ''}
                         </div>
                         <span class="hm-story-name">${escapeHTML(u.name || 'User')}</span>
-                    </a>
+                    </div>
                 `;
-            }).join('');
+            });
+
+            // 3. Other matches without active stories (subtle gray ring for quick chat discovery)
+            const storyUserIds = new Set(usersWithStories.map(g => String(g.user._id)));
+            matchesList
+                .filter(m => !storyUserIds.has(String(m._id)))
+                .slice(0, 16)
+                .forEach(u => {
+                    const photo = u.profileImage || (u.photos && u.photos[0]) || "";
+                    const photoSrc = photo ? escapeAttribute(photo) : "/images/icons/icon-192.png";
+                    const isOnline = u.isActive || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 5 * 60 * 1000);
+
+                    html += `
+                        <a href="chat.html?user=${u._id}" class="hm-story-item" title="Chat with ${escapeAttribute(u.name)}">
+                            <div class="hm-story-ring viewed">
+                                <img src="${photoSrc}" class="hm-story-avatar" alt="${escapeAttribute(u.name)}" onerror="this.src='/images/icons/icon-192.png'" />
+                                ${isOnline ? '<span class="hm-story-online-pip"></span>' : ''}
+                            </div>
+                            <span class="hm-story-name">${escapeHTML(u.name || 'User')}</span>
+                        </a>
+                    `;
+                });
+
+            scroll.innerHTML = html;
         }
+
+        // ==================================================
+        // STORY CREATOR CONTROLLER
+        // ==================================================
+        function openStoryCreator() {
+            selectedStoryFile = null;
+            const fileInput = document.getElementById("storyFileInput");
+            if (fileInput) fileInput.value = "";
+            const previewImg = document.getElementById("storyPreviewImg");
+            if (previewImg) {
+                previewImg.style.display = "none";
+                previewImg.src = "";
+            }
+            const prompt = document.getElementById("storyUploadPrompt");
+            if (prompt) prompt.style.display = "block";
+            const captionInput = document.getElementById("storyCaptionInput");
+            if (captionInput) captionInput.value = "";
+            const shareBtn = document.getElementById("storyShareBtn");
+            if (shareBtn) {
+                shareBtn.disabled = false;
+                shareBtn.innerHTML = "<span>Share to Story</span> ✨";
+            }
+            const modal = document.getElementById("storyCreatorModal");
+            if (modal) modal.classList.add("open");
+        }
+
+        function closeStoryCreator() {
+            const modal = document.getElementById("storyCreatorModal");
+            if (modal) modal.classList.remove("open");
+        }
+
+        function onStoryFileSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert("Please choose a photo or video under 10MB");
+                return;
+            }
+
+            selectedStoryFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImg = document.getElementById("storyPreviewImg");
+                const prompt = document.getElementById("storyUploadPrompt");
+                if (previewImg && prompt) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = "block";
+                    prompt.style.display = "none";
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function submitStory() {
+            if (!selectedStoryFile) {
+                alert("Please select a photo first!");
+                return;
+            }
+
+            const shareBtn = document.getElementById("storyShareBtn");
+            const captionInput = document.getElementById("storyCaptionInput");
+            const caption = captionInput ? captionInput.value.trim() : "";
+
+            try {
+                if (shareBtn) {
+                    shareBtn.disabled = true;
+                    shareBtn.innerHTML = "<span>Sharing...</span> ⏳";
+                }
+
+                const formData = new FormData();
+                formData.append("media", selectedStoryFile);
+                formData.append("caption", caption);
+
+                const res = await fetch("/api/stories", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeStoryCreator();
+                    showStoryToast("Story shared! 🌟");
+                    await loadData();
+                } else {
+                    alert(data.message || "Failed to share story. Please try again.");
+                    if (shareBtn) {
+                        shareBtn.disabled = false;
+                        shareBtn.innerHTML = "<span>Share to Story</span> ✨";
+                    }
+                }
+            } catch (err) {
+                console.error("Story upload error:", err);
+                alert("Network error sharing story. Please try again.");
+                if (shareBtn) {
+                    shareBtn.disabled = false;
+                    shareBtn.innerHTML = "<span>Share to Story</span> ✨";
+                }
+            }
+        }
+
+        // ==================================================
+        // FULL-SCREEN INSTAGRAM STORY VIEWER CONTROLLER
+        // ==================================================
+        function openStoryViewer(userGroupIdx, storyIdx) {
+            activeUserGroupIdx = userGroupIdx;
+            activeStoryIdx = storyIdx || 0;
+            const modal = document.getElementById("storyViewerModal");
+            if (modal) modal.classList.add("open");
+            playCurrentStory();
+        }
+
+        function closeStoryViewer() {
+            clearStoryTimer();
+            const modal = document.getElementById("storyViewerModal");
+            if (modal) modal.classList.remove("open");
+            const video = document.getElementById("storyViewerVideo");
+            if (video) {
+                video.pause();
+                video.src = "";
+            }
+            closeStoryViewersSheet();
+        }
+
+        function clearStoryTimer() {
+            if (storyTimer) {
+                clearInterval(storyTimer);
+                storyTimer = null;
+            }
+        }
+
+        function getCurrentGroupData() {
+            if (activeUserGroupIdx === -1) {
+                return {
+                    isSelf: true,
+                    user: storiesData.myUser,
+                    stories: storiesData.myStories || []
+                };
+            }
+            const group = storiesData.userStories && storiesData.userStories[activeUserGroupIdx];
+            if (!group) return null;
+            return {
+                isSelf: false,
+                user: group.user,
+                stories: group.stories || []
+            };
+        }
+
+        function playCurrentStory() {
+            clearStoryTimer();
+            const group = getCurrentGroupData();
+            if (!group || !group.stories || group.stories.length === 0) {
+                closeStoryViewer();
+                return;
+            }
+
+            if (activeStoryIdx >= group.stories.length) {
+                nextStory();
+                return;
+            }
+            if (activeStoryIdx < 0) activeStoryIdx = 0;
+
+            const story = group.stories[activeStoryIdx];
+            const user = group.user;
+
+            // Header elements
+            const avatarEl = document.getElementById("storyViewerAvatar");
+            const nameEl = document.getElementById("storyViewerName");
+            const timeEl = document.getElementById("storyViewerTime");
+            const viewsBtn = document.getElementById("storyViewsBtn");
+            const viewsCount = document.getElementById("storyViewsCount");
+            const deleteBtn = document.getElementById("storyDeleteBtn");
+            const addMoreBtn = document.getElementById("storyAddMoreBtn");
+            const footer = document.getElementById("storyFooter");
+
+            if (avatarEl) avatarEl.src = user?.profileImage || "/images/icons/icon-192.png";
+            if (nameEl) nameEl.textContent = group.isSelf ? "Your Story" : (user?.name || "User");
+            if (timeEl) timeEl.textContent = formatStoryTime(story.createdAt);
+
+            if (group.isSelf) {
+                if (viewsBtn) {
+                    viewsBtn.style.display = "flex";
+                    if (viewsCount) viewsCount.textContent = story.viewsCount || (story.viewers?.length || 0);
+                }
+                if (deleteBtn) deleteBtn.style.display = "flex";
+                if (addMoreBtn) addMoreBtn.style.display = "flex";
+                if (footer) footer.style.display = "none";
+            } else {
+                if (viewsBtn) viewsBtn.style.display = "none";
+                if (deleteBtn) deleteBtn.style.display = "none";
+                if (addMoreBtn) addMoreBtn.style.display = "none";
+                if (footer) footer.style.display = "flex";
+
+                // Mark as viewed on server
+                if (!story.isViewed) {
+                    story.isViewed = true;
+                    fetch(`/api/stories/${story._id}/view`, {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` }
+                    }).catch(() => {});
+
+                    const currentGroup = storiesData.userStories[activeUserGroupIdx];
+                    if (currentGroup && currentGroup.stories.every(s => s.isViewed)) {
+                        currentGroup.hasUnviewed = false;
+                    }
+                    renderStories();
+                }
+            }
+
+            // Media
+            const imgEl = document.getElementById("storyViewerImg");
+            const vidEl = document.getElementById("storyViewerVideo");
+            const bgBlur = document.getElementById("storyBgBlur");
+            const captionEl = document.getElementById("storyCaptionOverlay");
+
+            if (bgBlur) bgBlur.style.backgroundImage = `url("${story.mediaUrl}")`;
+
+            if (story.mediaType === "video") {
+                if (imgEl) imgEl.style.display = "none";
+                if (vidEl) {
+                    vidEl.style.display = "block";
+                    vidEl.src = story.mediaUrl;
+                    vidEl.currentTime = 0;
+                    vidEl.play().catch(() => {});
+                }
+            } else {
+                if (vidEl) {
+                    vidEl.pause();
+                    vidEl.style.display = "none";
+                }
+                if (imgEl) {
+                    imgEl.style.display = "block";
+                    imgEl.src = story.mediaUrl;
+                }
+            }
+
+            if (captionEl) {
+                if (story.caption && story.caption.trim()) {
+                    captionEl.textContent = story.caption;
+                    captionEl.style.display = "block";
+                } else {
+                    captionEl.style.display = "none";
+                }
+            }
+
+            // Render Segments
+            renderStorySegments(group.stories.length, activeStoryIdx);
+
+            // Progress Timer
+            storyProgress = 0;
+            const intervalMs = 40;
+            const step = (intervalMs / storyDurationMs) * 100;
+
+            storyTimer = setInterval(() => {
+                if (isPaused) return;
+
+                storyProgress += step;
+                const activeFill = document.getElementById(`story-seg-fill-${activeStoryIdx}`);
+                if (activeFill) {
+                    activeFill.style.width = Math.min(100, storyProgress) + "%";
+                }
+
+                if (storyProgress >= 100) {
+                    clearStoryTimer();
+                    nextStory();
+                }
+            }, intervalMs);
+        }
+
+        function renderStorySegments(total, activeIdx) {
+            const container = document.getElementById("storyProgressContainer");
+            if (!container) return;
+
+            let html = "";
+            for (let i = 0; i < total; i++) {
+                let fillWidth = "0%";
+                if (i < activeIdx) fillWidth = "100%";
+                html += `
+                    <div class="hm-story-segment">
+                        <div class="hm-story-segment-fill" id="story-seg-fill-${i}" style="width: ${fillWidth};"></div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function nextStory() {
+            const group = getCurrentGroupData();
+            if (!group) return;
+
+            if (activeStoryIdx < group.stories.length - 1) {
+                activeStoryIdx++;
+                playCurrentStory();
+            } else {
+                // Advance to next user group
+                if (activeUserGroupIdx === -1) {
+                    if (storiesData.userStories && storiesData.userStories.length > 0) {
+                        activeUserGroupIdx = 0;
+                        activeStoryIdx = 0;
+                        playCurrentStory();
+                    } else {
+                        closeStoryViewer();
+                    }
+                } else if (activeUserGroupIdx < storiesData.userStories.length - 1) {
+                    activeUserGroupIdx++;
+                    activeStoryIdx = 0;
+                    playCurrentStory();
+                } else {
+                    closeStoryViewer();
+                }
+            }
+        }
+
+        function prevStory() {
+            if (activeStoryIdx > 0) {
+                activeStoryIdx--;
+                playCurrentStory();
+            } else {
+                if (activeUserGroupIdx > 0) {
+                    activeUserGroupIdx--;
+                    const prevGroup = storiesData.userStories[activeUserGroupIdx];
+                    activeStoryIdx = (prevGroup.stories?.length || 1) - 1;
+                    playCurrentStory();
+                } else if (activeUserGroupIdx === 0 && storiesData.hasMyStories) {
+                    activeUserGroupIdx = -1;
+                    activeStoryIdx = (storiesData.myStories?.length || 1) - 1;
+                    playCurrentStory();
+                } else {
+                    playCurrentStory();
+                }
+            }
+        }
+
+        function formatStoryTime(dateStr) {
+            if (!dateStr) return "Just now";
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const minutes = Math.floor(diff / 60000);
+            if (minutes < 1) return "Just now";
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return "1d ago";
+        }
+
+        function initStoryInteractions() {
+            const stage = document.getElementById("storyViewerStage");
+            const tapPrev = document.getElementById("storyTapPrev");
+            const tapNext = document.getElementById("storyTapNext");
+
+            if (tapPrev) {
+                tapPrev.onclick = (e) => {
+                    e.stopPropagation();
+                    prevStory();
+                };
+            }
+
+            if (tapNext) {
+                tapNext.onclick = (e) => {
+                    e.stopPropagation();
+                    nextStory();
+                };
+            }
+
+            if (stage) {
+                const pause = () => { isPaused = true; };
+                const resume = () => { isPaused = false; };
+
+                stage.addEventListener("mousedown", pause);
+                window.addEventListener("mouseup", resume);
+
+                stage.addEventListener("touchstart", pause, { passive: true });
+                window.addEventListener("touchend", resume);
+            }
+        }
+
+        async function sendStoryReaction(emoji) {
+            sendReplyToStory(emoji, "");
+        }
+
+        async function sendStoryReply() {
+            const input = document.getElementById("storyReplyInput");
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+            sendReplyToStory("", text);
+        }
+
+        async function sendReplyToStory(reaction, text) {
+            const group = getCurrentGroupData();
+            if (!group || group.isSelf) return;
+
+            const story = group.stories[activeStoryIdx];
+            if (!story) return;
+
+            try {
+                showStoryToast("Sending reply... 💬");
+
+                const res = await fetch(`/api/stories/${story._id}/reply`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ reaction, text })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showStoryToast("Sent to chat! 💬");
+                } else {
+                    showStoryToast(data.message || "Could not send reply");
+                }
+            } catch (err) {
+                console.error("Story reply error:", err);
+                showStoryToast("Error sending reply");
+            }
+        }
+
+        function showStoryToast(msg) {
+            const toast = document.getElementById("storyToast");
+            const msgEl = document.getElementById("storyToastMsg");
+            if (!toast || !msgEl) return;
+            msgEl.textContent = msg;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2200);
+        }
+
+        async function deleteCurrentStory() {
+            const group = getCurrentGroupData();
+            if (!group || !group.isSelf) return;
+
+            const story = group.stories[activeStoryIdx];
+            if (!story) return;
+
+            if (!confirm("Delete this story? This cannot be undone.")) return;
+
+            try {
+                const res = await fetch(`/api/stories/${story._id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    showStoryToast("Story deleted 🗑️");
+                    storiesData.myStories.splice(activeStoryIdx, 1);
+                    if (storiesData.myStories.length === 0) {
+                        storiesData.hasMyStories = false;
+                        closeStoryViewer();
+                    } else {
+                        if (activeStoryIdx >= storiesData.myStories.length) {
+                            activeStoryIdx = storiesData.myStories.length - 1;
+                        }
+                        playCurrentStory();
+                    }
+                    renderStories();
+                }
+            } catch (err) {
+                console.error("Story delete error:", err);
+                alert("Could not delete story");
+            }
+        }
+
+        function openStoryViewersSheet() {
+            isPaused = true;
+            const group = getCurrentGroupData();
+            if (!group || !group.isSelf) return;
+
+            const story = group.stories[activeStoryIdx];
+            const sheet = document.getElementById("storyViewersSheet");
+            const list = document.getElementById("storyViewersList");
+            if (!sheet || !list) return;
+
+            const viewers = story.viewers || [];
+            if (viewers.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; color: var(--hm-text-muted); padding: 24px 0;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">👁️</div>
+                        <p>No views yet</p>
+                        <small>When mutual matches watch your story, they will appear here.</small>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = viewers.map(v => `
+                    <div class="hm-story-viewer-row">
+                        <img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;" onerror="this.src='/images/icons/icon-192.png'" />
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 14px; color: #fff;">${escapeHTML(v.name || 'User')}</div>
+                            <div style="font-size: 11px; color: var(--hm-text-muted);">${formatStoryTime(v.viewedAt)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            sheet.classList.add("open");
+        }
+
+        function closeStoryViewersSheet() {
+            const sheet = document.getElementById("storyViewersSheet");
+            if (sheet) sheet.classList.remove("open");
+            isPaused = false;
+        }
+
+        // Initialize story tap & pause handlers
+        initStoryInteractions();
 
         function render() {
             renderStories();
@@ -1031,6 +1713,32 @@
                 .replace(/"/g, "&quot;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;");
+        }
+
+        if (typeof io !== "undefined" && token) {
+            try {
+                const socket = io({ auth: { token } });
+                socket.on("newStoryAvailable", () => {
+                    loadData();
+                });
+                socket.on("storyViewed", (data) => {
+                    fetch("/api/stories/tray", { headers: { Authorization: `Bearer ${token}` } })
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.success) {
+                                storiesData.myStories = d.myStories;
+                                if (activeUserGroupIdx === -1 && storiesData.myStories[activeStoryIdx]) {
+                                    const cur = storiesData.myStories[activeStoryIdx];
+                                    const viewsCount = document.getElementById("storyViewsCount");
+                                    if (viewsCount) viewsCount.textContent = cur.viewsCount || 0;
+                                }
+                            }
+                        }).catch(() => {});
+                });
+                socket.on("match", () => {
+                    loadData();
+                });
+            } catch (_) {}
         }
 
         loadData();
