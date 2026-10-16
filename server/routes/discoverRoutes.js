@@ -121,9 +121,9 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 
     const [me, rawUsers] = await Promise.all([
-      User.findById(req.userId).select("age interests lookingFor location preferences isIncognito anthem loveLanguage socialEnergy").lean(),
+      User.findById(req.userId).select("age interests lookingFor location preferences isIncognito").lean(),
       User.find(filter)
-        .select("name age gender lookingFor bio profileImage interests location isVerified lastSeen createdAt anthem loveLanguage socialEnergy respectScore respectBadges")
+        .select("name age gender lookingFor bio profileImage interests location isVerified lastSeen createdAt")
         .sort({ lastSeen: -1, createdAt: -1 })
         .limit(80)
         .lean()
@@ -135,20 +135,12 @@ router.get("/", authMiddleware, async (req, res) => {
       const myInterests = (userA.interests || []).map(i => String(i).toLowerCase().trim());
       const theirInterests = (userB.interests || []).map(i => String(i).toLowerCase().trim());
       const shared = myInterests.filter(i => theirInterests.includes(i));
-      score += Math.min(32, shared.length * 10);
+      score += Math.min(36, shared.length * 12);
 
       if (userA.lookingFor && userB.lookingFor && userA.lookingFor === userB.lookingFor && userA.lookingFor !== "any") {
-        score += 12;
+        score += 14;
       }
       if (userA.location && userB.location && String(userA.location).toLowerCase().trim() === String(userB.location).toLowerCase().trim()) {
-        score += 8;
-      }
-      // Love Language & Social Energy Chemistry
-      if (userA.loveLanguage && userB.loveLanguage && userA.loveLanguage === userB.loveLanguage) {
-        score += 8;
-      }
-      // Music Vibe Chemistry
-      if (userA.anthem?.genre && userB.anthem?.genre && userA.anthem.genre.toLowerCase() === userB.anthem.genre.toLowerCase()) {
         score += 8;
       }
       const p = userA.preferences || {};

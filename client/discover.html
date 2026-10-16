@@ -18,7 +18,6 @@
   <link rel="stylesheet" href="/css/notification-badge.css">
   <link rel="stylesheet" href="css/animated-ui.css">
   <link rel="stylesheet" href="css/responsive.css">
-  <script src="js/socket.io.min.js"></script>
 </head>
 <body>
   <nav class="nav">
@@ -48,18 +47,6 @@
     </div>
 
     <div id="msg" class="msg"></div>
-
-    <!-- 🎭 BLIND CHEMISTRY LOUNGE BANNER -->
-    <div class="blind-lounge-banner" id="blindLoungeBanner">
-      <div>
-        <span class="blind-banner-badge">⚡ LIVE SPEED DATING</span>
-        <h3 style="margin:2px 0 6px">🎭 Blind Chemistry Lounge</h3>
-        <p>Chat for 3 minutes with mystery frosted avatars. Vibe &amp; banter first, reveal photos later!</p>
-      </div>
-      <button type="button" class="btn blind-launch-btn" id="openBlindLoungeBtn">
-        Enter Lounge 🚀
-      </button>
-    </div>
 
     <!-- Classification & Filters -->
     <section class="card" style="margin-bottom:18px">
@@ -166,69 +153,6 @@
     <div id="grid" class="grid"></div>
     <div id="swipeView" class="swipe-mode-wrap" style="display:none"></div>
   </main>
-
-  <!-- 🎭 BLIND CHEMISTRY LOUNGE FULLSCREEN MODAL -->
-  <div class="blind-fullscreen-modal" id="blindLoungeModal" style="display: none;">
-    <div class="blind-lounge-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:24px">🎭</span>
-        <div>
-          <h3 style="margin:0;font-size:16px;color:#fff">Blind Chemistry Lounge</h3>
-          <span style="font-size:11px;color:#ff6aa9" id="blindLoungeSub">3-Minute Live Mystery Chat</span>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span class="blind-timer-pill" id="blindTimer">⏱️ 03:00</span>
-        <button type="button" class="btn ghost" id="closeBlindLoungeBtn" style="padding:4px 10px;border-radius:50%;color:#fff">✕</button>
-      </div>
-    </div>
-
-    <!-- View A: Radar Matchmaking -->
-    <div id="blindRadarView" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center">
-      <div class="fake-call-avatar" style="font-size:46px;margin-bottom:24px">🎭</div>
-      <h2 style="margin:0 0 8px;color:#fff">Finding your mystery match...</h2>
-      <p class="muted" style="max-width:320px;font-size:14px;margin-bottom:24px">
-        Photos stay frosted while you chat for 3 minutes. Test your banter &amp; chemistry first!
-      </p>
-      <div style="font-size:13px;color:#ff4d8d;animation:pulse 1.5s infinite">Scanning online singles...</div>
-    </div>
-
-    <!-- View B: Active Mystery Chat -->
-    <div id="blindActiveView" style="display:none;flex:1;flex-direction:column;min-height:0">
-      <div class="blind-partner-preview">
-        <div class="blind-avatar-wrap">
-          <img id="blindPartnerAvatar" class="blind-avatar-frosted" src="/images/default-avatar.svg" alt="Mystery" />
-        </div>
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:8px">
-            <h4 id="blindPartnerName" style="margin:0;color:#fff;font-size:16px">Mystery Match</h4>
-            <span class="chip love-lang-chip" id="blindPartnerLoveLang" style="font-size:10px;padding:2px 6px">Quality Time ☕</span>
-          </div>
-          <div id="blindPartnerAnthem" style="font-size:12px;color:#ff6aa9;margin-top:2px">🎵 Starboy - The Weeknd</div>
-        </div>
-      </div>
-
-      <div class="blind-messages-area" id="blindMessagesList">
-        <div style="text-align:center;padding:12px;color:rgba(255,255,255,0.5);font-size:13px">
-          👋 You're connected! Say something funny to break the ice.
-        </div>
-      </div>
-
-      <div class="blind-reveal-banner" id="blindRevealBanner">
-        <div style="font-size:12px;color:#ccc" id="blindRevealText">
-          Ready to see each other? Both must tap Reveal!
-        </div>
-        <button type="button" class="btn" id="blindRevealBtn" style="background:linear-gradient(110deg,#ff3d8d,#a855f7);color:#fff;font-weight:800;padding:8px 16px;border-radius:20px;border:none;cursor:pointer">
-          Reveal &amp; Match ❤️
-        </button>
-      </div>
-
-      <form id="blindChatForm" style="display:flex;gap:8px;padding:10px 16px;background:rgba(14,11,22,0.98);border-top:1px solid rgba(255,255,255,0.08)">
-        <input type="text" id="blindMsgInput" placeholder="Type a message..." maxlength="500" style="flex:1;padding:10px 16px;border-radius:25px;border:1px solid rgba(255,255,255,0.1);background:#24212f;color:#fff;font-size:14px;outline:none" />
-        <button type="submit" class="btn" style="background:#ff3d8d;color:#fff;border-radius:50%;width:42px;height:42px;padding:0;display:grid;place-items:center;border:none">▶️</button>
-      </form>
-    </div>
-  </div>
 
   <script src="/js/app.js"></script>
   <script>
@@ -429,31 +353,12 @@
           <p class="muted">@${HM.esc(u.userId || "user")}</p>
           <p class="muted">📍 ${HM.esc(u.location || "Location not set")}</p>
           <p>${HM.esc(u.bio || "No bio yet.")}</p>
-
-          ${u.anthem && u.anthem.title ? `
-            <div style="margin: 6px 0;">
-              <button type="button" class="anthem-preview-btn" onclick="playAnthemVibe('${HM.esc(u.anthem.title)}', '${HM.esc(u.anthem.artist || '')}', '${HM.esc(u.anthem.genre || 'pop')}', this)">
-                <span class="anthem-disc">🎵</span>
-                <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${HM.esc(u.anthem.title)}</span>
-                <div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>
-              </button>
-            </div>
-          ` : ""}
-
           <div class="tags">
             ${catLabel ? `<span class="tag tag-category">${HM.esc(catLabel)}</span>` : ""}
             ${intentLabel ? `<span class="tag tag-intent">${HM.esc(intentLabel)}</span>` : ""}
-            ${u.loveLanguage ? `<span class="chip love-lang-chip" style="font-size:11px">${HM.esc(u.loveLanguage)}</span>` : ""}
             ${isOnline ? `<span class="tag tag-online">🟢 Active recently</span>` : ""}
             ${(u.interests || []).slice(0, 5).map(i => `<span class="tag">${HM.esc(i)}</span>`).join("")}
           </div>
-
-          ${Array.isArray(u.respectBadges) && u.respectBadges.length > 0 ? `
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
-              ${u.respectBadges.map(b => `<span class="chip respect-karma-badge" style="font-size:10px">${HM.esc(b)}</span>`).join("")}
-            </div>
-          ` : ""}
-
           <div class="card-actions">
             <button class="btn ghost" type="button" onclick="act('${u._id}','pass',this)">Pass</button>
             <button class="btn" type="button" onclick="act('${u._id}','like',this)">Like ❤️</button>
@@ -507,29 +412,12 @@
                     <span class="compatibility-pill">⚡ ${compScore}% Match</span>
                   </div>
                   <p class="muted" style="margin:3px 0 6px">📍 ${HM.esc(u.location || "Location not set")}</p>
-
-                  ${u.anthem && u.anthem.title ? `
-                    <div style="margin: 4px 0 6px;">
-                      <button type="button" class="anthem-preview-btn" onclick="playAnthemVibe('${HM.esc(u.anthem.title)}', '${HM.esc(u.anthem.artist || '')}', '${HM.esc(u.anthem.genre || 'pop')}', this)">
-                        <span class="anthem-disc">🎵</span>
-                        <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${HM.esc(u.anthem.title)}</span>
-                        <div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>
-                      </button>
-                    </div>
-                  ` : ""}
-
                   <p style="font-size:13px;line-height:1.4;margin-bottom:8px">${HM.esc(u.bio || "No bio yet.")}</p>
                   <div class="tags" style="margin:auto 0 0">
                     ${catLabel ? `<span class="tag tag-category">${HM.esc(catLabel)}</span>` : ""}
                     ${intentLabel ? `<span class="tag tag-intent">${HM.esc(intentLabel)}</span>` : ""}
-                    ${u.loveLanguage ? `<span class="chip love-lang-chip" style="font-size:11px">${HM.esc(u.loveLanguage)}</span>` : ""}
                     ${(u.interests || []).slice(0, 4).map(int => `<span class="tag">${HM.esc(int)}</span>`).join("")}
                   </div>
-                  ${Array.isArray(u.respectBadges) && u.respectBadges.length > 0 ? `
-                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
-                      ${u.respectBadges.map(b => `<span class="chip respect-karma-badge" style="font-size:10px">${HM.esc(b)}</span>`).join("")}
-                    </div>
-                  ` : ""}
                 </div>
               </div>
             `;
@@ -890,275 +778,6 @@
       if (event.key === "Enter") searchUser();
     });
 
-    // Web Audio API Anthem Vibe Player
-    let currentAnthemAudio = null;
-    let currentAnthemBtn = null;
-
-    function stopAnthemPlayback() {
-      if (currentAnthemAudio) {
-        try {
-          currentAnthemAudio.stop();
-          currentAnthemAudio.ctx.close();
-        } catch (_) {}
-        currentAnthemAudio = null;
-      }
-      if (currentAnthemBtn) {
-        currentAnthemBtn.classList.remove("playing");
-        currentAnthemBtn = null;
-      }
-    }
-
-    function playAnthemVibe(title, artist, genre, btn) {
-      if (currentAnthemBtn === btn) {
-        stopAnthemPlayback();
-        return;
-      }
-      stopAnthemPlayback();
-
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const g = String(genre || "pop").toLowerCase();
-
-        const genreScales = {
-          pop: [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 392.00, 523.25],
-          lofi: [220.00, 261.63, 329.63, 392.00, 293.66, 349.23, 440.00, 523.25],
-          indie: [196.00, 246.94, 293.66, 392.00, 220.00, 261.63, 329.63, 440.00],
-          rnb: [174.61, 220.00, 261.63, 329.63, 207.65, 261.63, 311.13, 392.00],
-          edm: [261.63, 329.63, 392.00, 523.25, 659.25, 523.25, 392.00, 329.63],
-          desi: [220.00, 246.94, 293.66, 329.63, 369.99, 440.00, 493.88, 587.33]
-        };
-
-        const notes = genreScales[g] || genreScales.pop;
-        let noteIdx = 0;
-        const now = ctx.currentTime;
-        const gainNode = ctx.createGain();
-        gainNode.gain.setValueAtTime(0.12, now);
-        gainNode.connect(ctx.destination);
-
-        btn.classList.add("playing");
-        currentAnthemBtn = btn;
-
-        let isPlaying = true;
-        function playNextNote(time) {
-          if (!isPlaying) return;
-          const osc = ctx.createOscillator();
-          const noteGain = ctx.createGain();
-          osc.type = (g === "lofi" || g === "rnb") ? "sine" : (g === "edm" ? "sawtooth" : "triangle");
-          osc.frequency.setValueAtTime(notes[noteIdx % notes.length], time);
-
-          noteGain.gain.setValueAtTime(0.001, time);
-          noteGain.gain.exponentialRampToValueAtTime(0.18, time + 0.05);
-          noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.38);
-
-          osc.connect(noteGain);
-          noteGain.connect(gainNode);
-          osc.start(time);
-          osc.stop(time + 0.4);
-
-          noteIdx++;
-        }
-
-        const intervalId = setInterval(() => {
-          if (!isPlaying) return;
-          playNextNote(ctx.currentTime);
-        }, 420);
-
-        playNextNote(now + 0.05);
-
-        const stopTimeout = setTimeout(() => {
-          stopAnthemPlayback();
-        }, 10000);
-
-        currentAnthemAudio = {
-          ctx,
-          stop: () => {
-            isPlaying = false;
-            clearInterval(intervalId);
-            clearTimeout(stopTimeout);
-            gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
-          }
-        };
-
-      } catch (err) {
-        console.warn("Audio vibe preview error:", err);
-        if (btn) btn.classList.remove("playing");
-      }
-    }
-
-    // 🎭 Blind Chemistry Lounge integration
-    let blindSocket = null;
-    let currentBlindSessionId = null;
-    let blindTimerInterval = null;
-    let blindTimeRemaining = 180;
-
-    function initBlindLounge() {
-      const openBtn = document.getElementById("openBlindLoungeBtn");
-      const closeBtn = document.getElementById("closeBlindLoungeBtn");
-      const modal = document.getElementById("blindLoungeModal");
-      const radarView = document.getElementById("blindRadarView");
-      const activeView = document.getElementById("blindActiveView");
-      const timerPill = document.getElementById("blindTimer");
-      const partnerAvatar = document.getElementById("blindPartnerAvatar");
-      const partnerName = document.getElementById("blindPartnerName");
-      const partnerLoveLang = document.getElementById("blindPartnerLoveLang");
-      const partnerAnthem = document.getElementById("blindPartnerAnthem");
-      const messagesList = document.getElementById("blindMessagesList");
-      const chatForm = document.getElementById("blindChatForm");
-      const msgInput = document.getElementById("blindMsgInput");
-      const revealBtn = document.getElementById("blindRevealBtn");
-      const revealText = document.getElementById("blindRevealText");
-
-      if (!openBtn || !modal) return;
-
-      function connectBlindSocket() {
-        if (blindSocket) return;
-        try {
-          blindSocket = io({ auth: { token: HM.token() } });
-
-          blindSocket.on("blind:waiting", () => {
-            if (radarView) radarView.style.display = "flex";
-            if (activeView) activeView.style.display = "none";
-          });
-
-          blindSocket.on("blind:matched", (data) => {
-            currentBlindSessionId = data.sessionId;
-            if (radarView) radarView.style.display = "none";
-            if (activeView) activeView.style.display = "flex";
-
-            if (partnerAvatar) {
-              partnerAvatar.src = data.partner.avatar || "/images/default-avatar.svg";
-              partnerAvatar.className = "blind-avatar-frosted";
-            }
-            if (partnerName) partnerName.textContent = data.partner.name || "Mystery Match";
-            if (partnerLoveLang) partnerLoveLang.textContent = data.partner.loveLanguage || "Quality Time ☕";
-            if (partnerAnthem) partnerAnthem.textContent = data.partner.anthem ? `🎵 ${data.partner.anthem}` : "🎵 Pop Vibe";
-
-            if (messagesList) {
-              messagesList.innerHTML = `<div style="text-align:center;padding:12px;color:rgba(255,255,255,0.6);font-size:13px">👋 You're connected with your Mystery Match! Banter away!</div>`;
-            }
-
-            if (revealBtn) {
-              revealBtn.disabled = false;
-              revealBtn.textContent = "Reveal & Match ❤️";
-            }
-            if (revealText) revealText.textContent = "Ready to see each other? Both must tap Reveal!";
-
-            blindTimeRemaining = data.duration || 180;
-            clearInterval(blindTimerInterval);
-            updateTimerDisplay();
-            blindTimerInterval = setInterval(() => {
-              blindTimeRemaining--;
-              updateTimerDisplay();
-              if (blindTimeRemaining <= 0) {
-                clearInterval(blindTimerInterval);
-                if (revealText) revealText.textContent = "Time's up! Did you find a spark?";
-              }
-            }, 1000);
-          });
-
-          blindSocket.on("blind:message", (msg) => {
-            if (!messagesList) return;
-            const myId = String(HM.user()?._id || HM.user()?.id || "");
-            const isMe = String(msg.senderId) === myId;
-            const bubble = document.createElement("div");
-            bubble.style.cssText = `margin-bottom:8px;display:flex;flex-direction:column;align-items:${isMe ? "flex-end" : "flex-start"}`;
-            bubble.innerHTML = `
-              <div style="max-width:78%;padding:8px 14px;border-radius:18px;font-size:14px;line-height:1.4;background:${isMe ? "linear-gradient(135deg,#ff3d8d,#a855f7)" : "#251f33"};color:#fff">
-                ${HM.esc(msg.text)}
-              </div>
-              <span style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;padding:0 4px">${HM.esc(msg.time || "")}</span>
-            `;
-            messagesList.appendChild(bubble);
-            messagesList.scrollTop = messagesList.scrollHeight;
-          });
-
-          blindSocket.on("blind:partnerRevealed", () => {
-            if (revealText) revealText.innerHTML = "✨ <b>Your mystery match tapped Reveal!</b> Tap Reveal now to see each other!";
-          });
-
-          blindSocket.on("blind:mutualReveal", () => {
-            if (partnerAvatar) {
-              partnerAvatar.className = "blind-avatar-wrap revealed";
-              partnerAvatar.style.filter = "none";
-            }
-            if (revealBtn) {
-              revealBtn.textContent = "Matched! ❤️🎉";
-              revealBtn.disabled = true;
-            }
-            if (revealText) {
-              revealText.innerHTML = "🎉 <b style='color:#4ade80'>It's a Mutual Match!</b> Both consented to reveal. You can now chat anytime in Matches!";
-            }
-          });
-
-          blindSocket.on("blind:partnerLeft", (data) => {
-            if (messagesList) {
-              const note = document.createElement("div");
-              note.style.cssText = "text-align:center;padding:8px;color:#f87171;font-size:12px;margin:10px 0";
-              note.textContent = data.message || "Mystery partner has left the lounge.";
-              messagesList.appendChild(note);
-              messagesList.scrollTop = messagesList.scrollHeight;
-            }
-            clearInterval(blindTimerInterval);
-            if (revealBtn) revealBtn.disabled = true;
-          });
-
-          blindSocket.on("blind:error", (err) => {
-            alert(err.message || "Blind lounge error");
-          });
-
-        } catch (e) {
-          console.error("Socket error in Blind Lounge:", e);
-        }
-      }
-
-      function updateTimerDisplay() {
-        if (!timerPill) return;
-        const m = Math.floor(Math.max(0, blindTimeRemaining) / 60);
-        const s = Math.max(0, blindTimeRemaining) % 60;
-        timerPill.textContent = `⏱️ ${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-      }
-
-      openBtn.addEventListener("click", () => {
-        modal.style.display = "flex";
-        radarView.style.display = "flex";
-        activeView.style.display = "none";
-        connectBlindSocket();
-        const u = HM.user();
-        blindSocket.emit("blind:joinQueue", { userId: u?._id || u?.id });
-      });
-
-      closeBtn.addEventListener("click", () => {
-        if (blindSocket) {
-          blindSocket.emit("blind:leave", { sessionId: currentBlindSessionId });
-        }
-        clearInterval(blindTimerInterval);
-        modal.style.display = "none";
-        currentBlindSessionId = null;
-      });
-
-      if (chatForm) {
-        chatForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const text = msgInput.value.trim();
-          if (!text || !currentBlindSessionId || !blindSocket) return;
-          blindSocket.emit("blind:sendMessage", { sessionId: currentBlindSessionId, text });
-          msgInput.value = "";
-        });
-      }
-
-      if (revealBtn) {
-        revealBtn.addEventListener("click", () => {
-          if (!currentBlindSessionId || !blindSocket) return;
-          blindSocket.emit("blind:reveal", { sessionId: currentBlindSessionId });
-          revealBtn.disabled = true;
-          revealBtn.textContent = "Waiting for partner... ⏳";
-        });
-      }
-    }
-
-    initBlindLounge();
     load();
   </script>
   <script src="js/notification-badge.js"></script>

@@ -14,7 +14,6 @@
   <link rel="icon" type="image/png" sizes="512x512" href="/images/icons/icon-512.png">
   <link rel="icon" type="image/svg+xml" href="/images/icons/icon.svg">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="stylesheet" href="/css/app.css">
     <style>
         :root {
             --bg: #090812;
@@ -513,30 +512,6 @@
                     ? `<span class="person-compat-badge">⚡ ${user.compatibility}% Match</span>`
                     : "";
 
-                const loveLangHTML = user.loveLanguage
-                    ? `<span class="chip love-lang-chip" style="font-size:12px;padding:4px 10px">${escapeHTML(user.loveLanguage)}</span>`
-                    : "";
-
-                const socialEnergyHTML = user.socialEnergy
-                    ? `<span class="chip" style="font-size:12px;padding:4px 10px;border-color:rgba(255,106,169,0.3);background:rgba(255,106,169,0.12);color:#ff6aa9">${escapeHTML(user.socialEnergy)}</span>`
-                    : "";
-
-                const anthemHTML = user.anthem && user.anthem.title ? `
-                    <div style="margin: 14px 0 6px;">
-                        <button type="button" class="anthem-preview-btn" onclick="playPersonAnthemVibe('${escapeHTML(user.anthem.title)}', '${escapeHTML(user.anthem.artist || '')}', '${escapeHTML(user.anthem.genre || 'pop')}', this)">
-                            <span class="anthem-disc">🎵</span>
-                            <span style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(user.anthem.title)} - ${escapeHTML(user.anthem.artist || 'Anthem')}</span>
-                            <div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>
-                        </button>
-                    </div>
-                ` : "";
-
-                const respectHTML = Array.isArray(user.respectBadges) && user.respectBadges.length > 0 ? `
-                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
-                        ${user.respectBadges.map(b => `<span class="chip respect-karma-badge">${escapeHTML(b)}</span>`).join("")}
-                    </div>
-                ` : "";
-
                 const promptsHTML = Array.isArray(user.prompts) && user.prompts.length > 0
                     ? `
                         <section class="profile-section">
@@ -570,17 +545,12 @@
                             </div>
                         </div>
 
-                        ${(compatHTML || intentHTML || loveLangHTML || socialEnergyHTML) ? `
+                        ${(compatHTML || intentHTML) ? `
                             <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:14px;">
                                 ${compatHTML}
                                 ${intentHTML}
-                                ${loveLangHTML}
-                                ${socialEnergyHTML}
                             </div>
                         ` : ""}
-
-                        ${anthemHTML}
-                        ${respectHTML}
 
                         <section class="profile-section">
                             <div class="section-label">
@@ -817,92 +787,6 @@
                         😕 ${escapeHTML(error.message)}
                     </div>
                 `;
-            }
-        }
-
-        // Web Audio API Anthem Player
-        let currentPersonAnthem = null;
-        let currentPersonAnthemBtn = null;
-
-        function stopPersonAnthem() {
-            if (currentPersonAnthem) {
-                try {
-                    currentPersonAnthem.stop();
-                    currentPersonAnthem.ctx.close();
-                } catch (_) {}
-                currentPersonAnthem = null;
-            }
-            if (currentPersonAnthemBtn) {
-                currentPersonAnthemBtn.classList.remove("playing");
-                currentPersonAnthemBtn = null;
-            }
-        }
-
-        function playPersonAnthemVibe(title, artist, genre, btn) {
-            if (currentPersonAnthemBtn === btn) {
-                stopPersonAnthem();
-                return;
-            }
-            stopPersonAnthem();
-
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (!AudioCtx) return;
-                const ctx = new AudioCtx();
-                const g = String(genre || "pop").toLowerCase();
-
-                const genreScales = {
-                    pop: [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 392.00, 523.25],
-                    lofi: [220.00, 261.63, 329.63, 392.00, 293.66, 349.23, 440.00, 523.25],
-                    indie: [196.00, 246.94, 293.66, 392.00, 220.00, 261.63, 329.63, 440.00],
-                    rnb: [174.61, 220.00, 261.63, 329.63, 207.65, 261.63, 311.13, 392.00],
-                    edm: [261.63, 329.63, 392.00, 523.25, 659.25, 523.25, 392.00, 329.63],
-                    desi: [220.00, 246.94, 293.66, 329.63, 369.99, 440.00, 493.88, 587.33]
-                };
-
-                const notes = genreScales[g] || genreScales.pop;
-                let noteIdx = 0;
-                const gainNode = ctx.createGain();
-                gainNode.gain.setValueAtTime(0.14, ctx.currentTime);
-                gainNode.connect(ctx.destination);
-
-                btn.classList.add("playing");
-                currentPersonAnthemBtn = btn;
-
-                let isPlaying = true;
-                const intervalId = setInterval(() => {
-                    if (!isPlaying) return;
-                    const osc = ctx.createOscillator();
-                    const ng = ctx.createGain();
-                    osc.type = (g === "lofi" || g === "rnb") ? "sine" : (g === "edm" ? "sawtooth" : "triangle");
-                    osc.frequency.setValueAtTime(notes[noteIdx % notes.length], ctx.currentTime);
-                    ng.gain.setValueAtTime(0.001, ctx.currentTime);
-                    ng.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.05);
-                    ng.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
-                    osc.connect(ng);
-                    ng.connect(gainNode);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 0.4);
-                    noteIdx++;
-                }, 400);
-
-                const stopTimeout = setTimeout(() => {
-                    stopPersonAnthem();
-                }, 10000);
-
-                currentPersonAnthem = {
-                    ctx,
-                    stop: () => {
-                        isPlaying = false;
-                        clearInterval(intervalId);
-                        clearTimeout(stopTimeout);
-                        gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
-                    }
-                };
-
-            } catch (e) {
-                console.error("Person anthem preview error:", e);
-                if (btn) btn.classList.remove("playing");
             }
         }
 

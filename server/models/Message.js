@@ -28,7 +28,7 @@ const messageSchema = new mongoose.Schema(
 
         type: {
             type: String,
-            enum: ["text", "image", "video", "audio", "view_once", "date_invite"],
+            enum: ["text", "image", "video", "audio", "view_once"],
             default: "text"
         },
 
@@ -36,14 +36,6 @@ const messageSchema = new mongoose.Schema(
             messageId: { type: mongoose.Schema.Types.ObjectId, ref: "Message", default: null },
             text: { type: String, default: "" },
             senderName: { type: String, default: "" }
-        },
-
-        // In-Chat Date Planner ("Meet-in-the-Middle")
-        dateDetails: {
-            activity: { type: String, default: "" },
-            dateTime: { type: String, default: "" },
-            locationName: { type: String, default: "" },
-            status: { type: String, enum: ["pending", "accepted", "declined"], default: "pending" }
         },
 
         viewOnce: {

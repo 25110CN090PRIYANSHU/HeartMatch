@@ -251,83 +251,6 @@
           </div>
           <div id="promptsContainer"></div>
           <hr style="border-color: var(--line); margin: 20px 0" />
-
-          <!-- 🎵 Music Vibe Anthem -->
-          <div>
-            <h3 style="margin:0 0 4px; font-size: 16px;">Music Vibe Anthem 🎵</h3>
-            <p class="muted" style="font-size: 12px; margin: 0 0 12px;">Share your life's theme song with your matches</p>
-            <div class="two">
-              <div class="field">
-                <label>Song Title</label>
-                <input id="anthemTitle" placeholder="e.g. Starboy / Kesariya" maxlength="80" />
-              </div>
-              <div class="field">
-                <label>Artist</label>
-                <input id="anthemArtist" placeholder="e.g. The Weeknd / Arijit Singh" maxlength="80" />
-              </div>
-            </div>
-            <div class="two" style="align-items:flex-end">
-              <div class="field">
-                <label>Musical Vibe</label>
-                <select id="anthemGenre">
-                  <option value="pop">Pop / Commercial 🌟</option>
-                  <option value="lofi">Lo-Fi / Chill Beats ☕</option>
-                  <option value="indie">Indie / Acoustic 🎸</option>
-                  <option value="rnb">R&amp;B / Soul 🎷</option>
-                  <option value="edm">EDM / Club / Dance ⚡</option>
-                  <option value="desi">Desi / Bollywood 🪕</option>
-                </select>
-              </div>
-              <div class="field">
-                <button type="button" class="btn alt" id="previewMyAnthemBtn" style="width:100%;padding:10px">
-                  ▶️ Preview Melody
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <hr style="border-color: var(--line); margin: 20px 0" />
-
-          <!-- 🧩 Chemistry & Personality -->
-          <div>
-            <h3 style="margin:0 0 4px; font-size: 16px;">Chemistry &amp; Love Language 🧩</h3>
-            <p class="muted" style="font-size: 12px; margin: 0 0 12px;">Boost your match compatibility by setting how you express affection</p>
-            <div class="two">
-              <div class="field">
-                <label>Primary Love Language</label>
-                <select id="loveLanguage">
-                  <option value="Quality Time ☕">Quality Time ☕</option>
-                  <option value="Words of Affirmation 💌">Words of Affirmation 💌</option>
-                  <option value="Physical Touch 🫂">Physical Touch 🫂</option>
-                  <option value="Acts of Service 🛠️">Acts of Service 🛠️</option>
-                  <option value="Receiving Gifts 🎁">Receiving Gifts 🎁</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Social Battery</label>
-                <select id="socialEnergy">
-                  <option value="⚡ Ambivert (Best of both)">⚡ Ambivert (Best of both)</option>
-                  <option value="🔋 Introvert (Quiet recharge)">🔋 Introvert (Quiet recharge)</option>
-                  <option value="🎉 Extrovert (Life of party)">🎉 Extrovert (Life of party)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <hr style="border-color: var(--line); margin: 20px 0" />
-
-          <!-- 🛡️ Date Shield Safety Contact -->
-          <div>
-            <h3 style="margin:0 0 4px; font-size: 16px;">Date Shield Safety Contact 🛡️</h3>
-            <p class="muted" style="font-size: 12px; margin: 0 0 12px;">Emergency phone number or WhatsApp to alert with 1 tap if a date feels unsafe</p>
-            <div class="field">
-              <label>Emergency Contact (Phone / WhatsApp)</label>
-              <input id="safetyContact" placeholder="e.g. +91 9876543210" maxlength="30" />
-            </div>
-          </div>
-
-          <hr style="border-color: var(--line); margin: 20px 0" />
-
           <h3>Discovery preferences</h3>
           <div class="two">
             <div class="field">
@@ -398,13 +321,6 @@
         galleryMsg: document.getElementById("galleryMsg"),
         promptsContainer: document.getElementById("promptsContainer"),
         addPromptBtn: document.getElementById("addPromptBtn"),
-        anthemTitle: document.getElementById("anthemTitle"),
-        anthemArtist: document.getElementById("anthemArtist"),
-        anthemGenre: document.getElementById("anthemGenre"),
-        previewMyAnthemBtn: document.getElementById("previewMyAnthemBtn"),
-        loveLanguage: document.getElementById("loveLanguage"),
-        socialEnergy: document.getElementById("socialEnergy"),
-        safetyContact: document.getElementById("safetyContact"),
       };
       let user = null;
       let userPhotos = [];
@@ -581,15 +497,6 @@
           els.maxAge.value = p.maxAge ?? 100;
           els.interestedIn.value = p.interestedIn || "any";
           els.prefLocation.value = p.location || "";
-
-          const a = user.anthem || {};
-          if (els.anthemTitle) els.anthemTitle.value = a.title || "";
-          if (els.anthemArtist) els.anthemArtist.value = a.artist || "";
-          if (els.anthemGenre) els.anthemGenre.value = a.genre || "pop";
-          if (els.loveLanguage) els.loveLanguage.value = user.loveLanguage || "Quality Time ☕";
-          if (els.socialEnergy) els.socialEnergy.value = user.socialEnergy || "⚡ Ambivert (Best of both)";
-          if (els.safetyContact) els.safetyContact.value = user.safetyContact || "";
-
           els.preview.textContent = user.name
             ? `${user.name}, ${user.age || ""}`
             : "Your profile";
@@ -653,14 +560,6 @@
             interestedIn: els.interestedIn.value,
             location: els.prefLocation.value.trim(),
           },
-          anthem: {
-            title: els.anthemTitle ? els.anthemTitle.value.trim() : "",
-            artist: els.anthemArtist ? els.anthemArtist.value.trim() : "",
-            genre: els.anthemGenre ? els.anthemGenre.value : "pop",
-          },
-          loveLanguage: els.loveLanguage ? els.loveLanguage.value : "Quality Time ☕",
-          socialEnergy: els.socialEnergy ? els.socialEnergy.value : "⚡ Ambivert (Best of both)",
-          safetyContact: els.safetyContact ? els.safetyContact.value.trim() : "",
         };
         els.saveBtn.disabled = true;
         els.saveBtn.textContent = "Saving...";
@@ -741,76 +640,6 @@
           renderPrompts();
         });
       }
-
-      let myAnthemOsc = null;
-      if (els.previewMyAnthemBtn) {
-        els.previewMyAnthemBtn.addEventListener("click", () => {
-          if (myAnthemOsc) {
-            try { myAnthemOsc.stop(); myAnthemOsc.ctx.close(); } catch(_) {}
-            myAnthemOsc = null;
-            els.previewMyAnthemBtn.textContent = "▶️ Preview Melody";
-            return;
-          }
-          try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            const ctx = new AudioCtx();
-            const g = (els.anthemGenre ? els.anthemGenre.value : "pop").toLowerCase();
-            const genreScales = {
-              pop: [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 392.00, 523.25],
-              lofi: [220.00, 261.63, 329.63, 392.00, 293.66, 349.23, 440.00, 523.25],
-              indie: [196.00, 246.94, 293.66, 392.00, 220.00, 261.63, 329.63, 440.00],
-              rnb: [174.61, 220.00, 261.63, 329.63, 207.65, 261.63, 311.13, 392.00],
-              edm: [261.63, 329.63, 392.00, 523.25, 659.25, 523.25, 392.00, 329.63],
-              desi: [220.00, 246.94, 293.66, 329.63, 369.99, 440.00, 493.88, 587.33]
-            };
-            const notes = genreScales[g] || genreScales.pop;
-            let noteIdx = 0;
-            const gain = ctx.createGain();
-            gain.gain.setValueAtTime(0.14, ctx.currentTime);
-            gain.connect(ctx.destination);
-            els.previewMyAnthemBtn.textContent = "⏹️ Stop Melody";
-
-            let isPlaying = true;
-            const interval = setInterval(() => {
-              if (!isPlaying) return;
-              const osc = ctx.createOscillator();
-              const ng = ctx.createGain();
-              osc.type = (g === "lofi" || g === "rnb") ? "sine" : (g === "edm" ? "sawtooth" : "triangle");
-              osc.frequency.setValueAtTime(notes[noteIdx % notes.length], ctx.currentTime);
-              ng.gain.setValueAtTime(0.001, ctx.currentTime);
-              ng.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.05);
-              ng.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.36);
-              osc.connect(ng);
-              ng.connect(gain);
-              osc.start(ctx.currentTime);
-              osc.stop(ctx.currentTime + 0.38);
-              noteIdx++;
-            }, 380);
-
-            const timer = setTimeout(() => {
-              if (myAnthemOsc) {
-                myAnthemOsc.stop();
-                myAnthemOsc = null;
-                els.previewMyAnthemBtn.textContent = "▶️ Preview Melody";
-              }
-            }, 8000);
-
-            myAnthemOsc = {
-              ctx,
-              stop: () => {
-                isPlaying = false;
-                clearInterval(interval);
-                clearTimeout(timer);
-                gain.gain.setValueAtTime(0.001, ctx.currentTime);
-              }
-            };
-          } catch(err) {
-            console.error("Preview audio error:", err);
-          }
-        });
-      }
-
       load();
     </script>
     <script src="js/notification-badge.js"></script>

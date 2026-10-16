@@ -35,7 +35,6 @@ const Notification = require("./models/Notification");
 const User = require("./models/User");
 const Block = require("./models/Block");
 const { sendPushNotification } = require("./utils/pushNotifier");
-const { initBlindLounge } = require("./utils/blindLounge");
 
 const app = express();
 
@@ -107,9 +106,6 @@ const io = new Server(server, {
         origin: "*"
     }
 });
-
-// Initialize 3-Minute Blind Chemistry Lounge real-time engine
-initBlindLounge(io);
 
 // ===============================
 // API ROUTES
@@ -188,11 +184,11 @@ app.get("/api/turn-config", (req, res) => {
 // Public profile endpoint for a matched person's profile page.
 app.get("/api/person/:id", authMiddleware, async (req, res) => {
     try {
-        const personFields = "_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt anthem loveLanguage socialEnergy respectScore respectBadges";
+        const lookup = String(req.params.id || "").trim().toLowerCase();
         const userPromise = mongoose.Types.ObjectId.isValid(lookup)
-            ? User.findById(lookup).select(personFields).lean()
-            : User.findOne({ userId: lookup, isActive: true }).select(personFields).lean();
-        const viewerPromise = User.findById(req.userId).select("age interests lookingFor location preferences anthem loveLanguage socialEnergy").lean();
+            ? User.findById(lookup).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt").lean()
+            : User.findOne({ userId: lookup, isActive: true }).select("_id userId name age gender location bio interests profileImage isVerified photos prompts lookingFor lastSeen createdAt").lean();
+        const viewerPromise = User.findById(req.userId).select("age interests lookingFor location preferences").lean();
 
         const [user, viewer] = await Promise.all([userPromise, viewerPromise]);
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -212,17 +208,11 @@ app.get("/api/person/:id", authMiddleware, async (req, res) => {
             const myInterests = (viewer.interests || []).map(i => String(i).toLowerCase().trim());
             const theirInterests = (uObj.interests || []).map(i => String(i).toLowerCase().trim());
             const shared = myInterests.filter(i => theirInterests.includes(i));
-            score += Math.min(32, shared.length * 10);
+            score += Math.min(36, shared.length * 12);
             if (viewer.lookingFor && uObj.lookingFor && viewer.lookingFor === uObj.lookingFor && viewer.lookingFor !== "any") {
-                score += 12;
+                score += 14;
             }
             if (viewer.location && uObj.location && String(viewer.location).toLowerCase().trim() === String(uObj.location).toLowerCase().trim()) {
-                score += 8;
-            }
-            if (viewer.loveLanguage && uObj.loveLanguage && viewer.loveLanguage === uObj.loveLanguage) {
-                score += 8;
-            }
-            if (viewer.anthem?.genre && uObj.anthem?.genre && viewer.anthem.genre.toLowerCase() === uObj.anthem.genre.toLowerCase()) {
                 score += 8;
             }
             const p = viewer.preferences || {};
