@@ -666,6 +666,23 @@
 
             <button
                 class="nav-btn"
+                onclick="location.href='notifications.html'"
+                style="position:relative;"
+                title="Notifications"
+            >
+                🔔
+                <span id="navNotifBadge" class="hm-notification-badge" style="display:none;"></span>
+            </button>
+
+            <button
+                class="nav-btn"
+                onclick="location.href='settings.html'"
+            >
+                Settings
+            </button>
+
+            <button
+                class="nav-btn"
                 onclick="logout()"
             >
                 Logout
@@ -781,8 +798,8 @@
                     <button id="storyAddMoreBtn" class="hm-story-viewcount-btn" style="display: none; background: rgba(0, 149, 246, 0.45); border-color: rgba(0, 149, 246, 0.6);" onclick="closeStoryViewer(); openStoryCreator();" title="Add another story">
                         ➕ Add
                     </button>
-                    <button id="storyViewsBtn" class="hm-story-viewcount-btn" style="display: none;" onclick="openStoryViewersSheet()">
-                        👁️ <span id="storyViewsCount">0</span>
+                    <button id="storyViewsBtn" class="hm-story-viewcount-btn" style="display: none; cursor: pointer; z-index: 35; pointer-events: auto;" onclick="event.stopPropagation(); openStoryViewersSheet();" ontouchend="event.stopPropagation(); openStoryViewersSheet();" title="View who saw your story">
+                        <span style="pointer-events: none;">👁️</span> <span id="storyViewsCount" style="pointer-events: none;">0</span>
                     </button>
                     <button id="storyDeleteBtn" class="hm-story-del-btn" style="display: none;" title="Delete story" onclick="deleteCurrentStory()">
                         🗑️
@@ -817,8 +834,10 @@
                     <input type="text" id="storyReplyInput" class="hm-story-reply-input" placeholder="Send message..." onkeydown="if(event.key==='Enter') sendStoryReply()" />
                     <button class="hm-story-send-btn" onclick="sendStoryReply()">Send</button>
                 </div>
+            </div>
+
             <!-- Bottom Instagram-style Seen By footer (for your own stories) -->
-            <div class="hm-story-self-footer" id="storySelfFooter" style="display: none;" onclick="openStoryViewersSheet()">
+            <div class="hm-story-self-footer" id="storySelfFooter" style="display: none; cursor: pointer; z-index: 35; pointer-events: auto;" onclick="event.stopPropagation(); openStoryViewersSheet();" ontouchend="event.stopPropagation(); openStoryViewersSheet();" title="View who saw your story">
                 <div class="hm-story-viewer-avatars-preview" id="storyViewerAvatarsPreview"></div>
                 <div class="hm-story-seen-label">
                     <span id="storySeenCountText">Seen by 0</span>
@@ -1439,7 +1458,14 @@
 
             if (stage) {
                 const pause = () => { isPaused = true; };
-                const resume = () => { isPaused = false; };
+                const resume = () => {
+                    const sheet = document.getElementById("storyViewersSheet");
+                    if (sheet && sheet.classList.contains("open")) {
+                        isPaused = true;
+                        return;
+                    }
+                    isPaused = false;
+                };
 
                 stage.addEventListener("mousedown", pause);
                 window.addEventListener("mouseup", resume);
@@ -1456,7 +1482,7 @@
                     resume();
                     if (e.changedTouches && e.changedTouches[0]) {
                         const diffY = touchStartY - e.changedTouches[0].clientY;
-                        if (diffY > 55) {
+                        if (diffY > 40) {
                             const group = getCurrentGroupData();
                             if (group && group.isSelf) {
                                 openStoryViewersSheet();
@@ -1557,18 +1583,11 @@
             }
         }
 
-        function openStoryViewersSheet() {
-            isPaused = true;
-            const group = getCurrentGroupData();
-            if (!group || !group.isSelf) return;
-
-            const story = group.stories[activeStoryIdx];
-            const sheet = document.getElementById("storyViewersSheet");
+        function renderStoryViewersHTML(viewers) {
             const list = document.getElementById("storyViewersList");
-            if (!sheet || !list) return;
+            if (!list) return;
 
-            const viewers = story.viewers || [];
-            if (viewers.length === 0) {
+            if (!viewers || viewers.length === 0) {
                 list.innerHTML = `
                     <div style="text-align: center; color: var(--hm-text-muted); padding: 32px 0;">
                         <div style="font-size: 40px; margin-bottom: 8px;">👁️</div>
@@ -1591,6 +1610,49 @@
                         </a>
                     </div>
                 `).join('');
+            }
+        }
+
+        function openStoryViewersSheet() {
+            isPaused = true;
+            const vidEl = document.getElementById("storyViewerVideo");
+            if (vidEl) vidEl.pause();
+
+            const group = getCurrentGroupData();
+            if (!group || !group.isSelf) return;
+
+            const story = group.stories[activeStoryIdx];
+            const sheet = document.getElementById("storyViewersSheet");
+            if (!sheet || !story) return;
+
+            // Render existing cached viewers first
+            const viewers = story.viewers || [];
+            renderStoryViewersHTML(viewers);
+
+            // Fetch live viewers from server
+            if (story._id) {
+                fetch(`/api/stories/${story._id}/viewers`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (data && Array.isArray(data.viewers)) {
+                        story.viewers = data.viewers;
+                        story.viewsCount = data.viewsCount || data.viewers.length;
+                        renderStoryViewersHTML(data.viewers);
+                        const viewsCount = document.getElementById("storyViewsCount");
+                        if (viewsCount) viewsCount.textContent = story.viewsCount;
+                        const seenText = document.getElementById("storySeenCountText");
+                        if (seenText) seenText.textContent = `Seen by ${story.viewsCount}`;
+                        const avatarsPreview = document.getElementById("storyViewerAvatarsPreview");
+                        if (avatarsPreview) {
+                            avatarsPreview.innerHTML = data.viewers.slice(0, 3).map(v => 
+                                `<img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" alt="${escapeAttribute(v.name || 'User')}" onerror="this.src='/images/icons/icon-192.png'" />`
+                            ).join('');
+                        }
+                    }
+                })
+                .catch(() => {});
             }
 
             sheet.classList.add("open");

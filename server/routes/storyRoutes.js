@@ -521,6 +521,45 @@ module.exports = (io) => {
     });
 
     // ==================================================
+    // 5.5 GET STORY VIEWERS (for own stories)
+    // ==================================================
+    router.get("/:id/viewers", authMiddleware, async (req, res) => {
+        try {
+            const storyId = req.params.id;
+            if (!mongoose.Types.ObjectId.isValid(storyId)) {
+                return res.status(400).json({ success: false, message: "Invalid story ID" });
+            }
+
+            const story = await Story.findOne({
+                _id: storyId,
+                user: req.userId
+            })
+                .populate("views.user", "_id name profileImage")
+                .lean();
+
+            if (!story) {
+                return res.status(404).json({ success: false, message: "Story not found" });
+            }
+
+            const viewers = (story.views || []).map((v) => ({
+                _id: v.user?._id || v.user,
+                name: v.user?.name || "User",
+                profileImage: v.user?.profileImage || "",
+                viewedAt: v.viewedAt
+            }));
+
+            res.json({
+                success: true,
+                viewsCount: viewers.length,
+                viewers
+            });
+        } catch (error) {
+            console.error("[Stories] Fetch viewers error:", error);
+            res.status(500).json({ success: false, message: "Failed to fetch viewers" });
+        }
+    });
+
+    // ==================================================
     // 6. DELETE OWN STORY
     // ==================================================
     router.delete("/:id", authMiddleware, async (req, res) => {

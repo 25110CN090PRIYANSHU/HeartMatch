@@ -147,7 +147,7 @@
 
     // If chat has reactToMessage function, send heart emoji reaction
     const row = targetElement.closest('.message-row');
-    const msgId = row?.dataset?.id;
+    const msgId = row?.dataset?.messageId || row?.dataset?.id;
     if (msgId && typeof window.reactToMessage === 'function') {
       window.reactToMessage(msgId, '❤️');
     }
