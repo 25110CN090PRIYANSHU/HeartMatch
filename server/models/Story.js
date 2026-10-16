@@ -5,8 +5,7 @@ const storySchema = new mongoose.Schema(
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
-            index: true
+            required: true
         },
         mediaUrl: {
             type: String,
@@ -41,8 +40,7 @@ const storySchema = new mongoose.Schema(
         ],
         expiresAt: {
             type: Date,
-            required: true,
-            index: { expires: 0 } // MongoDB TTL index auto-deletes expired stories
+            required: true
         }
     },
     {
@@ -51,6 +49,6 @@ const storySchema = new mongoose.Schema(
 );
 
 storySchema.index({ user: 1, expiresAt: -1 });
-storySchema.index({ expiresAt: 1 });
+storySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("Story", storySchema);
