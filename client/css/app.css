@@ -420,3 +420,441 @@ select option:hover {
 .typing-dot:nth-child(3){animation-delay:.4s}
 @keyframes typingBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
 
+/* ==================================================
+   1. ☕ IN-CHAT DATE PLANNER ("Meet-in-the-Middle")
+   ================================================== */
+.date-invite-card {
+  min-width: 250px;
+  max-width: 320px;
+  background: linear-gradient(145deg, rgba(30, 24, 48, 0.95), rgba(18, 14, 30, 0.95));
+  border: 1px solid rgba(255, 77, 141, 0.4);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  margin: 4px 0;
+}
+.date-invite-card.accepted {
+  border-color: rgba(82, 229, 165, 0.6);
+  background: linear-gradient(145deg, rgba(16, 36, 28, 0.95), rgba(12, 24, 20, 0.95));
+}
+.date-invite-card.declined {
+  border-color: rgba(255, 107, 129, 0.4);
+  opacity: 0.75;
+}
+.date-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.date-card-icon {
+  font-size: 24px;
+}
+.date-card-title {
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+}
+.date-card-sub {
+  font-size: 11px;
+  color: var(--pink, #ff4d8d);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.date-card-body {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.date-detail-item {
+  margin-bottom: 4px;
+  color: #e2e8f0;
+}
+.date-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.date-btn {
+  border: none;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  width: 100%;
+}
+.date-btn.accept {
+  background: linear-gradient(135deg, #ff4d8d, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 77, 141, 0.35);
+}
+.date-btn.accept:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+.date-btn.decline {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ff6b81;
+}
+.date-cal-btn {
+  background: rgba(82, 229, 165, 0.15);
+  border: 1px solid rgba(82, 229, 165, 0.4);
+  color: #52e5a5;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+}
+.date-status-pill {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px;
+  border-radius: 8px;
+}
+.date-status-pill.pending {
+  background: rgba(255, 183, 3, 0.15);
+  color: #ffb703;
+}
+.date-status-pill.accepted {
+  background: rgba(82, 229, 165, 0.2);
+  color: #52e5a5;
+}
+.date-status-pill.declined {
+  background: rgba(255, 107, 129, 0.2);
+  color: #ff6b81;
+}
+
+/* ==================================================
+   2. ✨ AI WINGMAN DRAWER
+   ================================================== */
+.wingman-drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  background: rgba(18, 14, 30, 0.98);
+  border-top: 1px solid rgba(255, 77, 141, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 16px;
+  backdrop-filter: blur(20px);
+  z-index: 58;
+  max-height: 280px;
+  overflow-y: auto;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUpWingman 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUpWingman {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wingman-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.wingman-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ff6aa9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wingman-close-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 16px;
+  cursor: pointer;
+}
+.wingman-suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wingman-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: 0.18s ease;
+  text-align: left;
+}
+.wingman-card:hover {
+  background: rgba(255, 77, 141, 0.12);
+  border-color: rgba(255, 77, 141, 0.4);
+  transform: translateX(4px);
+}
+.wingman-card-tag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #a855f7;
+  margin-bottom: 3px;
+}
+.wingman-card-text {
+  font-size: 13px;
+  color: #eee;
+  line-height: 1.4;
+}
+
+/* ==================================================
+   3. 🎭 BLIND CHEMISTRY LOUNGE BANNER & MODAL
+   ================================================== */
+.blind-lounge-banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #3b0764 0%, #1e112a 50%, #831843 100%);
+  border: 1px solid rgba(255, 77, 141, 0.5);
+  border-radius: 20px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 35px rgba(255, 61, 141, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.blind-banner-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ff3d8d;
+  background: rgba(255, 61, 141, 0.15);
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.blind-lounge-banner h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #fff;
+}
+.blind-lounge-banner p {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 480px;
+}
+.blind-launch-btn {
+  background: linear-gradient(110deg, #ff3d8d, #a855f7) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  padding: 10px 20px !important;
+  border-radius: 30px !important;
+  box-shadow: 0 6px 20px rgba(255, 61, 141, 0.4) !important;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Blind Lounge Fullscreen Screen */
+.blind-fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  background: #090812;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+}
+.blind-lounge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(18, 14, 30, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.blind-timer-pill {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ff4d8d;
+  background: rgba(255, 77, 141, 0.15);
+  border: 1px solid rgba(255, 77, 141, 0.3);
+  padding: 5px 14px;
+  border-radius: 20px;
+}
+.blind-partner-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.blind-avatar-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--pink);
+}
+.blind-avatar-frosted {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(14px) brightness(0.85);
+  transition: filter 1s ease;
+}
+.blind-avatar-frosted.revealed {
+  filter: none !important;
+}
+.blind-messages-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden !important;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.blind-reveal-banner {
+  padding: 12px 20px;
+  background: rgba(20, 16, 32, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ==================================================
+   4. 🎵 MUSIC ANTHEM & LOVE LANGUAGE BADGES
+   ================================================== */
+.anthem-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.anthem-preview-btn:hover, .anthem-preview-btn.playing {
+  background: rgba(255, 77, 141, 0.2);
+  border-color: #ff4d8d;
+  color: #ff6aa9;
+}
+.eq-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.eq-bars span {
+  width: 2px;
+  background: #ff4d8d;
+  border-radius: 1px;
+  animation: eqJump 0.8s infinite alternate ease-in-out;
+}
+.eq-bars span:nth-child(1) { height: 4px; animation-delay: 0s; }
+.eq-bars span:nth-child(2) { height: 10px; animation-delay: 0.2s; }
+.eq-bars span:nth-child(3) { height: 6px; animation-delay: 0.4s; }
+@keyframes eqJump {
+  from { height: 3px; }
+  to { height: 12px; }
+}
+.love-lang-chip {
+  background: rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  color: #c4b5fd !important;
+}
+.respect-karma-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(82, 229, 165, 0.15);
+  border: 1px solid rgba(82, 229, 165, 0.3);
+  color: #52e5a5;
+}
+
+/* ==================================================
+   5. 🛡️ DATE SHIELD SAFETY HUB & FAKE ESCAPE CALL
+   ================================================== */
+.fake-call-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 24px 70px;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.fake-call-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a855f7, #ff3d8d);
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  margin-bottom: 16px;
+  animation: callPulse 1.5s infinite;
+}
+@keyframes callPulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 61, 141, 0.7); }
+  70% { box-shadow: 0 0 0 25px rgba(255, 61, 141, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 61, 141, 0); }
+}
+.fake-call-name {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.fake-call-sub {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.65);
+}
+.fake-call-actions {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 320px;
+}
+.fake-call-circle-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s ease;
+}
+.fake-call-circle-btn.decline {
+  background: #ff3b30;
+  color: #fff;
+}
+.fake-call-circle-btn.accept {
+  background: #34c759;
+  color: #fff;
+}
+.fake-call-circle-btn:active {
+  transform: scale(0.92);
+}
+
+

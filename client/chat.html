@@ -1878,6 +1878,8 @@
         </a>
 
         <div class="header-actions">
+          <button class="call-btn" id="planDateBtn" type="button" title="Plan Date (Meet Halfway)">☕</button>
+          <button class="call-btn" id="dateShieldBtn" type="button" title="Date Shield (Safety Hub &amp; Fake Call)">🛡️</button>
           <button
             class="call-btn"
             id="backgroundBtn"
@@ -1934,6 +1936,20 @@
         <button type="button" class="reply-bar-close" id="cancelReplyBtn" title="Cancel Reply">✕</button>
       </div>
 
+      <!-- ✨ AI WINGMAN DRAWER -->
+      <div id="wingmanDrawer" class="wingman-drawer" style="display: none;">
+        <div class="wingman-header">
+          <div class="wingman-title">✨ AI Wingman <span style="font-size:11px;opacity:0.7">(Tap to insert)</span></div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" class="btn alt" id="wingmanRefreshBtn" style="padding: 3px 8px; font-size: 11px;">🔄 Refresh</button>
+            <button type="button" class="wingman-close-btn" id="wingmanCloseBtn">✕</button>
+          </div>
+        </div>
+        <div class="wingman-suggestions-list" id="wingmanList">
+          <div style="color:var(--muted);font-size:12px;padding:8px">Loading smart suggestions...</div>
+        </div>
+      </div>
+
       <!-- INPUT -->
 
       <form class="chat-input" id="chatForm" style="position: relative">
@@ -1954,6 +1970,14 @@
               <span class="attach-icon">👁️</span>
               <span>View Once Photo (Disappears)</span>
             </button>
+            <button type="button" class="attach-option" id="planDateOption">
+              <span class="attach-icon">☕</span>
+              <span>Plan Date (Meet Halfway)</span>
+            </button>
+            <button type="button" class="attach-option" id="politeClosureOption">
+              <span class="attach-icon">💖</span>
+              <span>Polite Closure &amp; Unmatch</span>
+            </button>
             <button type="button" class="attach-option" id="fileOption">
               <span class="attach-icon">📄</span>
               <span>Document</span>
@@ -1961,6 +1985,10 @@
           </div>
           <input class="file-input" id="fileInput" type="file" />
         </div>
+
+        <button type="button" class="call-btn wingman-btn" id="wingmanBtn" title="✨ AI Wingman (Smart Openers &amp; Banter)" style="background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(255,61,141,.3));border-color:rgba(255,61,141,.5);color:#ff6aa9">
+          ✨
+        </button>
 
         <button type="button" class="call-btn chat-camera-btn" id="openCameraBtn" title="Take Photo or Video">
           📷
@@ -2205,6 +2233,139 @@
         </button>
         <button type="button" class="cam-action-pill send-pill" id="cameraSendBtn">
           <span>Send to Chat ▶️</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. ☕ DATE PLANNER MODAL -->
+    <div class="bg-modal" id="datePlannerModal" style="display: none;">
+      <div class="bg-card" style="max-width: 440px;">
+        <div class="bg-card-head">
+          <h3>☕ Plan a Date ("Meet Halfway")</h3>
+          <button type="button" class="bg-close" id="closeDatePlannerBtn">×</button>
+        </div>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">
+          Send an interactive date invitation card directly to chat!
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="field">
+            <label style="font-size: 12px; font-weight: 700; color: #ff6aa9;">Choose Activity</label>
+            <select id="dateActivitySelect" style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid var(--line);">
+              <option value="Coffee &amp; Banter ☕">Coffee &amp; Banter ☕</option>
+              <option value="Dinner &amp; Good Vibes 🍽️">Dinner &amp; Good Vibes 🍽️</option>
+              <option value="Cocktails / Drinks 🍸">Cocktails / Drinks 🍸</option>
+              <option value="Sunset Walk in the Park 🌿">Sunset Walk in the Park 🌿</option>
+              <option value="Movie &amp; Popcorn 🎬">Movie &amp; Popcorn 🎬</option>
+              <option value="Arcade &amp; Bowling 🎳">Arcade &amp; Bowling 🎳</option>
+            </select>
+          </div>
+          <div class="field">
+            <label style="font-size: 12px; font-weight: 700; color: #ff6aa9;">When (Day &amp; Time)</label>
+            <input type="text" id="dateTimeInput" placeholder="e.g. Saturday at 5:00 PM" style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid var(--line);" />
+          </div>
+          <div class="field">
+            <label style="font-size: 12px; font-weight: 700; color: #ff6aa9;">Where (Cafe / Location Name)</label>
+            <input type="text" id="dateLocationInput" placeholder="e.g. Blue Tokai Cafe, Indiranagar" style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid var(--line);" />
+          </div>
+          <button type="button" class="btn" id="sendDateInviteBtn" style="margin-top: 8px; width: 100%; padding: 12px; font-weight: 800; background: linear-gradient(110deg,#ff3d8d,#a855f7); color: #fff; border: none; border-radius: 12px; cursor: pointer;">
+            Send Date Invitation 💌
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 🛡️ DATE SHIELD SAFETY HUB MODAL -->
+    <div class="bg-modal" id="dateShieldModal" style="display: none;">
+      <div class="bg-card" style="max-width: 440px;">
+        <div class="bg-card-head">
+          <h3>🛡️ Date Shield (Safety Hub)</h3>
+          <button type="button" class="bg-close" id="closeDateShieldBtn">×</button>
+        </div>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">
+          Built-in safety tools to protect you on dates and give you effortless exits.
+        </p>
+
+        <!-- Feature A: Instant Fake Escape Call -->
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-size: 14px; font-weight: 800; color: #ff6aa9; margin-bottom: 4px;">🚨 Simulated Escape Phone Call</div>
+          <p style="font-size: 12px; color: #ccc; margin-bottom: 10px; line-height: 1.4;">
+            Triggers a realistic incoming phone call on your device with ringtone &amp; real voice so you have a natural, polite reason to leave an uncomfortable date.
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn alt trigger-fake-call-btn" data-delay="10" style="padding: 7px 12px; font-size: 12px;">Call in 10s</button>
+            <button type="button" class="btn alt trigger-fake-call-btn" data-delay="30" style="padding: 7px 12px; font-size: 12px;">Call in 30s</button>
+            <button type="button" class="btn trigger-fake-call-btn" data-delay="0" style="padding: 7px 12px; font-size: 12px; background: #ff3d8d; color: #fff; border: 0;">Call NOW 📞</button>
+          </div>
+        </div>
+
+        <!-- Feature B: Date Safety Timer & SOS -->
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px;">
+          <div style="font-size: 14px; font-weight: 800; color: #52e5a5; margin-bottom: 4px;">⏱️ Date Safety Check-In</div>
+          <p style="font-size: 12px; color: #ccc; margin-bottom: 10px; line-height: 1.4;">
+            Set a check-in timer for your date. You can also send a 1-tap SOS message with your date details to WhatsApp or Messages.
+          </p>
+          <button type="button" class="btn alt" id="sendSafetySosBtn" style="width: 100%; padding: 9px; font-size: 13px; border-color: rgba(82,229,165,0.4); color: #52e5a5;">
+            📲 Share Date Details with Trusted Friend
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 📞 REALISTIC FAKE ESCAPE CALL FULLSCREEN OVERLAY -->
+    <div id="fakeCallOverlay" class="fake-call-overlay" style="display: none;">
+      <div style="display: flex; flex-direction: column; align-items: center; margin-top: 40px;">
+        <div class="fake-call-avatar">👩</div>
+        <div class="fake-call-name" id="fakeCallerName">Mom ❤️</div>
+        <div class="fake-call-sub" id="fakeCallStatus">Incoming phone call...</div>
+      </div>
+
+      <div id="fakeCallActiveControls" style="display: none; flex-direction: column; align-items: center; margin-bottom: 20px;">
+        <div style="font-size: 32px; font-weight: 300; margin-bottom: 10px;" id="fakeCallTimer">00:01</div>
+        <div style="font-size: 14px; color: #a855f7; animation: pulse 1.5s infinite;">Voice audio playing through speaker...</div>
+      </div>
+
+      <div class="fake-call-actions" id="fakeCallIncomingActions">
+        <button type="button" class="fake-call-circle-btn decline" id="declineFakeCallBtn" title="Decline">
+          ☎
+        </button>
+        <button type="button" class="fake-call-circle-btn accept" id="acceptFakeCallBtn" title="Accept">
+          📞
+        </button>
+      </div>
+
+      <div id="fakeCallEndWrap" style="display: none;">
+        <button type="button" class="fake-call-circle-btn decline" id="endActiveFakeCallBtn" title="End Call">
+          ☎
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. 💖 POLITE CLOSURE MODAL -->
+    <div class="bg-modal" id="politeClosureModal" style="display: none;">
+      <div class="bg-card" style="max-width: 440px;">
+        <div class="bg-card-head">
+          <h3>💖 Polite Closure &amp; Unmatch</h3>
+          <button type="button" class="bg-close" id="closePoliteClosureBtn">×</button>
+        </div>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">
+          Say goodbye kindly instead of ghosting. Earn <b style="color:#52e5a5">+10 Respect Karma</b> and a Verified Respectful badge!
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px;" id="closureNotesList">
+          <label style="display: flex; gap: 8px; align-items: flex-start; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.04); cursor: pointer;">
+            <input type="radio" name="closureNoteChoice" value="Hey, it was really lovely talking to you, but I don't feel a romantic spark. Wishing you all the best! ✨" checked style="margin-top: 3px;" />
+            <span style="font-size: 13px; color: #eee;">"Hey, it was really lovely talking to you, but I don't feel a romantic spark. Wishing you all the best! ✨"</span>
+          </label>
+          <label style="display: flex; gap: 8px; align-items: flex-start; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.04); cursor: pointer;">
+            <input type="radio" name="closureNoteChoice" value="Hey! I'm taking a break from dating apps right now, but wanted to let you know before leaving. Good luck! 🌸" style="margin-top: 3px;" />
+            <span style="font-size: 13px; color: #eee;">"Hey! I'm taking a break from dating apps right now, but wanted to let you know before leaving. Good luck! 🌸"</span>
+          </label>
+          <label style="display: flex; gap: 8px; align-items: flex-start; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.04); cursor: pointer;">
+            <input type="radio" name="closureNoteChoice" value="Hey, I think we are looking for different things, but you seem like a wonderful person. Take care! 🌟" style="margin-top: 3px;" />
+            <span style="font-size: 13px; color: #eee;">"Hey, I think we are looking for different things, but you seem like a wonderful person. Take care! 🌟"</span>
+          </label>
+        </div>
+        <button type="button" class="btn" id="confirmPoliteClosureBtn" style="margin-top: 14px; width: 100%; padding: 12px; font-weight: 800; background: linear-gradient(110deg,#ff3d8d,#a855f7); color: #fff; border: none; border-radius: 12px; cursor: pointer;">
+          Send Kind Note &amp; Unmatch 💖
         </button>
       </div>
     </div>
@@ -2694,6 +2855,43 @@
             card.innerHTML = `<span>📄</span><div><b>${escapeHTML(attachment.name)}</b><small style="display:block;opacity:.6">${escapeHTML(attachment.type || "Attachment")}</small></div><a href="${attachment.data}" download="${escapeHTML(attachment.name)}">⬇</a>`;
             bubble.appendChild(card);
           }
+        } else if (message.type === "date_invite" || message.dateDetails) {
+          const d = message.dateDetails || {};
+          const isPending = (d.status || "pending") === "pending";
+          const isAccepted = d.status === "accepted";
+          const isDeclined = d.status === "declined";
+
+          const card = document.createElement("div");
+          card.className = `date-invite-card ${d.status || "pending"}`;
+          card.id = `date-card-${message._id}`;
+          card.innerHTML = `
+            <div class="date-card-header">
+              <span class="date-card-icon">💌</span>
+              <div>
+                <div class="date-card-title">${escapeHTML(d.activity || "Coffee Date ☕")}</div>
+                <div class="date-card-sub">Date Invitation</div>
+              </div>
+            </div>
+            <div class="date-card-body">
+              <div class="date-detail-item">📍 <b>Where:</b> ${escapeHTML(d.locationName || "Meet Halfway")}</div>
+              <div class="date-detail-item">🗓️ <b>When:</b> ${escapeHTML(d.dateTime || "TBD")}</div>
+            </div>
+            <div class="date-card-footer" id="date-footer-${message._id}">
+              ${isPending ? (
+                !isMine ? `
+                  <button type="button" class="date-btn accept" onclick="respondDateInvite('${message._id}', 'accepted')">Accept ("I'm in! 🎉")</button>
+                  <button type="button" class="date-btn decline" onclick="respondDateInvite('${message._id}', 'declined')">Decline</button>
+                ` : `<span class="date-status-pill pending">⏳ Waiting for response</span>`
+              ) : (
+                isAccepted ? `
+                  <span class="date-status-pill accepted">✅ Date Accepted! 🎉</span>
+                  <button type="button" class="date-cal-btn" onclick="addToCalendar('${escapeHTML(d.activity)}', '${escapeHTML(d.locationName)}', '${escapeHTML(d.dateTime)}')">📅 Add to Calendar</button>
+                ` : `<span class="date-status-pill declined">❌ Invitation Declined</span>`
+              )}
+            </div>
+          `;
+          bubble.appendChild(card);
+          row.dataset.type = "date_invite";
         } else {
           const content = document.createElement("div");
           content.textContent = message.content;
@@ -5533,7 +5731,400 @@ window.addEventListener(
       });
     }
   }
-);      // =========================
+);
+
+      // ==========================================
+      // ✨ AI WINGMAN (Smart Openers & Banter)
+      // ==========================================
+      const wingmanBtn = document.getElementById("wingmanBtn");
+      const wingmanDrawer = document.getElementById("wingmanDrawer");
+      const wingmanCloseBtn = document.getElementById("wingmanCloseBtn");
+      const wingmanRefreshBtn = document.getElementById("wingmanRefreshBtn");
+      const wingmanList = document.getElementById("wingmanList");
+
+      async function loadWingmanSuggestions() {
+        if (!otherUserId || !wingmanList) return;
+        wingmanList.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:8px">✨ Generating tailored openers for ${escapeHTML(chatUserName)}...</div>`;
+        try {
+          const res = await fetch(`${API}/chat/wingman/${otherUserId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (!data.success || !data.suggestions?.length) {
+            wingmanList.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:8px">No suggestions right now. Try typing a message!</div>`;
+            return;
+          }
+          wingmanList.innerHTML = "";
+          data.suggestions.forEach(s => {
+            const card = document.createElement("div");
+            card.className = "wingman-card";
+            card.innerHTML = `
+              <div class="wingman-card-tag">${escapeHTML(s.category)} • <span style="color:#ff6aa9">${escapeHTML(s.badge)}</span></div>
+              <div class="wingman-card-text">"${escapeHTML(s.text)}"</div>
+            `;
+            card.onclick = () => {
+              if (messageInput) {
+                messageInput.value = s.text;
+                messageInput.focus();
+                wingmanDrawer.style.display = "none";
+              }
+            };
+            wingmanList.appendChild(card);
+          });
+        } catch (e) {
+          wingmanList.innerHTML = `<div style="color:#ff6b81;font-size:12px;padding:8px">Could not load suggestions.</div>`;
+        }
+      }
+
+      wingmanBtn?.addEventListener("click", () => {
+        if (wingmanDrawer.style.display === "none" || !wingmanDrawer.style.display) {
+          wingmanDrawer.style.display = "block";
+          loadWingmanSuggestions();
+        } else {
+          wingmanDrawer.style.display = "none";
+        }
+      });
+      wingmanCloseBtn?.addEventListener("click", () => {
+        wingmanDrawer.style.display = "none";
+      });
+      wingmanRefreshBtn?.addEventListener("click", () => {
+        loadWingmanSuggestions();
+      });
+
+      // ==========================================
+      // ☕ IN-CHAT DATE PLANNER ("Meet-in-the-Middle")
+      // ==========================================
+      const planDateBtn = document.getElementById("planDateBtn");
+      const planDateOption = document.getElementById("planDateOption");
+      const datePlannerModal = document.getElementById("datePlannerModal");
+      const closeDatePlannerBtn = document.getElementById("closeDatePlannerBtn");
+      const sendDateInviteBtn = document.getElementById("sendDateInviteBtn");
+      const dateActivitySelect = document.getElementById("dateActivitySelect");
+      const dateTimeInput = document.getElementById("dateTimeInput");
+      const dateLocationInput = document.getElementById("dateLocationInput");
+
+      function openDatePlanner() {
+        if (datePlannerModal) datePlannerModal.style.display = "flex";
+        if (attachMenu) attachMenu.classList.remove("active");
+      }
+      function closeDatePlanner() {
+        if (datePlannerModal) datePlannerModal.style.display = "none";
+      }
+
+      planDateBtn?.addEventListener("click", openDatePlanner);
+      planDateOption?.addEventListener("click", openDatePlanner);
+      closeDatePlannerBtn?.addEventListener("click", closeDatePlanner);
+
+      sendDateInviteBtn?.addEventListener("click", async () => {
+        const activity = dateActivitySelect?.value || "Coffee & Banter ☕";
+        const dateTime = dateTimeInput?.value?.trim();
+        const locationName = dateLocationInput?.value?.trim();
+
+        if (!dateTime || !locationName) {
+          alert("Please enter both the date/time and the location name!");
+          return;
+        }
+
+        try {
+          sendDateInviteBtn.disabled = true;
+          sendDateInviteBtn.textContent = "Sending Invite...";
+          const res = await fetch(`${API}/chat/date-invite`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              receiverId: otherUserId,
+              activity,
+              dateTime,
+              locationName
+            })
+          });
+          const d = await res.json();
+          if (d.success && d.message) {
+            displayMessage(d.message);
+            scrollToBottom();
+            closeDatePlanner();
+            if (socket?.connected) {
+              socket.emit("sendMessage", {
+                receiver: otherUserId,
+                content: d.message.content,
+                type: "date_invite",
+                dateDetails: d.message.dateDetails
+              });
+            }
+          } else {
+            alert(d.message || "Failed to send date invitation.");
+          }
+        } catch (e) {
+          alert("Error sending date invitation.");
+        } finally {
+          sendDateInviteBtn.disabled = false;
+          sendDateInviteBtn.textContent = "Send Date Invitation 💌";
+        }
+      });
+
+      window.respondDateInvite = async function(messageId, status) {
+        try {
+          const res = await fetch(`${API}/chat/date-invite/${messageId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+          });
+          const data = await res.json();
+          if (data.success) {
+            const footer = document.getElementById(`date-footer-${messageId}`);
+            const card = document.getElementById(`date-card-${messageId}`);
+            if (card) {
+              card.className = `date-invite-card ${status}`;
+            }
+            if (footer) {
+              if (status === "accepted") {
+                footer.innerHTML = `
+                  <span class="date-status-pill accepted">✅ Date Accepted! 🎉</span>
+                  <button type="button" class="date-cal-btn" onclick="addToCalendar('${data.message?.dateDetails?.activity || "Date"}', '${data.message?.dateDetails?.locationName || ""}', '${data.message?.dateDetails?.dateTime || ""}')">📅 Add to Calendar</button>
+                `;
+              } else {
+                footer.innerHTML = `<span class="date-status-pill declined">❌ Invitation Declined</span>`;
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      window.addToCalendar = function(title, location, timeStr) {
+        const now = new Date();
+        const start = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+
+        function fmt(d) {
+          return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+        }
+
+        const icsData = [
+          "BEGIN:VCALENDAR",
+          "VERSION:2.0",
+          "PRODID:-//HeartMatch//Dating App//EN",
+          "BEGIN:VEVENT",
+          `SUMMARY:HeartMatch Date: ${title}`,
+          `LOCATION:${location}`,
+          `DESCRIPTION:Meet-in-the-Middle Date arranged via HeartMatch with ${chatUserName}. Time: ${timeStr}`,
+          `DTSTART:${fmt(start)}`,
+          `DTEND:${fmt(end)}`,
+          "STATUS:CONFIRMED",
+          "END:VEVENT",
+          "END:VCALENDAR"
+        ].join("\r\n");
+
+        const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `HeartMatch_Date_${Date.now()}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      // ==========================================
+      // 🛡️ DATE SHIELD (Safety Hub & Simulated Escape Call)
+      // ==========================================
+      const dateShieldBtn = document.getElementById("dateShieldBtn");
+      const dateShieldModal = document.getElementById("dateShieldModal");
+      const closeDateShieldBtn = document.getElementById("closeDateShieldBtn");
+      const fakeCallOverlay = document.getElementById("fakeCallOverlay");
+      const declineFakeCallBtn = document.getElementById("declineFakeCallBtn");
+      const acceptFakeCallBtn = document.getElementById("acceptFakeCallBtn");
+      const endActiveFakeCallBtn = document.getElementById("endActiveFakeCallBtn");
+      const fakeCallIncomingActions = document.getElementById("fakeCallIncomingActions");
+      const fakeCallActiveControls = document.getElementById("fakeCallActiveControls");
+      const fakeCallEndWrap = document.getElementById("fakeCallEndWrap");
+      const fakeCallStatus = document.getElementById("fakeCallStatus");
+      const fakeCallTimer = document.getElementById("fakeCallTimer");
+
+      let fakeCallRingAudioCtx = null;
+      let fakeCallRingOsc1 = null;
+      let fakeCallRingOsc2 = null;
+      let fakeCallRingGain = null;
+      let fakeCallTimerInterval = null;
+      let fakeCallTimeoutId = null;
+
+      function openDateShield() {
+        if (dateShieldModal) dateShieldModal.style.display = "flex";
+      }
+      function closeDateShield() {
+        if (dateShieldModal) dateShieldModal.style.display = "none";
+      }
+      dateShieldBtn?.addEventListener("click", openDateShield);
+      closeDateShieldBtn?.addEventListener("click", closeDateShield);
+
+      function startRingtoneSound() {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          fakeCallRingAudioCtx = new AudioContext();
+
+          fakeCallRingOsc1 = fakeCallRingAudioCtx.createOscillator();
+          fakeCallRingOsc2 = fakeCallRingAudioCtx.createOscillator();
+          fakeCallRingGain = fakeCallRingAudioCtx.createGain();
+
+          fakeCallRingOsc1.type = "sine";
+          fakeCallRingOsc1.frequency.setValueAtTime(440, fakeCallRingAudioCtx.currentTime);
+
+          fakeCallRingOsc2.type = "sine";
+          fakeCallRingOsc2.frequency.setValueAtTime(480, fakeCallRingAudioCtx.currentTime);
+
+          const now = fakeCallRingAudioCtx.currentTime;
+          fakeCallRingGain.gain.setValueAtTime(0, now);
+          for (let i = 0; i < 15; i++) {
+            const t = now + i * 4;
+            fakeCallRingGain.gain.setValueAtTime(0.3, t);
+            fakeCallRingGain.gain.setValueAtTime(0.3, t + 2);
+            fakeCallRingGain.gain.setValueAtTime(0, t + 2.05);
+          }
+
+          fakeCallRingOsc1.connect(fakeCallRingGain);
+          fakeCallRingOsc2.connect(fakeCallRingGain);
+          fakeCallRingGain.connect(fakeCallRingAudioCtx.destination);
+
+          fakeCallRingOsc1.start();
+          fakeCallRingOsc2.start();
+
+          if (navigator.vibrate) {
+            navigator.vibrate([1000, 1000, 1000, 1000, 1000]);
+          }
+        } catch (e) {
+          console.warn("Audio synthesis error:", e);
+        }
+      }
+
+      function stopRingtoneSound() {
+        try {
+          if (fakeCallRingOsc1) { fakeCallRingOsc1.stop(); fakeCallRingOsc1.disconnect(); }
+          if (fakeCallRingOsc2) { fakeCallRingOsc2.stop(); fakeCallRingOsc2.disconnect(); }
+          if (fakeCallRingAudioCtx) { fakeCallRingAudioCtx.close(); }
+        } catch (e) {}
+        fakeCallRingAudioCtx = null;
+        if (navigator.vibrate) navigator.vibrate(0);
+      }
+
+      function triggerFakeCallNow() {
+        closeDateShield();
+        if (fakeCallOverlay) {
+          fakeCallOverlay.style.display = "flex";
+          fakeCallIncomingActions.style.display = "flex";
+          fakeCallActiveControls.style.display = "none";
+          fakeCallEndWrap.style.display = "none";
+          fakeCallStatus.textContent = "Incoming phone call...";
+        }
+        startRingtoneSound();
+      }
+
+      document.querySelectorAll(".trigger-fake-call-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const delaySec = parseInt(btn.dataset.delay || "0", 10);
+          closeDateShield();
+          if (delaySec === 0) {
+            triggerFakeCallNow();
+          } else {
+            alert(`🚨 Simulated escape call scheduled in ${delaySec} seconds! Keep your screen on.`);
+            if (fakeCallTimeoutId) clearTimeout(fakeCallTimeoutId);
+            fakeCallTimeoutId = setTimeout(triggerFakeCallNow, delaySec * 1000);
+          }
+        });
+      });
+
+      acceptFakeCallBtn?.addEventListener("click", () => {
+        stopRingtoneSound();
+        fakeCallIncomingActions.style.display = "none";
+        fakeCallActiveControls.style.display = "flex";
+        fakeCallEndWrap.style.display = "block";
+        fakeCallStatus.textContent = "Call in progress";
+
+        let callSec = 0;
+        if (fakeCallTimer) fakeCallTimer.textContent = "00:01";
+        fakeCallTimerInterval = setInterval(() => {
+          callSec++;
+          const mins = String(Math.floor(callSec / 60)).padStart(2, "0");
+          const secs = String(callSec % 60).padStart(2, "0");
+          if (fakeCallTimer) fakeCallTimer.textContent = `${mins}:${secs}`;
+        }, 1000);
+
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const voiceMessage = new SpeechSynthesisUtterance("Hey! Are you still out? Something really important came up at home, can you please head back right now? We need your help.");
+          voiceMessage.rate = 1.0;
+          voiceMessage.pitch = 1.05;
+          window.speechSynthesis.speak(voiceMessage);
+        }
+      });
+
+      function dismissFakeCall() {
+        stopRingtoneSound();
+        if (fakeCallTimerInterval) clearInterval(fakeCallTimerInterval);
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        if (fakeCallOverlay) fakeCallOverlay.style.display = "none";
+      }
+
+      declineFakeCallBtn?.addEventListener("click", dismissFakeCall);
+      endActiveFakeCallBtn?.addEventListener("click", dismissFakeCall);
+
+      document.getElementById("sendSafetySosBtn")?.addEventListener("click", () => {
+        const text = encodeURIComponent(`🚨 HeartMatch Date Safety: I am on a date with ${chatUserName}. If I haven't checked in with you, please call or message me!`);
+        window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+      });
+
+      // ==========================================
+      // 💖 POLITE CLOSURE & KARMA UNMATCH
+      // ==========================================
+      const politeClosureOption = document.getElementById("politeClosureOption");
+      const politeClosureModal = document.getElementById("politeClosureModal");
+      const closePoliteClosureBtn = document.getElementById("closePoliteClosureBtn");
+      const confirmPoliteClosureBtn = document.getElementById("confirmPoliteClosureBtn");
+
+      politeClosureOption?.addEventListener("click", () => {
+        if (politeClosureModal) politeClosureModal.style.display = "flex";
+        if (attachMenu) attachMenu.classList.remove("active");
+      });
+      closePoliteClosureBtn?.addEventListener("click", () => {
+        if (politeClosureModal) politeClosureModal.style.display = "none";
+      });
+
+      confirmPoliteClosureBtn?.addEventListener("click", async () => {
+        const selectedRadio = document.querySelector('input[name="closureNoteChoice"]:checked');
+        const note = selectedRadio?.value || "Hey, it was lovely talking to you, but I don't feel a romantic spark. Wishing you all the best! ✨";
+
+        try {
+          confirmPoliteClosureBtn.disabled = true;
+          confirmPoliteClosureBtn.textContent = "Sending Kind Closure...";
+
+          const res = await fetch(`${API}/chat/polite-unmatch`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              otherUserId,
+              closureNote: note
+            })
+          });
+          const d = await res.json();
+          alert(d.message || "Unmatched politely. +10 Respect Karma awarded! 💖");
+          window.location.href = "matches.html";
+        } catch (e) {
+          alert("Could not complete unmatch.");
+        } finally {
+          confirmPoliteClosureBtn.disabled = false;
+        }
+      });
+
+      // =========================
       // START
       // =========================
 

@@ -39,7 +39,25 @@ const userSchema = new mongoose.Schema({
       auth: { type: String, required: true }
     },
     createdAt: { type: Date, default: Date.now }
-  }]
+  }],
+  // Music Vibe Anthem
+  anthem: {
+    title: { type: String, default: "" },
+    artist: { type: String, default: "" },
+    audioUrl: { type: String, default: "" },
+    genre: { type: String, default: "" }
+  },
+  // Love Language & Social Energy (Personality compatibility)
+  loveLanguage: { type: String, default: "Quality Time ☕" },
+  socialEnergy: { type: String, default: "Ambivert ⚡" },
+  // Karma & Respect
+  respectScore: { type: Number, default: 100 },
+  respectBadges: { type: [String], default: ["⚡ Fast Responder", "🤝 Verified Respectful"] },
+  // Date Shield Safety Contact
+  safetyContact: {
+    name: { type: String, default: "" },
+    phone: { type: String, default: "" }
+  }
 }, { timestamps: true });
 
 userSchema.index({ isActive: 1, isIncognito: 1, lastSeen: -1 });
