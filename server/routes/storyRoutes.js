@@ -63,7 +63,7 @@ module.exports = (io) => {
                 expiresAt: { $gt: now }
             })
                 .sort({ createdAt: 1 })
-                .populate("views.user", "_id name profileImage")
+                .populate("views.user", "_id name userId profileImage isVerified")
                 .lean();
 
             const myStories = myStoriesRaw.map((s) => ({
@@ -76,7 +76,9 @@ module.exports = (io) => {
                 viewers: (s.views || []).map((v) => ({
                     _id: v.user?._id || v.user,
                     name: v.user?.name || "User",
+                    userId: v.user?.userId || "",
                     profileImage: v.user?.profileImage || "",
+                    isVerified: !!v.user?.isVerified,
                     viewedAt: v.viewedAt
                 }))
             }));
@@ -534,7 +536,7 @@ module.exports = (io) => {
                 _id: storyId,
                 user: req.userId
             })
-                .populate("views.user", "_id name profileImage")
+                .populate("views.user", "_id name userId profileImage isVerified")
                 .lean();
 
             if (!story) {
@@ -544,7 +546,9 @@ module.exports = (io) => {
             const viewers = (story.views || []).map((v) => ({
                 _id: v.user?._id || v.user,
                 name: v.user?.name || "User",
+                userId: v.user?.userId || "",
                 profileImage: v.user?.profileImage || "",
+                isVerified: !!v.user?.isVerified,
                 viewedAt: v.viewedAt
             }));
 

@@ -837,9 +837,9 @@
             </div>
 
             <!-- Bottom Instagram-style Seen By footer (for your own stories) -->
-            <div class="hm-story-self-footer" id="storySelfFooter" style="display: none; cursor: pointer; z-index: 35; pointer-events: auto;" onclick="event.stopPropagation(); openStoryViewersSheet();" ontouchend="event.stopPropagation(); openStoryViewersSheet();" title="View who saw your story">
-                <div class="hm-story-viewer-avatars-preview" id="storyViewerAvatarsPreview"></div>
-                <div class="hm-story-seen-label">
+            <div class="hm-story-self-footer" id="storySelfFooter" style="display: none;" title="View who saw your story" onclick="openStoryViewersSheet(event)" ontouchend="openStoryViewersSheet(event)">
+                <div class="hm-story-viewer-avatars-preview" id="storyViewerAvatarsPreview" title="Viewers"></div>
+                <div class="hm-story-seen-label" id="storySeenLabel">
                     <span id="storySeenCountText">Seen by 0</span>
                     <span class="hm-story-seen-chevron">▲</span>
                 </div>
@@ -851,16 +851,18 @@
             </div>
 
             <!-- Viewers List Sheet Backdrop & Sheet (for own stories) -->
-            <div class="hm-story-viewers-backdrop" id="storyViewersBackdrop" onclick="closeStoryViewersSheet()"></div>
+            <div class="hm-story-viewers-backdrop" id="storyViewersBackdrop" onclick="closeStoryViewersSheet(event)"></div>
             <div class="hm-story-viewers-sheet" id="storyViewersSheet" onclick="event.stopPropagation();" ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();">
-                <div class="hm-sheet-handle" onclick="closeStoryViewersSheet()" title="Drag or tap to close"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                    <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span>👁️</span> Story Viewers <span id="storyViewersCountBadge" style="font-size: 12px; background: rgba(255,61,141,0.22); color: #ff6b9d; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0</span>
-                    </h3>
-                    <button type="button" style="background: rgba(255,255,255,0.12); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="closeStoryViewersSheet()">✕</button>
+                <div class="hm-sheet-handle" onclick="closeStoryViewersSheet(event)" title="Drag or tap to close"></div>
+                <div class="hm-story-viewers-header">
+                    <div class="hm-story-viewers-title">
+                        <span class="hm-story-viewers-eye">👁️</span>
+                        <span class="hm-story-viewers-heading">Story Viewers</span>
+                        <span id="storyViewersCountBadge" class="hm-story-viewers-pill">0</span>
+                    </div>
+                    <button type="button" class="hm-story-viewers-close" onclick="closeStoryViewersSheet(event)" aria-label="Close viewers list">✕</button>
                 </div>
-                <div id="storyViewersList"></div>
+                <div id="storyViewersList" class="hm-story-viewers-body"></div>
             </div>
         </div>
     </div>
@@ -1288,6 +1290,7 @@
                             `<img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" alt="${escapeAttribute(v.name || 'User')}" onerror="this.src='/images/icons/icon-192.png'" />`
                         ).join('');
                     }
+                    bindStoryViewersTriggers();
                 }
             } else {
                 if (viewsBtn) viewsBtn.style.display = "none";
@@ -1501,6 +1504,7 @@
                     }
                 });
             }
+            bindStoryViewersTriggers();
         }
 
         async function sendStoryReaction(emoji) {
@@ -1598,43 +1602,68 @@
             if (!list) return;
 
             const countBadge = document.getElementById("storyViewersCountBadge");
-            if (countBadge) countBadge.textContent = Array.isArray(viewers) ? viewers.length : 0;
+            const count = Array.isArray(viewers) ? viewers.length : 0;
+            if (countBadge) countBadge.textContent = count;
 
             if (!viewers || viewers.length === 0) {
                 list.innerHTML = `
-                    <div style="text-align: center; color: var(--hm-text-muted); padding: 36px 12px;">
-                        <div style="font-size: 38px; margin-bottom: 8px;">👀</div>
-                        <p style="font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 15px;">No views yet</p>
-                        <small style="color: rgba(255,255,255,0.65); font-size: 12px; line-height: 1.4; display: block;">When people view your story, their profile and timestamp will appear here.</small>
+                    <div style="text-align: center; color: var(--hm-text-muted); padding: 48px 16px;">
+                        <div style="font-size: 42px; margin-bottom: 12px;">👁️</div>
+                        <p style="font-weight: 700; color: #fff; margin-bottom: 6px; font-size: 16px;">No viewers yet</p>
+                        <small style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.4; display: block; max-width: 260px; margin: 0 auto;">When someone views your story, their name and profile picture will appear here like Instagram.</small>
                     </div>
                 `;
             } else {
-                list.innerHTML = viewers.map(v => `
-                    <div class="hm-story-viewer-row">
-                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
-                            <img src="${escapeAttribute(v.profileImage || '/images/icons/icon-192.png')}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.25); flex-shrink: 0;" onerror="this.src='/images/icons/icon-192.png'" />
-                            <div style="min-width: 0; flex: 1;">
-                                <div style="font-weight: 700; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(v.name || 'User')}</div>
-                                <div style="font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px;">${formatStoryTime(v.viewedAt)}</div>
+                list.innerHTML = viewers.map(v => {
+                    const pfp = escapeAttribute(v.profileImage || '/images/icons/icon-192.png');
+                    const name = escapeHTML(v.name || 'User');
+                    const username = v.userId ? `@${escapeHTML(v.userId)}` : '';
+                    const timeAgo = formatStoryTime(v.viewedAt);
+                    const isVerified = !!v.isVerified;
+                    const profileLink = `person.html?user=${encodeURIComponent(v.userId || v._id)}`;
+                    const chatLink = `chat.html?user=${encodeURIComponent(v._id)}`;
+
+                    return `
+                    <div class="hm-story-viewer-row" onclick="window.location.href='${profileLink}'" title="View ${name}'s profile">
+                        <div class="hm-viewer-info-col">
+                            <div class="hm-viewer-avatar-wrap">
+                                <img src="${pfp}" alt="${name}" class="hm-viewer-pfp" onerror="this.src='/images/icons/icon-192.png'" />
+                            </div>
+                            <div class="hm-viewer-text-wrap">
+                                <div class="hm-viewer-name-row">
+                                    <span class="hm-viewer-name">${name}</span>
+                                    ${isVerified ? '<span class="hm-viewer-badge-verified" title="Verified Profile">✓</span>' : ''}
+                                </div>
+                                <div class="hm-viewer-meta-row">
+                                    ${username ? `<span class="hm-viewer-username">${username}</span> • ` : ''}
+                                    <span class="hm-viewer-time">${timeAgo}</span>
+                                </div>
                             </div>
                         </div>
-                        <a href="chat.html?user=${encodeURIComponent(v._id)}" class="hm-viewer-chat-btn" title="Message ${escapeAttribute(v.name)}">
+                        <a href="${chatLink}" class="hm-viewer-chat-btn" onclick="event.stopPropagation();" title="Message ${name}">
                             💬 Message
                         </a>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         }
 
-        function openStoryViewersSheet() {
+        function openStoryViewersSheet(e) {
+            if (e) {
+                e.stopPropagation();
+                if (typeof e.preventDefault === "function") e.preventDefault();
+            }
             isPaused = true;
             const vidEl = document.getElementById("storyViewerVideo");
             if (vidEl) vidEl.pause();
 
             const group = getCurrentGroupData();
-            if (!group || !group.isSelf) return;
+            const isSelf = group ? group.isSelf : (activeUserGroupIdx === -1);
+            if (!isSelf) return;
 
-            const story = group.stories[activeStoryIdx];
+            const myStories = (group && group.stories) || (storiesData && storiesData.myStories) || [];
+            const story = myStories[activeStoryIdx] || myStories[0];
             const sheet = document.getElementById("storyViewersSheet");
             const backdrop = document.getElementById("storyViewersBackdrop");
             if (!sheet || !story) return;
@@ -1642,6 +1671,10 @@
             // Ensure bottom dock is completely hidden while sheet is active
             const dock = document.getElementById("hmBottomDock");
             if (dock) dock.style.setProperty("display", "none", "important");
+
+            // Slide up the bottom sheet & fade in backdrop immediately
+            if (backdrop) backdrop.classList.add("open");
+            sheet.classList.add("open");
 
             // Render existing cached viewers first
             const viewers = story.viewers || [];
@@ -1672,17 +1705,33 @@
                 })
                 .catch(() => {});
             }
-
-            if (backdrop) backdrop.classList.add("open");
-            sheet.classList.add("open");
         }
 
-        function closeStoryViewersSheet() {
+        function closeStoryViewersSheet(e) {
+            if (e) {
+                e.stopPropagation();
+            }
             const backdrop = document.getElementById("storyViewersBackdrop");
             if (backdrop) backdrop.classList.remove("open");
             const sheet = document.getElementById("storyViewersSheet");
             if (sheet) sheet.classList.remove("open");
             isPaused = false;
+        }
+
+        function bindStoryViewersTriggers() {
+            const targets = [
+                document.getElementById("storySelfFooter"),
+                document.getElementById("storyViewerAvatarsPreview"),
+                document.getElementById("storySeenLabel"),
+                document.getElementById("storySeenCountText"),
+                document.getElementById("storyViewsBtn")
+            ];
+            targets.forEach(el => {
+                if (el) {
+                    el.addEventListener("click", openStoryViewersSheet);
+                    el.addEventListener("touchend", openStoryViewersSheet);
+                }
+            });
         }
 
         // Initialize story tap, pause & swipe-up handlers
